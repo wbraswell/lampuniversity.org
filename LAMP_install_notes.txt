@@ -385,6 +385,7 @@ $ mysql --user=root --password  # required for DBD::mysql `make test`
     mysql> GRANT ALL PRIVILEGES ON test.* TO 'SOMEBODY'@'localhost';
     mysql> QUIT
 $ cpanm DBD::mysql Devel::Declare::MethodInstaller::Simple Text::CSV_XS inc::Module::Install Module::Install::Catalyst
+# NEED FIX: SHINYCMS REPO DOESN'T FOLLOW DOMAIN NAMING SCHEME, CREATE SHINYCMSTEMPLATE.COM REPO ON GITHUB
 $ mkdir ShinyCMS-latest; git clone https://github.com/denny/ShinyCMS.git ShinyCMS-latest
 $ cd ShinyCMS-latest; perl Makefile.PL; make; make test; make install  # CPANPLUS FAILS
 $ cd ShinyCMS-latest; perl Makefile.PL
@@ -531,10 +532,12 @@ $ a2ensite SOMEDOMAIN.COM
 # CONFIGURE APACHE PERMISSIONS
 $ vi /etc/group  # allow SOMEBODY user to modify permissions
     www-data:x:33:SOMEBODY
-$ chown -R SOMEBODY:www-data /home/SOMEBODY/public_html/SOMEDOMAIN-latest
+$ chown -R SOMEBODY:www-data /home/SOMEBODY/public_html/SOMEDOMAIN-latest  # ERROR, STATIC IMAGES CANNOT BE READ BY WWW-DATA GROUP
+$ chown -R SOMEBODY:www-data /home/SOMEBODY/
 $ chmod -R u+rwX /home/SOMEBODY/public_html/SOMEDOMAIN-latest
 $ chmod -R g+rwX /home/SOMEBODY/public_html/SOMEDOMAIN-latest/root/static/cms-uploads/
-$ chmod -R g+rX /home/SOMEBODY/public_html/SOMEDOMAIN-latest
+$ chmod -R g+rX /home/SOMEBODY/public_html/SOMEDOMAIN-latest  # ERROR, STATIC IMAGES CANNOT BE READ BY WWW-DATA GROUP
+$ chmod -R g+rX /home/SOMEBODY/
 $ chmod -R o-rwx /home/SOMEBODY/public_html/SOMEDOMAIN-latest
 $ service apache2 reload
 # CONFIGURE SHINY
