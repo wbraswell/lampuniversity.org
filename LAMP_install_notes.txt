@@ -1,0 +1,594 @@
+LAMP Install Notes 20141029 2014.302
+Copyright (c) 2014 William N. Braswell, Jr.
+
+Fresh Ubuntu v14.04.1 (Trusty Tahr) from CloudAtCost.com or HostGator.com
+Fresh Ubuntu v14.04 (Trusty Tahr) in Virtual Box
+Fresh CentOS v6.5 from 1and1.com
+
+# [[[ UBUNTU, CONFIGURE OPERATING SYSTEM USERS ]]]
+$ passwd  # reset root password;  NEED FIX: disable root account???
+$ userdel user  # remove default user
+$ rm -Rf /home/user
+$ useradd SOMEBODY
+$ passwd SOMEBODY
+$ cp -a /etc/skel /home/SOMEBODY
+$ chown -R SOMEBODY.SOMEBODY /home/SOMEBODY
+$ chsh SOMEBODY
+    /bin/bash
+$ vi /etc/group  # add SOMEBODY to group "sudo", allows running root commands (like update-manager) via sudo in xpra
+# CHEAT!!!
+    userdel user; rm -Rf /home/user; useradd wbraswell; passwd wbraswell; cp -a /etc/skel /home/wbraswell; chown -R wbraswell.wbraswell /home/wbraswell; chsh wbraswell; vi /etc/group 
+# USER MACHINE
+$ vi /etc/hosts  # add cloudhost entry
+	SOMEIP	SUBDOMAIN.SOMEDOMAIN.COM
+$ ssh-keygen  # if not already done in the past
+$ ssh-copy-id SOMEBODY@SUBDOMAIN.SOMEDOMAIN.COM
+$ ssh SOMEBODY@SUBDOMAIN.SOMEDOMAIN.COM  # may be prompted once to unlock keyring, then passwordless
+$ scp ~/.vimrc ~/.gitconfig SUBDOMAIN.SOMEDOMAIN.COM:~/
+$ scp SUBDOMAIN.SOMEDOMAIN.COM:~/
+
+
+# [[[ UBUNTU, CONFIGURE CLOUD NETWORKING ]]]
+# USER MACHINE
+$ scp /etc/hosts SUBDOMAIN.SOMEDOMAIN.COM:/tmp/hosts
+# CLOUD MACHINE
+$ mv /tmp/hosts /etc/hosts
+$ vi /etc/hosts  # modify localhost entry, public entry if present
+    127.0.1.1       SUBDOMAIN_OR_SOMEDOMAIN  # === EDIT THIS LINE TO BE YOUR LOCAL HOSTNAME ===
+    # === REMOVE LOCAL HOSTNAME IF APPEARING BELOW ===
+    XXX.YYY.ZZZ.YYY                  SUBDOMAIN.SOMEDOMAIN.COM  # godaddy DNS A record
+$ vi /etc/hostname  # enter real hostname, no underscores only hyphens, single word not FQDN
+$ vi /etc/network/interfaces  # append following
+    dns-nameservers 8.8.8.8 8.8.4.4
+$ reboot
+$ cat /etc/resolv.conf  # confirm following
+    nameserver 8.8.8.8
+    nameserver 8.8.4.4
+
+
+# [[[ UBUNTU, UPDATE OPERATING SYSTEM PACKAGES ]]]
+$ apt-get update
+$ apt-get upgrade
+$ apt-get -f install  # confirm no errors, only non-upgraded packages allowable
+$ apt-get upgrade  # review non-upgraded (kept back) packages, confirm suitability for safe-upgrade
+$ apt-get install aptitude
+$ aptitude safe-upgrade
+$ apt-get -f install  # confirm nothing to upgrade
+$ apt-get upgrade  # confirm nothing to upgrade
+$ reboot
+# CHEAT!!!
+    apt-get update; apt-get -y upgrade; aptitude -y safe-upgrade; apt-get -f install; reboot
+$ apt-get install linuxlogo
+$ apt-get install git
+$ apt-get install lynx
+$ apt-get install xterm  # trigger installation of X windows
+$ apt-get install x11-apps  # contains xeyes for basic X testing
+$ apt-get install gkrellm
+$ apt-get install xchat
+$ apt-get install firefox
+$ apt-get install update-manager
+$ apt-get install xpra
+$ apt-get install clamav clamav-daemon
+# CHEAT!!!
+    apt-get -y install linuxlogo git lynx xterm x11-apps gkrellm xchat firefox update-manager xpra clamav clamav-daemon
+# CLAMAV ANTI-VIRUS
+$ freshclam
+$ clamscan -r /home
+$ cd /home/SOMEBODY; wget http://www.eicar.org/download/eicar.com
+$ clamscan -r /home
+$ clamscan --infected --remove --recursive /home
+$ clamscan -r /home
+$ /etc/init.d/clamav-daemon start
+$ /etc/init.d/clamav-daemon status
+$ /etc/init.d/clamav-freshclam start
+$ /etc/init.d/clamav-freshclam status
+$ clamdscan -V
+# ENABLE X WINDOWS PER INSTRUCTIONS BELOW
+$ update-manager  # DON'T FORGET THIS CRITICAL SECURITY STEP!
+    # enable security updates only
+    # check for updates daily
+    # install security updates only
+    # never remind of dist upgrade
+    # enable Ubuntu repositories only, disable restricted & multiverse
+
+
+# [[[ BENCHMARKING ]]]  # MAY NEED TO UPDATE THIS SECTION
+$ linuxlogo
+# CPUMINER
+$ apt-get install libcurl4-openssl-dev
+$ apt-get install libncurses5-dev
+$ apt-get install pkg-config
+$ apt-get install automake
+$ apt-get install yasm
+$ git clone https://github.com/pooler/cpuminer.git
+$ cd cpuminer
+$ ./autogen.sh
+$ ./configure CFLAGS="-O3"
+$ make
+$ ./minerd --url=http://GETWORK.POOL.COM --userpass=SOMEBODY:SOMEPASS
+
+
+# [[[ UBUNTU, INSTALL X WINDOWS & XPRA ]]]
+# USER MACHINE
+    # MUST OPEN FIREWALL tcp port 6000 
+$ vi /etc/gdm/custom.conf  # GDM ONLY
+    [security]
+    DisallowTCP=false
+$ /etc/init.d/gdm restart  # GDM ONLY, WARNING SYSTEM RESTART!
+$ vi /etc/lightdm/lightdm.conf # LIGHTDM ONLY
+    [SeatDefaults]
+    #greeter-session=unity-greeter  # DELETE???
+    #user-session=ubuntu  # DELETE???
+    xserver-allow-tcp=true
+$ /etc/init.d/lightdm restart # LIGHTDM ONLY, WARNING SYSTEM RESTART!
+$ xhost +SUBDOMAIN.SOMEDOMAIN.COM # single-session connection
+# http://xpra.org/dists/USERDIST/main/USERARCH
+$ gdebi-gtk ./xpra_SOMEVERSION_USERARCH.deb  # old user machines only
+$ apt-get install xpra  # new user machines only
+$ xpra attach ssh:SUBDOMAIN.SOMEDOMAIN.COM:100  # multi-session connection
+# CLOUD MACHINE
+$ export DISPLAY=USERHOST:0.0
+$ xeyes  # single-session connection
+$ xpra start :100 --start-child=xterm  # multi-session connection
+$ export DISPLAY=:100.0  # multi-session connection
+$ xeyes  # multi-session connection
+$ xpra stop
+
+
+# [[[ UBUNTU, INSTALL APACHE & MOD_PERL ]]]
+# for subdomains, ensure CNAME alias set in hosting provider DNS zone file: * @
+$ apt-get install apache2
+$ apt-get install libapache2-mod-perl2
+$ vi /etc/apache2/apache2.conf
+    # WBRASWELL XYZZY: fix "Could not reliably determine the server's fully qualified domain name"
+    ServerName localhost
+
+    <IfModule mpm_prefork_module>  #IGNORE THIS SECTION??? not present in Ubuntu v14.04.pre
+        StartServers          2  # 5 in Ubuntu v12.04.4
+        MinSpareServers       5
+        MaxSpareServers      10
+        MaxClients          150
+        MaxRequestsPerChild   3000  # 0 in Ubuntu v12.04.4
+    </IfModule>
+$ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf  # repeat for each enabled domain & subdomain
+    # DOMAIN
+    <VirtualHost *:80>
+        ServerName SOMEDOMAIN.COM
+        ServerAlias www.SOMEDOMAIN.COM
+        ServerAdmin webmaster@SOMEDOMAIN.COM
+        DocumentRoot /srv/www/SOMEDOMAIN.COM/public_html/
+        <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre
+            Require all granted
+        </Directory>
+        ErrorLog /srv/www/SOMEDOMAIN.COM/logs/error.log
+        CustomLog /srv/www/SOMEDOMAIN.COM/logs/access.log combined
+    </VirtualHost>
+    # OR
+    # SUBDOMAIN
+    <VirtualHost *:80>
+        ServerName SUBDOMAIN.SOMEDOMAIN.COM
+        ServerAlias SUBDOMAIN.SOMEDOMAIN.COM *.SOMEDOMAIN.COM  # DISABLE IF ALSO USING PHPMYADMIN.SUBDOMAIN.SOMEDOMAIN.COM
+        ServerAdmin webmaster@SUBDOMAIN.SOMEDOMAIN.COM
+        DocumentRoot /srv/www/SUBDOMAIN.SOMEDOMAIN.COM/public_html/
+        <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre
+            Require all granted
+        </Directory>
+        ErrorLog /srv/www/SUBDOMAIN.SOMEDOMAIN.COM/logs/error.log
+        CustomLog /srv/www/SUBDOMAIN.SOMEDOMAIN.COM/logs/access.log combined
+    </VirtualHost>
+# if using subdomain, then replace SOMEDOMAIN.COM with SUBDOMAIN.SOMEDOMAIN.COM in remaining Apache commands below
+$ mkdir -p /srv/www/SOMEDOMAIN.COM/public_html
+$ mkdir /srv/www/SOMEDOMAIN.COM/logs
+$ vi /srv/www/SOMEDOMAIN.COM/public_html/index.html  # create test page
+    SOMEDOMAIN.COM lives!
+$ a2dissite 000-default # skip to allow default placeholder "It Works" page, required in Ubuntu v14.04.pre?  
+$ a2ensite SOMEDOMAIN.COM
+$ service apache2 reload
+$ chown -R www-data.www-data /srv/www
+$ chmod -R g+rwX /srv/www
+$ chmod -R o-w /srv/www
+$ vi /etc/group
+    # add user to www-data group
+
+
+# [[[ UBUNTU, INSTALL MYSQL ]]]
+$ apt-get install mysql-server mysql-client libmysqlclient-dev phpmyadmin
+    # DO NOT CONFIGURE APACHE AUTOMATICALLY
+    # DO CONFIGURE DATABASE WITH DBCONFIG-COMMON
+$ mysql --user=root --password
+    mysql> SHOW VARIABLES LIKE 'have_innodb';
+    +---------------+-------+
+    | Variable_name | Value |
+    +---------------+-------+
+    | have_innodb   | YES   |
+    +---------------+-------+
+$ vi /etc/apache2/sites-available/phpmyadmin.SOMEDOMAIN.COM.conf
+    # SUBDOMAIN
+    <VirtualHost *:80>
+         ServerName phpmyadmin.SOMEDOMAIN.COM
+         ServerAdmin webmaster@SOMEDOMAIN.COM
+         DocumentRoot /srv/www/phpmyadmin.SOMEDOMAIN.COM/public_html/
+         <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre
+            Require all granted
+         </Directory>
+         ErrorLog /srv/www/phpmyadmin.SOMEDOMAIN.COM/logs/error.log
+         CustomLog /srv/www/phpmyadmin.SOMEDOMAIN.COM/logs/access.log combined
+    </VirtualHost>
+$ mkdir -p /srv/www/phpmyadmin.SOMEDOMAIN.COM/logs;  ln -s /usr/share/phpmyadmin/ /srv/www/phpmyadmin.SOMEDOMAIN.COM/public_html 
+$ a2ensite phpmyadmin.SOMEDOMAIN.COM;  service apache2 reload
+# FIX MISSING MCRYPT ERROR
+$ updatedb
+$ locate mcrypt.ini
+$ locate mcrypt.so
+$ vi /PATH_FROM_LOCATE_COMMAND/mcrypt.ini
+    extension=/PATH_FROM_LOCATE_COMMAND/mcrypt.so
+$ php5enmod mcrypt
+$ service apache2 reload
+
+
+# [[[ CENTOS, INSTALL MYSQL & CONFIGURE NETWORK ]]]
+$ yum install ftp://fr2.rpmfind.net/linux/epel/6/x86_64/epel-release-6-8.noarch.rpm
+$ yum install yum-utils
+$ yum install mysql-server  # skipped
+$ yum install mysql-devel
+$ service mysqld start
+$ mysql_install_db  # skipped
+$ mysql_secure_installation  # skipped
+$ yum install phpmyadmin
+$ repoquery -l phpMyAdmin
+$ vi /etc/httpd/conf.d/phpMyAdmin.conf
+    #    Require ip 127.0.0.1
+        Require ip USERIP
+    #    Allow from 127.0.0.1
+        Allow from USERIP
+$ service httpd start
+$ cpanm --mirror http://cpan.msi.umn.edu/ DBD::mysql
+$ vi /etc/httpd/conf/httpd.conf;  /etc/init.d/httpd restart
+     Allow from USER_IP
+$ vi /etc/hosts.deny;  /etc/init.d/sshd restart
+     sshd: ALL EXCEPT AAA.BBB.CCC., WWW.XXX.YYY.,
+$ vi /etc/apf/conf.apf;  apf -f;  apf -r
+     TOS_8="21,20,80,22,3000"
+     IG_TCP_CPORTS="22,80,443,3000"
+     EG_TCP_CPORTS="21,25,80,443,43,4242,3000"
+$ yum install lynx telnet
+
+
+# [[[ UBUNTU, INSTALL POSTFIX ]]]
+# Outgoing E-Mail
+$ apt-get install postfix
+    # Internet Site config option
+    # FQDN: MYSUBDOMAIN.SOMEDOMAIN.COM
+$ vi /etc/postfix/main.cf
+    myhostname = MYSUBDOMAIN.SOMEDOMAIN.COM
+$ service postfix restart
+$ telnet localhost 25
+    HELO username
+    MAIL FROM:somebody@mysubdomain.somedomain.com
+    RCPT TO:real@external.email.com
+    DATA
+    howdy howdy howdy
+    .
+    QUIT
+# NEED FIX: Incoming E-Mail Not Yet Verified
+# SET DNS MX RECORD
+$ apt-get install mailutils
+$ mail
+
+
+# [[[ UBUNTU, INSTALL WEBMIN ]]]
+$ vi /etc/apt/sources.list
+    deb http://download.webmin.com/download/repository sarge contrib
+$ wget -q http://www.webmin.com/jcameron-key.asc -O- | sudo apt-key add -  # NOTE HYPHEN AT END OF LINE
+$ apt-get update
+$ apt-get install webmin
+# https://SOMEDOMAIN.COM:10000  # NOTE THE 's' IN 'https'
+
+
+# [[[ UBUNTU, INSTALL CATALYST, SYSTEM-WIDE ]]]
+$ apt-get install libmodule-install-perl
+$ apt-get install libcatalyst-engine-apache-perl
+$ service apache2 restart
+$ apt-get install libcatalyst-devel-perl
+$ apt-get install libcatalyst-modules-perl
+
+
+# [[[ CENTOS, INSTALL CATALYST; OUTDATED VERSIONS, DO NOT USE ]]]
+$ yum install perl-Catalyst-Runtime
+$ yum install perl-Catalyst-Devel
+$ yum install perl-Catalyst-Model-DBIC-Schema
+$ yum install perl-Catalyst-Plugin-Session-State-Cookie
+$ yum install perl-Catalyst-Plugin-Session-Store-FastMmap
+$ yum install perl-Catalyst-Plugin-StackTrace
+$ yum install perl-Catalyst-Plugin-SubRequest
+$ yum install perl-Catalyst-View-JSON
+$ yum install perl-Catalyst-View-TT
+$ yum install perl-Test-WWW-Mechanize-Catalyst
+$ yum install perlbrew
+
+
+# [[[ UBUNTU, INSTALL HAND-COMPILED PERL, OR PERLBREW & CPANMINUS; COPIED FROM RPERL INSTALL DOC ]]]
+# [[[ DO NOT MIX WITH LOCAL::LIB ]]]
+$ wget http://www.cpan.org/src/5.0/perl-5.20.1.tar.bz2; bunzip2 perl-5.20.1.tar.bz2; cd perl-5.20.1; perl Makefile.PL; make; make test; make install
+# OR
+$ sudo apt-get install perlbrew
+# OR
+$ curl -L http://install.perlbrew.pl | bash
+$ perlbrew init
+$ perlbrew mirror  # Arlington, TX #222 http://mirror.uta.edu/CPAN/
+$ echo 'source ~/perl5/perlbrew/etc/bashrc' >> ~/.bashrc
+$ source ~/.bashrc; set | grep perl5
+    # ensure the following 3 environmental variables are updated to include ~/perl5: 
+    # PERLBREW_MANPATH, PERLBREW_PATH, PERLBREW_ROOT
+$ perlbrew install perl-5.20.1
+$ perlbrew use perl-5.20.1  # TEMPORARY
+$ perlbrew switch perl-5.20.1  # PERMANENT
+$ perlbrew install-cpanm
+
+
+# [[[ UBUNTU, INSTALL CPANM & LOCAL::LIB; COPIED FROM RPERL INSTALL DOC ]]]
+# [[[ DO NOT MIX WITH PERLBREW ]]]
+# ROOT
+$ apt-get install curl
+# NOT ROOT
+$ curl -L cpanmin.us | perl - -l $HOME/perl5 App::cpanminus local::lib
+$ echo 'eval $(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)' >> ~/.bashrc
+$ source ~/.bashrc  # optionally logout & login
+$ set | grep perl5
+    # ensure the following 4 environmental variables are updated to include ~/perl5: 
+    # PERL_MM_OPT, PERL_MB_OPT, PERL5LIB, PATH
+
+
+# [[[ CENTOS, INSTALL CATALYST ]]]
+# [[[ UBUNTU, INSTALL CATALYST TUTORIAL ]]]
+$ cpanm Template
+$ cpanm Task::Catalyst::Tutorial
+# OR FOR FIREWALLED NETWORKS
+$ cpanm --mirror http://cpan.msi.umn.edu/ Template
+$ cpanm --mirror http://cpan.msi.umn.edu/ Task::Catalyst::Tutorial
+
+
+# [[[ CHECK VERSIONS OF CATALYST ]]]
+$ dpkg -p libcatalyst-perl
+    # v5.90002 tutorial; v5.80022 Ubuntu v10.04.4; v5.90007 Ubuntu v12.04.3; v5.90007 Ubuntu v12.04.4; v5.90053 Ubuntu v14.04.1
+$ perl -V
+    # read list of @INC dirs
+$ mkdir -p ANY_INC_DIRS_THAT_DO_NOT_YET_EXIST
+$ perl -MCatalyst::Runtime\ 999
+$ perl -MCatalyst::Devel\ 999
+    # v1.34 tutorial; v1.36 Ubuntu v12.04.4; v1.39 Ubuntu v14.04.1
+$ perl -MDBIx::Class\ 999
+    # v0.08195 tutorial; v0.08196 Ubuntu v12.04.4; v0.08250 Ubuntu v14.04.1
+$ perl -MCatalyst::Model::DBIC::Schema\ 999
+    # v0.54 tutorial; v0.49 Ubuntu v12.04.4; v0.61 Ubuntu v14.04.1
+$ perl -MHTML::FormFu\ 999
+    # >= v0.09004; v0.09004 Ubuntu v12.04.4; v1.0 Ubuntu v14.04.1
+$ perl -MTemplate\ 999
+    # v2.22 Tutorial; v2.25 Ubuntu v12.04.4; v2.24 Ubuntu v14.04.1
+$ perl -MDBD::mysql\ 999
+    # >= v4.020; v4.020 Ubuntu v12.04.4; v4.025 ubuntu v14.04.1
+$ perl -MTask::Catalyst::Tutorial\ 999
+    # >= v0.06; v0.06 Ubuntu v12.04.4
+
+
+# [[[ UBUNTU IN VIRTUALBOX, INSTALL VIRTUALBOX GUEST ADDITIONS ]]]
+$ apt-get install dkms
+# download VBoxGuestAdditions.iso from http://download.virtualbox.org/virtualbox/
+$ cd MOUNTED_DIR; sh ./VBoxLinuxAdditions.run
+
+
+# [[[ SHINYCMS FROM GITHUB & LATEST CATALYST FROM CPAN ]]]
+# Prerequisites: LAMP, mod_perl, Postfix; Catalyst will be installed from CPAN
+$ sudo apt-get install expat libexpat1-dev libxml2-dev zlib1g-dev
+$ mysql --user=root --password  # required for DBD::mysql `make test`
+    mysql> GRANT ALL PRIVILEGES ON test.* TO 'SOMEBODY'@'localhost' IDENTIFIED BY 'MYSQL_TEMP_PASSWORD';  # WRONGLY CREATES PASSWORD
+    mysql> GRANT ALL PRIVILEGES ON test.* TO 'SOMEBODY'@'localhost';
+    mysql> QUIT
+$ cpanm DBD::mysql Devel::Declare::MethodInstaller::Simple Text::CSV_XS inc::Module::Install Module::Install::Catalyst
+$ mkdir ShinyCMS-latest; git clone https://github.com/denny/ShinyCMS.git ShinyCMS-latest
+$ cd ShinyCMS-latest; perl Makefile.PL; make; make test; make install  # CPANPLUS FAILS
+$ cd ShinyCMS-latest; perl Makefile.PL
+$ cpanm --installdeps .  # RUN TWICE TO MAKE SURE ALL DEPENDENCIES ARE MET
+# CREATE TEST DEMO APP
+$ mysql --user=root --password
+    mysql> CREATE DATABASE shinycms_testdb_00;
+    mysql> GRANT ALL PRIVILEGES ON shinycms_testdb_00.* TO 'shinycms_user_00'@'localhost' IDENTIFIED BY 'MYSQL_SHINY_PASSWORD_00';
+$ vi shinycms.conf
+    <Model::DB>
+            schema_class ShinyCMS::Schema
+            <connect_info>
+                    dsn        dbi:mysql:shinycms_testdb_00
+                    user       shinycms_user_00
+                    password   shinycms_pass_00
+                    ...
+            </connect_info>
+    </Model::DB>
+$ ./bin/database/build  # NO DEMO DATA
+$ ./bin/database/build-with-demo-data  # YES DEMO DATA
+$ make; make test
+$ ./script/shinycms_server.pl  # admin/changeme
+# BACKUP & RESTORE DATABASE
+$ mysqldump --user=shinycms_user_00 --password=shinycms_pass_00 shinycms_testdb_00 --lock-all-tables --ignore-table=shinycms_testdb_00.user > shinycms_testdb_00__no_user.sql  # NO USER, BACKUP
+$ mysql --user=root --password
+    mysql> CREATE DATABASE shinycms_testdb_00;  # NO USER, CREATE EMPTY DB TO RECEIVE RESTORE
+$ mysql --user=shinycms_user_00 --password=shinycms_pass_00 shinycms_testdb_00 < shinycms_testdb_00__no_user.sql  # NO USER TABLE, YES MYSQL USER, RESTORE 
+# CONFIGURE APACHE MOD_PERL
+$ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
+    # DOMAIN
+    <VirtualHost *:80>
+        ServerName SOMEDOMAIN.COM
+        ServerAlias www.SOMEDOMAIN.COM
+        ServerAdmin webmaster@SOMEDOMAIN.COM
+        DocumentRoot /srv/www/SOMEDOMAIN.COM/public_html/
+        <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre
+            Require all granted
+        </Directory>
+        ErrorLog /srv/www/SOMEDOMAIN.COM/logs/error.log
+        CustomLog /srv/www/SOMEDOMAIN.COM/logs/access.log combined
+        <Perl>
+            use lib '/home/SOMEBODY/public_html/SOMEDOMAIN-latest/lib';  # ShinyCMS
+            use lib '/home/SOMEBODY/perl5/lib/perl5';  # local::lib
+        </Perl>
+    #   PerlRequire     /home/example.com/code/ShinyCMS/startup.pl  # handled by 'use lib' code above 
+        PerlModule      ShinyCMS
+        Alias   /static     /home/SOMEBODY/public_html/SOMEDOMAIN-latest/root/static
+        <Location />
+            SetHandler          modperl 
+            PerlResponseHandler +ShinyCMS
+        </Location>
+        <Location /static>
+            SetHandler  default-handler
+        </Location>
+    </VirtualHost>
+    # OR
+    # SUBDOMAIN
+    <VirtualHost *:80>
+        ServerName SUB.SOMEDOMAIN.COM
+        ServerAdmin webmaster@SOMEDOMAIN.COM
+        DocumentRoot /srv/www/SUB.SOMEDOMAIN.COM/public_html/
+        <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre
+            Require all granted
+        </Directory>
+        ErrorLog /srv/www/SUB.SOMEDOMAIN.COM/logs/error.log
+        CustomLog /srv/www/SUB.SOMEDOMAIN.COM/logs/access.log combined
+        <Perl>
+            use lib '/home/SOMEBODY/public_html/SOMEDOMAIN-latest/lib';  # ShinyCMS
+            use lib '/home/SOMEBODY/perl5/lib/perl5';  # local::lib
+        </Perl>
+    #   PerlRequire     /home/SOMEBODY/public_html/SOMEDOMAIN-latest/startup.pl  # handled by 'use lib' code above 
+        PerlModule      ShinyCMS
+        Alias   /static     /home/SOMEBODY/public_html/SOMEDOMAIN-latest/root/static
+        <Location />
+            SetHandler          modperl 
+            PerlResponseHandler +ShinyCMS
+        </Location>
+        <Location /static>
+            SetHandler  default-handler
+        </Location>
+    </VirtualHost>
+# CONFIGURE APACHE MOD_FASTCGI
+$ cpanm FCGI FCGI::ProcManager  # NOT ROOT IF local::lib
+$ vi /etc/apt/sources.list
+    deb http://us.archive.ubuntu.com/ubuntu/ trusty multiverse
+    deb-src http://us.archive.ubuntu.com/ubuntu/ trusty multiverse
+$ apt-get update
+$ apt-get -f install
+$ apt-get install libapache2-mod-fastcgi
+$ a2enmod fastcgi
+$ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
+    <VirtualHost *:80>
+        ServerName SOMEDOMAIN.COM
+        ServerAlias www.SOMEDOMAIN.COM
+        ServerAdmin webmaster@SOMEDOMAIN.COM
+    #    DocumentRoot /srv/www/SOMEDOMAIN.COM/public_html/  # mod_fastcgi overrides below
+        <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre
+            Require all granted
+        </Directory>
+        ErrorLog /srv/www/SOMEDOMAIN.COM/logs/error.log
+        CustomLog /srv/www/SOMEDOMAIN.COM/logs/access.log combined
+    # MOD_FASTCGI
+        DocumentRoot    /home/SOMEBODY/public_html/SOMEDOMAIN.COM-latest/root
+        <Location />
+            Order allow,deny
+            Allow from all
+        </Location>
+        # Allow Apache to serve static content.
+        Alias       /static     /home/SOMEBODY/public_html/SOMEDOMAIN.COM-latest/root/static
+        <Location /static>
+            SetHandler          default-handler
+        </Location>
+        # Display friendly error page if the FastCGI process is not running.
+        ErrorDocument   502     /home/SOMEBODY/public_html/SOMEDOMAIN.COM-latest/root/offline.html
+        # Connect to the external server.
+        FastCgiExternalServer   /tmp/SOMEDOMAIN.COM.fcgi -socket /tmp/SOMEDOMAIN.COM.socket
+        Alias           /       /tmp/SOMEDOMAIN.COM.fcgi/
+    </VirtualHost>
+$ cd /home/SOMEBODY/public_html/SOMEDOMAIN-latest
+$ vi modified/offline.html
+    <b>ERROR 502:</b> FastCGI Process Not Running, Please Inform Site Administrator <a href="mailto:SOMEBODY@SUBDOMAIN.SOMEDOMAIN.COM">ADMIN NAME</a>
+$ cd root
+$ ln -s ../modified/offline.html ./offline.html
+$ cd ../bin
+$ mv external-fastcgi-server ../modified/
+$ ln -s ../modified/external-fastcgi-server ./external-fastcgi-server
+$ vi /home/SOMEBODY/public_html/SOMEDOMAIN-latest/bin/external-fastcgi-server
+    # Start an external fastcgi server, 3 processes, listening on the specified socket path
+    script/shinycms_fastcgi.pl -d \
+        -n 3 \
+        -l /tmp/SOMEDOMAIN.COM.socket \
+        -p /tmp/SOMEDOMAIN.COM.pid
+$ cd /home/SOMEBODY/public_html/SOMEDOMAIN-latest  # MUST RUN FASTCGI FROM THIS DIR
+$ /home/SOMEBODY/public_html/SOMEDOMAIN-latest/bin/external-fastcgi-server  # LOCAL::LIB, RUN AS USER SOMEBODY BY USER SOMEBODY
+# OR
+$ sudo -Eu SOMEBODY /home/SOMEBODY/public_html/SOMEDOMAIN-latest/bin/external-fastcgi-server  # PERLBREW, RUN AS USER SOMEBODY BY USER root
+$ cat /tmp/SOMEDOMAIN.COM.pid
+# CREATE APACHE DIRECTORIES
+$ mkdir -p /srv/www/SOMEDOMAIN.COM/public_html
+$ mkdir /srv/www/SOMEDOMAIN.COM/logs
+$ vi /srv/www/SOMEDOMAIN.COM/public_html/index.html  # create static test page
+    SOMEDOMAIN.COM STATIC PAGE
+$ a2ensite SOMEDOMAIN.COM
+# CONFIGURE APACHE PERMISSIONS
+$ vi /etc/group  # allow SOMEBODY user to modify permissions
+    www-data:x:33:SOMEBODY
+$ chown -R SOMEBODY:www-data /home/SOMEBODY/public_html/SOMEDOMAIN-latest
+$ chmod -R u+rwX /home/SOMEBODY/public_html/SOMEDOMAIN-latest
+$ chmod -R g+rwX /home/SOMEBODY/public_html/SOMEDOMAIN-latest/root/static/cms-uploads/
+$ chmod -R g+rX /home/SOMEBODY/public_html/SOMEDOMAIN-latest
+$ chmod -R o-rwx /home/SOMEBODY/public_html/SOMEDOMAIN-latest
+$ service apache2 reload
+# CONFIGURE SHINY
+$ vi shinycms.conf
+    Update all e-mail addresses
+# Login as admin -> Admin area -> Pages -> List form handlers -> Edit Contact Form -> Update "Email to" Field
+
+
+# [[[ RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]
+$ mkdir RapidApp-latest; git clone https://github.com/vanstyn/RapidApp.git RapidApp-latest  # NO MAKEFILE ON GITHUB, CAN'T MAKE OR INSTALL!
+# OR
+$ mysql --user=root --password  # required for DBD::mysql `make test` 
+    mysql> GRANT ALL PRIVILEGES ON test.* TO 'SOMEBODY'@'localhost';
+$ cpanm DBD::mysql MooseX::NonMoose RapidApp
+$ mkdir ~/public_html; cd ~/public_html
+$ rapidapp.pl --helpers RapidDbic,Templates,TabGui,AuthCore,NavCore RapidApp_phpmyadmin_database -- --dsn dbi:mysql:database=phpmyadmin,root,'ROOTPASS'
+$ cd RapidApp_phpmyadmin_database; perl Makefile.PL; make; make test
+$ ~/public_html/RapidApp_phpmyadmin_database/script/rapidapp_phpmyadmin_database_server.pl  # admin, pass
+# BlueBox demo app
+$ cd; mkdir BlueBox-latest; git clone https://github.com/vanstyn/BlueBox.git BlueBox-latest
+$ cd BlueBox-latest; perl Makefile.PL; cpanm --installdeps .  # NO MAKE OR TEST
+$ script/bluebox_server.pl  # admin/pass
+
+
+# [[[ MOODLE FROM GITHUB ]]]
+$ apt-get install curl libcurl3 libcurl3-gnutls php5-curl graphviz
+$ cd public_html
+$ mkdir -p SOMEDOMAIN-latest/moodle SOMEDOMAIN-latest/moodledata
+$ git clone --depth=1 -b MOODLE_27_STABLE --single-branch git://git.moodle.org/moodle.git SOMEDOMAIN-latest/moodle
+# CONFIGURE MYSQL
+$ mysql --user=root --password
+    mysql> CREATE DATABASE subdomain_somedomain_com_moodle DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+    mysql> GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,CREATE TEMPORARY TABLES,DROP,INDEX,ALTER ON subdomain_somedomain_com_moodle.* TO subsomedomain_user@localhost IDENTIFIED BY 'MYSQL_SUBDOMAIN_PASSWORD';  # BROKEN, causes LOCK TABLES error during mysqldump
+    mysql> GRANT ALL PRIVILEGES ON subdomain_somedomain_com_moodle.* TO subsomedomain_user@localhost IDENTIFIED BY 'MYSQL_SUBDOMAIN_PASSWORD';
+# CONFIGURE APACHE
+$ vi /etc/group  # allow SOMEBODY user to modify permissions
+    www-data:x:33:SOMEBODY
+$ chown -R SOMEBODY:www-data /home/SOMEBODY/public_html/SOMEDOMAIN-latest
+$ chmod -R a-rwx /home/SOMEBODY/public_html/SOMEDOMAIN-latest
+$ chmod -R u+rwX /home/SOMEBODY/public_html/SOMEDOMAIN-latest
+$ chmod -R g+rX /home/SOMEBODY/public_html/SOMEDOMAIN-latest
+$ chmod -R g+rwX /home/SOMEBODY/public_html/SOMEDOMAIN-latest/moodledata
+$ chmod -R o-rwx /home/SOMEBODY/public_html/SOMEDOMAIN-latest
+# ENABLE MOODLE IN APACHE; simply place moodle files in Apache serving path
+$ cd /srv/www/SOMEDOMAIN.COM; mv public_html public_html.static; ln -s /home/SOMEBODY/public_html/SOMEDOMAIN-latest/moodle ./public_html
+# INSTALL MOODLE
+$ cd /home/SOMEBODY/public_html/SOMEDOMAIN-latest/moodle/admin/cli
+$ php ./install.php
+    # RE-RUN chmod's ABOVE
+# Browser SOMEDOMAIN.COM -> Login -> Administration -> Site administration -> Plugins -> Message Outputs -> Email
+# Browser SOMEDOMAIN.COM -> Login -> Administration -> Site administration -> Server -> System paths
+$ sudo -u www-data /usr/bin/php /home/SOMEBODY/public_html/SOMEDOMAIN-latest/moodle/admin/cli/cron.php  # TEST CRON JOB
+$ crontab -u www-data -e
+    */1 * * * * /usr/bin/php  /home/SOMEBODY/public_html/SOMEDOMAIN-latest/moodle/admin/cli/cron.php >/dev/null
+$ vi /etc/postfix/main.cf
+    relay_domains = gmail.com USERDOMAIN1.COM USERDOMAIN2.COM # ADD ALL DOMAINS FROM MOODLE USER PROFILE E-MAILS
+$ service postfix reload
