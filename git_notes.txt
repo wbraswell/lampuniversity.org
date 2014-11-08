@@ -4,13 +4,13 @@ Copyright (c) 2014 William N. Braswell, Jr.
 # [[[ SET UP SSH KEYS ]]]
 # https://help.github.com/articles/generating-ssh-keys
 $ cd ~/.ssh;  ls -la  # skip next step if id_rsa.pub or id_dsa.pub files exist
-$ ssh-keygen -t rsa -C "USER@DOMAIN.com";  eval `ssh-agent -s`;  ssh-add ~/.ssh/id_rsa;  ssh-agent -k
+$ ssh-keygen -t rsa -C "GITHUB_ACCOUNT_EMAIL_ADDRESS";  eval `ssh-agent -s`;  ssh-add ~/.ssh/id_rsa;  ssh-agent -k
     # DO create secure key passphrase
 $ sudo apt-get install keychain
 $ echo '/usr/bin/keychain $HOME/.ssh/id_rsa;  source $HOME/.keychain/$HOSTNAME-sh' >> ~/.bashrc;  source ~/.bashrc
 $ reset;  cat ~/.ssh/id_rsa.pub  # copy to clipboard
 # browse to https://github.com/settings/ssh
-# click "Add SSH Key", paste, save
+# click "Add SSH Key", paste, title LINUXUSERNAME@LINUXMACHINENAME, save
 $ ssh -T git@github.com  # confirm greeting, requires passphrase
 # manually create github repository via webui, if not already done
 
