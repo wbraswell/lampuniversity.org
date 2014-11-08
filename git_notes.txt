@@ -1,0 +1,97 @@
+Git Notes 20141107 2014.311
+Copyright (c) 2014 William N. Braswell, Jr.
+
+# [[[ SET UP SSH KEYS ]]]
+# https://help.github.com/articles/generating-ssh-keys
+$ cd ~/.ssh;  ls -la  # skip next step if id_rsa.pub or id_dsa.pub files exist
+$ ssh-keygen -t rsa -C "USER@DOMAIN.com";  eval `ssh-agent -s`;  ssh-add ~/.ssh/id_rsa;  ssh-agent -k
+$ sudo apt-get install keychain
+$ echo '/usr/bin/keychain $HOME/.ssh/id_rsa;  source $HOME/.keychain/$HOSTNAME-sh' >> ~/.bashrc;  source ~/.bashrc
+$ reset;  cat ~/.ssh/id_rsa.pub  # copy to clipboard
+# browse to https://github.com/settings/ssh
+# click "Add SSH Key", paste, save
+$ ssh -T git@github.com  # confirm greeting, requires passphrase
+# manually create github repository via webui, if not already done
+
+# [[[ GET STARTED, REMOTE -> LOCAL -> REMOTE, WITHOUT AUTOMATIC REPOSITORY INITIALIZATION BY GITHUB ]]]
+$ cd GIT_REPOS_DIR
+$ git init
+$ git add .
+$ git commit -m "INITIAL COMMIT MESSAGE"
+$ git remote add origin URL_FROM_GITHUB
+$ git pull origin master
+$ git push origin master
+
+# [[[ GET STARTED, REMOTE -> LOCAL -> REMOTE, WITH AUTOMATIC REPOSITORY INITIALIZATION BY GITHUB ]]]
+$ git clone URL_FROM_GITHUB ./GIT_REPOS_DIR
+$ cd GIT_REPOS_DIR
+$ git fetch
+$ git pull
+$ git checkout gh-pages  # ONLY IF USING GITHUB PAGES
+$ git reset --hard origin/gh-pages  # ONLY IF USING GITHUB PAGES
+
+# [[[ UPDATE CODE CHANGES, LOCAL -> REMOTE ]]]
+$ git add -A
+$ git commit -a
+$ git push origin master
+
+# [[[ UPDATE GITHUB PAGES, LOCAL -> REMOTE ]]]
+$ git checkout -b gh-pages  # CREATES LOCAL BRANCH
+$ git checkout gh-pages
+	# NOW MANUALLY EDIT WEB PAGE FILES 
+$ git add -A
+$ git commit -a
+$ git push origin gh-pages
+$ git checkout master
+
+# [[[ CREATE NEW BRANCH, LOCAL -> REMOTE -> LOCAL -> REMOTE ]]]
+$ cd GIT_REPOS_DIR
+$ git checkout -b NEW_BRANCH
+$ git push origin NEW_BRANCH
+	# NOW MANUALLY EDIT NEW BRANCH FILES, OTHER COLLABORATORS
+$ git pull origin NEW_BRANCH
+    # NOW MANUALLY EDIT NEW BRANCH FILES, ADD AUTO-GENERATED FILES TO .gitignore AS NEEDED
+$ git status
+$ git diff
+    # NOW MANUALLY CONFIRM CODE CHANGES ARE ALL PUSH-WORTHY
+$ git add -A
+$ git commit -a
+$ git push origin NEW_BRANCH
+
+# [[[ MERGE NEW BRANCH BACK INTO MASTER BRANCH ]]]
+$ cd GIT_REPOS_DIR
+$ git checkout NEW_BRANCH
+$ git status
+    On branch NEW_BRANCH
+    nothing to commit (working directory clean)
+$ git rebase master  # NOTE: automatically update new branch to be based on latest master branch
+    Current branch NEW_BRANCH is up to date.
+$ git checkout master
+    Switched to branch 'master'
+$ git pull . NEW_BRANCH
+    From .  * branch ... NEW_BRANCH -> FETCH_HEAD
+    Updating ...  Fast-forward ETC ETC
+$ git log
+    # NOW MANUALLY CONFIRM LOG CHANGES ARE PUSH-WORTHY
+$ git push origin master
+    Total 0 (delta 0), reused 0 (delta 0)
+    To git@github.com:USER_NAME/PROJECT_NAME.git
+       ...  master -> master
+$ git branch -D NEW_BRANCH  # WARNING: hard delete!
+    Deleted branch NEW_BRANCH (was ...).
+$ git push origin :NEW_BRANCH
+    To git@github.com:USER_NAME/PROJECT_NAME.git
+     - [deleted]         NEW_BRANCH
+
+# [[[ FIX BROKEN LOCAL GH-PAGES REPO, THROW AWAY LOCAL CODE AND REPLACE WITH ALL REMOTE CODE ]]]
+$ git fetch
+$ git checkout gh-pages
+$ git reset --hard origin/gh-pages
+
+# [[[ REVERT TO 3 COMMITS AGO, WITHOUT LOSING CURRENT WORK ]]]
+$ git reset HEAD~3
+$ git diff
+$ vi TO_EDIT_DIFFS
+$ git add -A
+$ git commit -a
+$ git push origin INSERT_BRANCH
