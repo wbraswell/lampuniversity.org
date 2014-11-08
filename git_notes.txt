@@ -12,6 +12,8 @@ $ reset;  cat ~/.ssh/id_rsa.pub  # copy to clipboard
 # browse to https://github.com/settings/ssh
 # click "Add SSH Key", paste, title LINUXUSERNAME@LINUXMACHINENAME, save
 $ ssh -T git@github.com  # confirm greeting, requires passphrase
+$ git config --global user.email "GITHUB_ACCOUNT_EMAIL_ADDRESS"
+$ git config --global user.name "FIRSTNAME LASTNAME"
 # manually create github repository via webui, if not already done
 
 # [[[ GET STARTED, REMOTE -> LOCAL -> REMOTE, WITHOUT AUTOMATIC REPOSITORY INITIALIZATION BY GITHUB ]]]
@@ -26,14 +28,13 @@ $ git push origin master
 # [[[ GET STARTED, REMOTE -> LOCAL -> REMOTE, WITH AUTOMATIC REPOSITORY INITIALIZATION BY GITHUB ]]]
 $ git clone URL_FROM_GITHUB ./GITHUB_REPO_NAME-latest
 $ cd GITHUB_REPO_NAME-latest
-$ git fetch
-$ git pull
 $ git checkout gh-pages  # ONLY IF USING GITHUB PAGES
 $ git reset --hard origin/gh-pages  # ONLY IF USING GITHUB PAGES
 
 # [[[ UPDATE CODE CHANGES, LOCAL -> REMOTE ]]]
 $ git add -A
 $ git commit -a
+    # Major Comment, Minor Comments
 $ git push origin master
 
 # [[[ UPDATE GITHUB PAGES, LOCAL -> REMOTE ]]]
