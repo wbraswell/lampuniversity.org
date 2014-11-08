@@ -14,6 +14,7 @@ $ reset;  cat ~/.ssh/id_rsa.pub  # copy to clipboard
 $ ssh -T git@github.com  # confirm greeting, requires passphrase
 $ git config --global user.email "GITHUB_ACCOUNT_EMAIL_ADDRESS"
 $ git config --global user.name "FIRSTNAME LASTNAME"
+$ git config --global core.editor "vim"
 # manually create github repository via webui, if not already done
 
 # [[[ GET STARTED, REMOTE -> LOCAL -> REMOTE, WITHOUT AUTOMATIC REPOSITORY INITIALIZATION BY GITHUB ]]]
