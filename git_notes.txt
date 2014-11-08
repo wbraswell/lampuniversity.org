@@ -35,7 +35,7 @@ $ git reset --hard origin/gh-pages  # ONLY IF USING GITHUB PAGES
 # [[[ UPDATE CODE CHANGES, LOCAL -> REMOTE ]]]
 $ git add -A
 $ git commit -a
-    # Major Comment, Minor Comments
+    # (Initial Commit;) Major Comment, Minor Comments
 $ git push origin master
 
 # [[[ UPDATE GITHUB PAGES, LOCAL -> REMOTE ]]]
