@@ -36,7 +36,7 @@ $ vi /etc/hosts  # modify localhost entry, public entry if present
     127.0.1.1       SUBDOMAIN_OR_SOMEDOMAIN  # === EDIT THIS LINE TO BE YOUR LOCAL HOSTNAME ===
     # === REMOVE LOCAL HOSTNAME IF APPEARING BELOW ===
     XXX.YYY.ZZZ.YYY                  SUBDOMAIN.SOMEDOMAIN.COM  # godaddy DNS A record
-$ vi /etc/hostname  # enter real hostname, no underscores only hyphens, single word not FQDN
+$ vi /etc/hostname  # enter real dot-separated FQDN, or single word if no real FQDN
 $ vi /etc/network/interfaces  # append following
     dns-nameservers 8.8.8.8 8.8.4.4
 $ reboot
@@ -46,6 +46,7 @@ $ cat /etc/resolv.conf  # confirm following
 
 
 # [[[ UBUNTU, UPDATE OPERATING SYSTEM PACKAGES ]]]
+$ locale-gen en_US.UTF-8; dpkg-reconfigure locales  # fix "perl: warning: Setting locale failed."
 $ apt-get update
 $ apt-get upgrade
 $ apt-get -f install  # confirm no errors, only non-upgraded packages allowable
@@ -56,7 +57,7 @@ $ apt-get -f install  # confirm nothing to upgrade
 $ apt-get upgrade  # confirm nothing to upgrade
 $ reboot
 # CHEAT!!!
-    apt-get update; apt-get -y upgrade; aptitude -y safe-upgrade; apt-get -f install; reboot
+    apt-get update; apt-get -y upgrade; apt-get -y install aptitude; aptitude -y safe-upgrade; apt-get -f install; reboot
 $ apt-get install vim
 $ apt-get install linuxlogo
 $ apt-get install git
