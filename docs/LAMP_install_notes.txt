@@ -1,4 +1,4 @@
-LAMP Install Notes 20141107 2014.311
+LAMP Install Notes 20141111 2014.315
 Copyright (c) 2014 William N. Braswell, Jr.
 
 Fresh Ubuntu v14.04.1 (Trusty Tahr) from CloudAtCost.com or HostGator.com
@@ -25,7 +25,6 @@ $ ssh-keygen  # if not already done in the past
 $ ssh-copy-id SOMEBODY@SUBDOMAIN.SOMEDOMAIN.COM
 $ ssh SOMEBODY@SUBDOMAIN.SOMEDOMAIN.COM  # may be prompted once to unlock keyring, then passwordless
 $ scp ~/.vimrc ~/.gitconfig SUBDOMAIN.SOMEDOMAIN.COM:~/
-$ scp SUBDOMAIN.SOMEDOMAIN.COM:~/
 
 
 # [[[ UBUNTU, CONFIGURE CLOUD NETWORKING ]]]
@@ -62,6 +61,7 @@ $ apt-get install vim
 $ apt-get install linuxlogo
 $ apt-get install git
 $ apt-get install lynx
+$ apt-get install screen
 $ apt-get install xterm  # trigger installation of X windows
 $ apt-get install x11-apps  # contains xeyes for basic X testing
 $ apt-get install gkrellm
@@ -71,7 +71,7 @@ $ apt-get install update-manager
 $ apt-get install xpra
 $ apt-get install clamav clamav-daemon
 # CHEAT!!!
-    apt-get -y install vim linuxlogo git lynx xterm x11-apps gkrellm xchat firefox update-manager xpra clamav clamav-daemon
+    apt-get -y install vim linuxlogo git lynx screen xterm x11-apps gkrellm xchat firefox update-manager xpra clamav clamav-daemon
 # CLAMAV ANTI-VIRUS
 $ freshclam
 $ clamscan -r /home
