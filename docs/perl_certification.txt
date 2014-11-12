@@ -1,0 +1,91 @@
+Auto-Parallel Technologies, Inc.
+LAMP University
+Perl Certification & Degree Requirements
+
+
+LEVEL 1 CERTIFIED:
+
+Learning Perl, 6th Edition
+http://shop.oreilly.com/product/0636920018452.do
+
+Learning Perl Student Workbook, 2nd Edition
+http://shop.oreilly.com/product/0636920018469.do
+
+
+LEVEL 2 CERTIFIED:
+
+Intermediate Perl, 2nd Edition
+http://shop.oreilly.com/product/0636920012689.do
+
+Perl Pocket Reference, 5th Edition
+http://shop.oreilly.com/product/0636920018476.do
+
+
+<<< ASSOCIATE DEGREE IN PERL >>>
+
+
+LEVEL 3 CERTIFIED:
+
+Mastering Perl, 2nd Edition
+http://shop.oreilly.com/product/0636920012702.do
+
+
+LEVEL 4 CERTIFIED:
+
+Perl Best Practices
+http://shop.oreilly.com/product/9780596001735.do
+
+Learning RPerl
+http://www.rperl.org
+
+
+<<< BACHELOR'S DEGREE IN PERL >>>
+
+
+LEVEL 5 CERTIFIED:
+
+Programming Perl, 4th Edition
+http://shop.oreilly.com/product/9780596004927.do
+
+
+LEVEL 6 CERTIFIED:
+
+Advanced Perl Programming, 2nd Edition
+http://shop.oreilly.com/product/9780596004569.do
+
+
+<<< MASTER'S DEGREE IN PERL >>>
+
+
+LEVEL 7 CERTIFIED:
+
+Prerequisite: Linux Certification Level 3
+
+Automating System Administration with Perl, 2nd Edition
+http://shop.oreilly.com/product/9780596006396.do
+
+
+LEVEL 8 CERTIFIED:
+
+Elective material, choose any of the remaining books with an animal on the cover:
+http://shop.oreilly.com/category/browse-subjects/programming/perl.do
+
+
+LEVEL 9 CERTIFIED:
+
+Real-life thesis project, to be selected with the assistance of the LAMP University professor.
+
+
+<<< DOCTORATE DEGREE IN PERL >>>
+
+
+LEVEL 10 CERTIFIED:
+
+Elective material, choose any of the remaining books with an animal on the cover:
+http://shop.oreilly.com/category/browse-subjects/programming/perl.do
+
+Real-life thesis project, to be selected with the assistance of the LAMP University professor.
+
+
+<<< POSTDOCTORAL FELLOWSHIP IN PERL >>>
+

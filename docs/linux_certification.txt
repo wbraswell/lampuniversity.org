@@ -1,0 +1,88 @@
+Auto-Parallel Technologies, Inc.
+LAMP University
+Linux Certification & Degree Requirements
+
+
+LEVEL 1 CERTIFIED:
+
+Ubuntu: Up and Running
+http://shop.oreilly.com/product/9780596804855.do
+
+
+LEVEL 2 CERTIFIED:
+
+Learning the vi and Vim Editors, 7th Edition
+http://shop.oreilly.com/product/9780596529833.do
+
+Linux Pocket Guide, 2nd Edition
+http://shop.oreilly.com/product/0636920023029.do
+
+
+<<< ASSOCIATE DEGREE IN LINUX >>>
+
+
+LEVEL 3 CERTIFIED:
+
+Learning the bash Shell, 3rd Edition
+http://shop.oreilly.com/product/9780596009656.do
+
+vi and Vim Editors Pocket Reference, 2nd Edition
+http://shop.oreilly.com/product/0636920010913.do
+
+
+LEVEL 4 CERTIFIED:
+
+Linux in a Nutshell, 6th Edition
+http://shop.oreilly.com/product/9780596154493.do
+
+
+<<< BACHELOR'S DEGREE IN LINUX >>>
+
+
+LEVEL 5 CERTIFIED:
+
+Linux System Programming, 2nd Edition
+http://shop.oreilly.com/product/0636920026891.do
+
+
+LEVEL 6 CERTIFIED:
+
+Debian 7: System Administration Best Practices
+http://shop.oreilly.com/product/9781783283118.do
+
+SELinux System Administration
+http://shop.oreilly.com/product/9781783283170.do
+
+
+<<< MASTER'S DEGREE IN LINUX >>>
+
+
+LEVEL 7 CERTIFIED:
+
+Ubuntu Linux Toolbox: 1000+ Commands for Power Users, 2nd Edition
+http://shop.oreilly.com/product/9781118183526.do
+
+
+LEVEL 8 CERTIFIED:
+
+Elective material, to be selected with the assistance of the LAMP University professor:
+http://shop.oreilly.com/category/browse-subjects/system-administration/linux-unix.do
+
+
+LEVEL 9 CERTIFIED:
+
+Real-life thesis project, to be selected with the assistance of the LAMP University professor.
+
+
+<<< DOCTORATE DEGREE IN LINUX >>>
+
+
+LEVEL 10 CERTIFIED:
+
+Elective material, to be selected with the assistance of the LAMP University professor:
+http://shop.oreilly.com/category/browse-subjects/system-administration/linux-unix.do
+
+Real-life thesis project, to be selected with the assistance of the LAMP University professor.
+
+
+<<< POSTDOCTORAL FELLOWSHIP IN LINUX >>>
