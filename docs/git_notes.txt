@@ -1,4 +1,4 @@
-Git Notes 20141107 2014.311
+Git Notes 20141113 2014.317
 Copyright (c) 2014 William N. Braswell, Jr.
 
 # [[[ SET UP SSH KEYS ]]]
@@ -90,6 +90,13 @@ $ git push origin :NEW_BRANCH
 $ git fetch
 $ git checkout gh-pages
 $ git reset --hard origin/gh-pages
+
+# [[[ UNDO GIT ADD BEFORE GIT COMMIT ]]]
+# [ UNDO SINGLE FILE ADD ]
+$ git reset HEAD FILE_YOU_DIDNT_MEAN_TO_ADD  # "HEAD" is a real git keyword, do not change it
+# OR
+# [ UNDO ALL ADDS ]
+$ git reset HEAD
 
 # [[[ REVERT TO 3 COMMITS AGO, WITHOUT LOSING CURRENT WORK ]]]
 $ git reset HEAD~3

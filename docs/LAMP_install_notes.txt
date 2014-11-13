@@ -1,4 +1,4 @@
-LAMP Install Notes 20141111 2014.315
+LAMP Install Notes 20141113 2014.317
 Copyright (c) 2014 William N. Braswell, Jr.
 
 Fresh Ubuntu v14.04.1 (Trusty Tahr) from CloudAtCost.com or HostGator.com
@@ -216,7 +216,7 @@ $ vi /etc/apache2/sites-available/phpmyadmin.SOMEDOMAIN.COM.conf
          ErrorLog /srv/www/phpmyadmin.SOMEDOMAIN.COM/logs/error.log
          CustomLog /srv/www/phpmyadmin.SOMEDOMAIN.COM/logs/access.log combined
     </VirtualHost>
-$ mkdir -p /srv/www/phpmyadmin.SOMEDOMAIN.COM/logs;  ln -s /usr/share/phpmyadmin/ /srv/www/phpmyadmin.SOMEDOMAIN.COM/public_html 
+$ mkdir -p /srv/www/phpmyadmin.SOMEDOMAIN.COM/logs;  ln -s /usr/share/phpmyadmin/ /srv/www/phpmyadmin.SOMEDOMAIN.COM/public_html
 $ a2ensite phpmyadmin.SOMEDOMAIN.COM;  service apache2 reload
 # FIX MISSING MCRYPT ERROR
 $ updatedb
@@ -269,6 +269,7 @@ $ telnet localhost 25
     MAIL FROM:somebody@mysubdomain.somedomain.com
     RCPT TO:real@external.email.com
     DATA
+    Subject:Postfix Mail Server Test
     howdy howdy howdy
     .
     QUIT
