@@ -1,4 +1,4 @@
-LAMP Install Notes 20141113 2014.317
+LAMP Install Notes 20141114 2014.318
 Copyright (c) 2014 William N. Braswell, Jr.
 
 Fresh Ubuntu v14.04.1 (Trusty Tahr) from CloudAtCost.com or HostGator.com
@@ -389,33 +389,37 @@ $ mysql --user=root --password  # required for DBD::mysql `make test`
     mysql> QUIT
 $ cpanm DBD::mysql Devel::Declare::MethodInstaller::Simple Text::CSV_XS inc::Module::Install Module::Install::Catalyst
 # NEED FIX: SHINYCMS REPO DOESN'T FOLLOW DOMAIN NAMING SCHEME, CREATE SHINYCMSTEMPLATE.COM REPO ON GITHUB
-$ mkdir ShinyCMS-latest; git clone https://github.com/denny/ShinyCMS.git ShinyCMS-latest
-$ cd ShinyCMS-latest; perl Makefile.PL; make; make test; make install  # CPANPLUS FAILS
-$ cd ShinyCMS-latest; perl Makefile.PL
-$ cpanm --installdeps .  # RUN TWICE TO MAKE SURE ALL DEPENDENCIES ARE MET
+$ mkdir ~/public_html; cd ~/public_html
+$ git clone git@github.com:wbraswell/shinycmstemplate.com.git shinycmstemplate.com-latest
+$ cd shinycmstemplate.com-latest; perl Makefile.PL; make; make test; make install  # CPANPLUS FAILS, USE FOLLOWING COMMANDS INSTEAD
+$ cd shinycmstemplate.com-latest; perl Makefile.PL
+$ cpanm --installdeps .  # NOTE THE DOT AT THE END OF THIS COMMAND; RUN TWICE TO MAKE SURE ALL DEPENDENCIES ARE MET
 # CREATE TEST DEMO APP
 $ mysql --user=root --password
-    mysql> CREATE DATABASE shinycms_testdb_00;
-    mysql> GRANT ALL PRIVILEGES ON shinycms_testdb_00.* TO 'shinycms_user_00'@'localhost' IDENTIFIED BY 'MYSQL_SHINY_PASSWORD_00';
+    mysql> CREATE DATABASE shinycmstemplate_com;
+    mysql> GRANT ALL PRIVILEGES ON shinycmstemplate_com.* TO 'template_user'@'localhost' IDENTIFIED BY 'MYSQL_SHINYCMSTEMPLATE_PASS';
 $ vi shinycms.conf
     <Model::DB>
             schema_class ShinyCMS::Schema
             <connect_info>
-                    dsn        dbi:mysql:shinycms_testdb_00
-                    user       shinycms_user_00
-                    password   shinycms_pass_00
+                    dsn        dbi:mysql:shinycmstemplate_com
+                    user       template_user
+                    password   MYSQL_SHINYCMSTEMPLATE_PASS
                     ...
             </connect_info>
     </Model::DB>
 $ ./bin/database/build  # NO DEMO DATA
-$ ./bin/database/build-with-demo-data  # YES DEMO DATA
+$ ./bin/database/build-with-demo-data  # YES DEMO DATA, INCLUDING USER CREDENTIALS admin/changeme
 $ make; make test
-$ ./script/shinycms_server.pl  # admin/changeme
+$ ./script/shinycms_server.pl
+    # LOG IN AS ADMIN, CREDENTIALS admin/changeme
+    # CHANGE ALL PASSWORDS NOW!!!
+    # Admin area -> Users -> List users -> Change passwords for "admin" & "trevor" & "w1n5t0n"
 # BACKUP & RESTORE DATABASE
-$ mysqldump --user=shinycms_user_00 --password=shinycms_pass_00 shinycms_testdb_00 --lock-all-tables --ignore-table=shinycms_testdb_00.user > shinycms_testdb_00__no_user.sql  # NO USER, BACKUP
+$ mysqldump --user=template_user --password=MYSQL_SHINYCMSTEMPLATE_PASS shinycmstemplate_com --lock-all-tables --ignore-table=shinycmstemplate_com.user > shinycmstemplate_com__no_user.sql  # NO USER, BACKUP
 $ mysql --user=root --password
-    mysql> CREATE DATABASE shinycms_testdb_00;  # NO USER, CREATE EMPTY DB TO RECEIVE RESTORE
-$ mysql --user=shinycms_user_00 --password=shinycms_pass_00 shinycms_testdb_00 < shinycms_testdb_00__no_user.sql  # NO USER TABLE, YES MYSQL USER, RESTORE 
+    mysql> CREATE DATABASE shinycmstemplate_com;  # NO USER, CREATE EMPTY DB TO RECEIVE RESTORE
+$ mysql --user=template_user --password=MYSQL_SHINYCMSTEMPLATE_PASS shinycmstemplate_com < shinycmstemplate_com__no_user.sql  # NO USER TABLE, YES MYSQL USER, RESTORE 
 # CONFIGURE APACHE MOD_PERL
 $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
     # DOMAIN
@@ -510,18 +514,13 @@ $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
 $ cd /home/SOMEBODY/public_html/SOMEDOMAIN-latest
 $ vi modified/offline.html
     <b>ERROR 502:</b> FastCGI Process Not Running, Please Inform Site Administrator <a href="mailto:SOMEBODY@SUBDOMAIN.SOMEDOMAIN.COM">ADMIN NAME</a>
-$ cd root
-$ ln -s ../modified/offline.html ./offline.html
-$ cd ../bin
-$ mv external-fastcgi-server ../modified/
-$ ln -s ../modified/external-fastcgi-server ./external-fastcgi-server
-$ vi /home/SOMEBODY/public_html/SOMEDOMAIN-latest/bin/external-fastcgi-server
+$ vi bin/external-fastcgi-server
     # Start an external fastcgi server, 3 processes, listening on the specified socket path
     script/shinycms_fastcgi.pl -d \
         -n 3 \
         -l /tmp/SOMEDOMAIN.COM.socket \
         -p /tmp/SOMEDOMAIN.COM.pid
-$ cd /home/SOMEBODY/public_html/SOMEDOMAIN-latest  # MUST RUN FASTCGI FROM THIS DIR
+$ cd /home/SOMEBODY/public_html/SOMEDOMAIN-latest  # DOUBLE CHECK, MUST RUN FASTCGI FROM THIS DIR
 $ /home/SOMEBODY/public_html/SOMEDOMAIN-latest/bin/external-fastcgi-server  # LOCAL::LIB, RUN AS USER SOMEBODY BY USER SOMEBODY
 # OR
 $ sudo -Eu SOMEBODY /home/SOMEBODY/public_html/SOMEDOMAIN-latest/bin/external-fastcgi-server  # PERLBREW, RUN AS USER SOMEBODY BY USER root
@@ -535,18 +534,21 @@ $ a2ensite SOMEDOMAIN.COM
 # CONFIGURE APACHE PERMISSIONS
 $ vi /etc/group  # allow SOMEBODY user to modify permissions
     www-data:x:33:SOMEBODY
-$ chown -R SOMEBODY:www-data /home/SOMEBODY/public_html/SOMEDOMAIN-latest  # ERROR, STATIC IMAGES CANNOT BE READ BY WWW-DATA GROUP
 $ chown -R SOMEBODY:www-data /home/SOMEBODY/
 $ chmod -R u+rwX /home/SOMEBODY/public_html/SOMEDOMAIN-latest
 $ chmod -R g+rwX /home/SOMEBODY/public_html/SOMEDOMAIN-latest/root/static/cms-uploads/
-$ chmod -R g+rX /home/SOMEBODY/public_html/SOMEDOMAIN-latest  # ERROR, STATIC IMAGES CANNOT BE READ BY WWW-DATA GROUP
 $ chmod -R g+rX /home/SOMEBODY/
-$ chmod -R o-rwx /home/SOMEBODY/public_html/SOMEDOMAIN-latest
+$ chmod -R o+rX /home/SOMEBODY/public_html/SOMEDOMAIN-latest
+$ chmod -R o-w /home/SOMEBODY/public_html/SOMEDOMAIN-latest
 $ service apache2 reload
 # CONFIGURE SHINY
 $ vi shinycms.conf
     Update all e-mail addresses
-# Login as admin -> Admin area -> Pages -> List form handlers -> Edit Contact Form -> Update "Email to" Field
+# Login as admin
+# Admin area -> Users -> List users -> Change passwords for "admin" & "trevor" & "w1n5t0n" DOUBLE CHECK, SHOULD ALREADY BE DONE ABOVE
+# Admin area -> Pages -> List form handlers -> Edit Contact Form -> Update "Email to" Field
+# Admin area -> Pages -> List pages -> Edit Home -> Add image "homepage_added.png" & "Lorem Ipsum Dolor" text
+# Admin area -> Pages -> List templates -> Edit Home -> Delete "video_url" Element
 
 
 # [[[ RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]
