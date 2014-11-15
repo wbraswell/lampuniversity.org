@@ -3,7 +3,9 @@ Copyright (c) 2014 William N. Braswell, Jr.
 
 Fresh Ubuntu v14.04.1 (Trusty Tahr) from CloudAtCost.com or HostGator.com
 Fresh Ubuntu v14.04 (Trusty Tahr) in Virtual Box
-Fresh CentOS v6.5 from 1and1.com
+
+# [[[ UNINDENT ]]]
+:%s/^\ \ \ \ //g
 
 # [[[ UBUNTU, CONFIGURE OPERATING SYSTEM USERS ]]]
 $ passwd  # reset root password;  NEED FIX: disable root account???
@@ -521,14 +523,8 @@ $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
 $ cd /home/SOMEBODY/public_html/SOMEDOMAIN-latest
 $ vi modified/offline.html
     <b>ERROR 502:</b> FastCGI Process Not Running, Please Inform Site Administrator <a href="mailto:SOMEBODY@SUBDOMAIN.SOMEDOMAIN.COM">ADMIN NAME</a>
-$ vi bin/external-fastcgi-server
-    # Start an external fastcgi server, 3 processes, listening on the specified socket path
-    script/shinycms_fastcgi.pl -d \
-        -n 3 \
-        -l /tmp/SOMEDOMAIN.COM.socket \
-        -p /tmp/SOMEDOMAIN.COM.pid
-$ cd /home/SOMEBODY/public_html/SOMEDOMAIN-latest  # DOUBLE CHECK, MUST RUN FASTCGI FROM THIS DIR
-$ /home/SOMEBODY/public_html/SOMEDOMAIN-latest/bin/external-fastcgi-server  # LOCAL::LIB, RUN AS USER SOMEBODY BY USER SOMEBODY
+$ cd /home/SOMEBODY/public_html/SOMEDOMAIN-latest  # DOUBLE CHECK THAT YOU ARE IN THIS DIRECTORY, MUST RUN FASTCGI FROM THIS DIR
+$ ./bin/external-fastcgi-server  # LOCAL::LIB, RUN AS USER SOMEBODY BY USER SOMEBODY
 # OR
 $ sudo -Eu SOMEBODY /home/SOMEBODY/public_html/SOMEDOMAIN-latest/bin/external-fastcgi-server  # PERLBREW, RUN AS USER SOMEBODY BY USER root
 $ cat /tmp/SOMEDOMAIN.COM.pid
@@ -549,8 +545,6 @@ $ chmod -R o+rX /home/SOMEBODY/public_html/SOMEDOMAIN-latest
 $ chmod -R o-w /home/SOMEBODY/public_html/SOMEDOMAIN-latest
 $ service apache2 reload
 # CONFIGURE SHINY
-$ vi shinycms.conf
-    Update all e-mail addresses
 # http://phpmyadmin.SOMEDOMAIN.COM
     database "SOMEDOMAIN_COM"
     table "user" 
