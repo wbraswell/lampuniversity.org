@@ -1,4 +1,4 @@
-LAMP Install Notes 20141114 2014.318
+LAMP Install Notes 20141115 2014.319
 Copyright (c) 2014 William N. Braswell, Jr.
 
 Fresh Ubuntu v14.04.1 (Trusty Tahr) from CloudAtCost.com or HostGator.com
@@ -162,6 +162,8 @@ $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf  # repeat for each enabled
         <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre
             Require all granted
         </Directory>
+        # Google Webmaster Tools, Robots Testing Tool 
+        Alias    /googleSOMELONGNUMBER.html    /home/SOMEBODY/public_html/SOMEDOMAIN.COM-latest/root/googleSOMELONGNUMBER.html
         ErrorLog /srv/www/SOMEDOMAIN.COM/logs/error.log
         CustomLog /srv/www/SOMEDOMAIN.COM/logs/access.log combined
     </VirtualHost>
@@ -175,6 +177,8 @@ $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf  # repeat for each enabled
         <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre
             Require all granted
         </Directory>
+        # Google Webmaster Tools, Robots Testing Tool 
+        Alias    /googleSOMELONGNUMBER.html    /home/SOMEBODY/public_html/SUBDOMAIN.SOMEDOMAIN.COM-latest/root/googleSOMELONGNUMBER.html
         ErrorLog /srv/www/SUBDOMAIN.SOMEDOMAIN.COM/logs/error.log
         CustomLog /srv/www/SUBDOMAIN.SOMEDOMAIN.COM/logs/access.log combined
     </VirtualHost>
@@ -228,34 +232,6 @@ $ php5enmod mcrypt
 $ service apache2 reload
 
 
-# [[[ CENTOS, INSTALL MYSQL & CONFIGURE NETWORK ]]]
-$ yum install ftp://fr2.rpmfind.net/linux/epel/6/x86_64/epel-release-6-8.noarch.rpm
-$ yum install yum-utils
-$ yum install mysql-server  # skipped
-$ yum install mysql-devel
-$ service mysqld start
-$ mysql_install_db  # skipped
-$ mysql_secure_installation  # skipped
-$ yum install phpmyadmin
-$ repoquery -l phpMyAdmin
-$ vi /etc/httpd/conf.d/phpMyAdmin.conf
-    #    Require ip 127.0.0.1
-        Require ip USERIP
-    #    Allow from 127.0.0.1
-        Allow from USERIP
-$ service httpd start
-$ cpanm --mirror http://cpan.msi.umn.edu/ DBD::mysql
-$ vi /etc/httpd/conf/httpd.conf;  /etc/init.d/httpd restart
-     Allow from USER_IP
-$ vi /etc/hosts.deny;  /etc/init.d/sshd restart
-     sshd: ALL EXCEPT AAA.BBB.CCC., WWW.XXX.YYY.,
-$ vi /etc/apf/conf.apf;  apf -f;  apf -r
-     TOS_8="21,20,80,22,3000"
-     IG_TCP_CPORTS="22,80,443,3000"
-     EG_TCP_CPORTS="21,25,80,443,43,4242,3000"
-$ yum install lynx telnet
-
-
 # [[[ UBUNTU, INSTALL POSTFIX ]]]
 # Outgoing E-Mail
 $ apt-get install postfix
@@ -296,20 +272,6 @@ $ apt-get install libcatalyst-devel-perl
 $ apt-get install libcatalyst-modules-perl
 
 
-# [[[ CENTOS, INSTALL CATALYST; OUTDATED VERSIONS, DO NOT USE ]]]
-$ yum install perl-Catalyst-Runtime
-$ yum install perl-Catalyst-Devel
-$ yum install perl-Catalyst-Model-DBIC-Schema
-$ yum install perl-Catalyst-Plugin-Session-State-Cookie
-$ yum install perl-Catalyst-Plugin-Session-Store-FastMmap
-$ yum install perl-Catalyst-Plugin-StackTrace
-$ yum install perl-Catalyst-Plugin-SubRequest
-$ yum install perl-Catalyst-View-JSON
-$ yum install perl-Catalyst-View-TT
-$ yum install perl-Test-WWW-Mechanize-Catalyst
-$ yum install perlbrew
-
-
 # [[[ UBUNTU, INSTALL HAND-COMPILED PERL, OR PERLBREW & CPANMINUS; COPIED FROM RPERL INSTALL DOC ]]]
 # [[[ DO NOT MIX WITH LOCAL::LIB ]]]
 $ wget http://www.cpan.org/src/5.0/perl-5.20.1.tar.bz2; bunzip2 perl-5.20.1.tar.bz2; cd perl-5.20.1; perl Makefile.PL; make; make test; make install
@@ -342,7 +304,6 @@ $ set | grep perl5
     # PERL_MM_OPT, PERL_MB_OPT, PERL5LIB, PATH
 
 
-# [[[ CENTOS, INSTALL CATALYST ]]]
 # [[[ UBUNTU, INSTALL CATALYST TUTORIAL ]]]
 $ cpanm Template
 $ cpanm Task::Catalyst::Tutorial
@@ -387,39 +348,78 @@ $ mysql --user=root --password  # required for DBD::mysql `make test`
     mysql> GRANT ALL PRIVILEGES ON test.* TO 'SOMEBODY'@'localhost' IDENTIFIED BY 'MYSQL_TEMP_PASSWORD';  # WRONGLY CREATES PASSWORD
     mysql> GRANT ALL PRIVILEGES ON test.* TO 'SOMEBODY'@'localhost';
     mysql> QUIT
-$ cpanm DBD::mysql Devel::Declare::MethodInstaller::Simple Text::CSV_XS inc::Module::Install Module::Install::Catalyst
-# NEED FIX: SHINYCMS REPO DOESN'T FOLLOW DOMAIN NAMING SCHEME, CREATE SHINYCMSTEMPLATE.COM REPO ON GITHUB
+$ cpanm DBD::mysql Devel::Declare::MethodInstaller::Simple Text::CSV_XS inc::Module::Install Module::Install::Catalyst Test::Pod Test::Pod::Coverage
 $ mkdir ~/public_html; cd ~/public_html
-$ git clone git@github.com:wbraswell/shinycmstemplate.com.git shinycmstemplate.com-latest
-$ cd shinycmstemplate.com-latest; perl Makefile.PL; make; make test; make install  # CPANPLUS FAILS, USE FOLLOWING COMMANDS INSTEAD
-$ cd shinycmstemplate.com-latest; perl Makefile.PL
+$ git clone git@github.com:wbraswell/myshinytemplate.com.git myshinytemplate.com-latest
+$ mv myshinytemplate.com-latest SOMEDOMAIN.COM-latest  # OR MANUALLY MERGE INTO EXISTING GIT REPO
+$ cd SOMEDOMAIN.COM-latest; perl Makefile.PL; make; make test; make install  # DO NOT USE: CPANPLUS ERROR, USE FOLLOWING COMMANDS INSTEAD
+$ cd SOMEDOMAIN.COM-latest; perl Makefile.PL
 $ cpanm --installdeps .  # NOTE THE DOT AT THE END OF THIS COMMAND; RUN TWICE TO MAKE SURE ALL DEPENDENCIES ARE MET
-# CREATE TEST DEMO APP
+# CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES
 $ mysql --user=root --password
-    mysql> CREATE DATABASE shinycmstemplate_com;
-    mysql> GRANT ALL PRIVILEGES ON shinycmstemplate_com.* TO 'template_user'@'localhost' IDENTIFIED BY 'MYSQL_SHINYCMSTEMPLATE_PASS';
+    mysql> CREATE DATABASE SOMEDOMAIN_COM;
+    mysql> GRANT ALL PRIVILEGES ON SOMEDOMAIN_COM.* TO 'SOME_MYSQL_USER'@'localhost' IDENTIFIED BY 'SOME_MYSQL_PASS';
+$ mv shinycms.conf.redacted modified/shinycms.conf; ln -s modified/shinycms.conf ./shinycms.conf
 $ vi shinycms.conf
+    name   ShinyCMS
+    author SOME BODY <SOMEBODY@EXTERNALDOMAIN.COM>
+    site_name    SOMEDOMAIN
+    domain       SOMEDOMAIN.COM
+    email_from   SOMEBODY@SOMEDOMAIN.COM
+    ...
     <Model::DB>
             schema_class ShinyCMS::Schema
             <connect_info>
-                    dsn        dbi:mysql:shinycmstemplate_com
-                    user       template_user
-                    password   MYSQL_SHINYCMSTEMPLATE_PASS
+                    dsn        dbi:mysql:SOMEDOMAIN_COM
+                    user       SOME_MYSQL_USER
+                    password   SOME_MYSQL_PASS
                     ...
             </connect_info>
     </Model::DB>
-$ ./bin/database/build  # NO DEMO DATA
+$ make clean
+$ grep -nr myshiny ./*
+    # EDIT EVERY NON-SYMLINK FILE LISTED, SHOULD FOLLOW AS BELOW
+    # replace both "myshinytemplate.com" & "myshinytemplate_com"; also "template_user" & "wbraswell"
+    # :%s/myshinytemplate\.com/SOMEDOMAIN\.COM/g
+    # :%s/myshinytemplate_com/SOMEDOMAIN_COM/g
+    # :%s/MyShinyTemplate\.com/SOMEDOMAIN\.COM/g
+    # :%s/MyShinyTemplate/SOMEDOMAIN/g
+    # :%s/template_user/SOME_MYSQL_USER/g
+    # :%s/wbraswell/SOMEBODY/g
+$ cd modified
+$ vi README.md
+$ vi external-fastcgi-server
+$ vi fastcgi_start__myshinytemplate.com.sh
+$ mv fastcgi_start__myshinytemplate.com.sh fastcgi_start__SOMEDOMAIN.COM.sh
+$ vi git_backup__myshinytemplate.com.sh
+$ mv git_backup__myshinytemplate.com.sh git_backup__SOMEDOMAIN.COM.sh
+$ vi git_merge_modified__myshinytemplate.com.sh
+$ mv git_merge_modified__myshinytemplate.com.sh git_merge_modified__SOMEDOMAIN.COM.sh
+$ vi mysqldump__myshinytemplate.com__no_user.sh.redacted
+$ mv mysqldump__myshinytemplate.com__no_user.sh.redacted mysqldump__SOMEDOMAIN.COM__no_user.sh.redacted
+$ mkdir ~/bin; cp mysqldump__SOMEDOMAIN.COM__no_user.sh.redacted ~/bin/mysqldump__SOMEDOMAIN.COM__no_user.sh
+$ vi ~/bin/mysqldump__SOMEDOMAIN.COM__no_user.sh  # ADD PASSWORD, USE SINGLE QUOTES IF SPECIAL CHARACTERS
+$ ln -s ~/public_html/SOMEDOMAIN.COM-latest/modified/*.sh ~/bin
+$ cd ..
+$ rm backup/*.bz2
+$ grep -nr myshiny ./*
+$ grep -nr MyShiny ./*
+    # ENSURE NO FILES REMAIN
+$ find | grep myshiny
+    # ENSURE NO FILES REMAIN
+# BUILD DEMO DATA & RUN TESTS
 $ ./bin/database/build-with-demo-data  # YES DEMO DATA, INCLUDING USER CREDENTIALS admin/changeme
-$ make; make test
+$ export TEST_POD=1
+$ perl Makefile.PL; make; make test
 $ ./script/shinycms_server.pl
     # LOG IN AS ADMIN, CREDENTIALS admin/changeme
     # CHANGE ALL PASSWORDS NOW!!!
     # Admin area -> Users -> List users -> Change passwords for "admin" & "trevor" & "w1n5t0n"
 # BACKUP & RESTORE DATABASE
-$ mysqldump --user=template_user --password=MYSQL_SHINYCMSTEMPLATE_PASS shinycmstemplate_com --lock-all-tables --ignore-table=shinycmstemplate_com.user > shinycmstemplate_com__no_user.sql  # NO USER, BACKUP
+$ mysqldump --user=SOME_MYSQL_USER --password=SOME_MYSQL_PASS SOMEDOMAIN_COM --lock-all-tables --ignore-table=SOMEDOMAIN_COM.user > SOMEDOMAIN_COM__no_user.sql  # NO USER, BACKUP
 $ mysql --user=root --password
-    mysql> CREATE DATABASE shinycmstemplate_com;  # NO USER, CREATE EMPTY DB TO RECEIVE RESTORE
-$ mysql --user=template_user --password=MYSQL_SHINYCMSTEMPLATE_PASS shinycmstemplate_com < shinycmstemplate_com__no_user.sql  # NO USER TABLE, YES MYSQL USER, RESTORE 
+    mysql> CREATE DATABASE SOMEDOMAIN_COM;  # NO USER, CREATE EMPTY DB TO RECEIVE RESTORE
+$ mysql --user=SOME_MYSQL_USER --password=SOME_MYSQL_PASS SOMEDOMAIN_COM < SOMEDOMAIN_COM__no_user.sql  # NO USER TABLE, YES MYSQL USER, RESTORE 
 # CONFIGURE APACHE MOD_PERL
 $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
     # DOMAIN
@@ -431,15 +431,17 @@ $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
         <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre
             Require all granted
         </Directory>
+        # Google Webmaster Tools, Robots Testing Tool 
+        Alias    /googleSOMELONGNUMBER.html    /home/SOMEBODY/public_html/SOMEDOMAIN.COM-latest/root/googleSOMELONGNUMBER.html
         ErrorLog /srv/www/SOMEDOMAIN.COM/logs/error.log
         CustomLog /srv/www/SOMEDOMAIN.COM/logs/access.log combined
         <Perl>
-            use lib '/home/SOMEBODY/public_html/SOMEDOMAIN-latest/lib';  # ShinyCMS
+            use lib '/home/SOMEBODY/public_html/SOMEDOMAIN.COM-latest/lib';  # ShinyCMS
             use lib '/home/SOMEBODY/perl5/lib/perl5';  # local::lib
         </Perl>
     #   PerlRequire     /home/example.com/code/ShinyCMS/startup.pl  # handled by 'use lib' code above 
         PerlModule      ShinyCMS
-        Alias   /static     /home/SOMEBODY/public_html/SOMEDOMAIN-latest/root/static
+        Alias   /static     /home/SOMEBODY/public_html/SOMEDOMAIN.COM-latest/root/static
         <Location />
             SetHandler          modperl 
             PerlResponseHandler +ShinyCMS
@@ -451,21 +453,23 @@ $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
     # OR
     # SUBDOMAIN
     <VirtualHost *:80>
-        ServerName SUB.SOMEDOMAIN.COM
+        ServerName SUBDOMAIN.SOMEDOMAIN.COM
         ServerAdmin webmaster@SOMEDOMAIN.COM
-        DocumentRoot /srv/www/SUB.SOMEDOMAIN.COM/public_html/
+        DocumentRoot /srv/www/SUBDOMAIN.SOMEDOMAIN.COM/public_html/
         <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre
             Require all granted
         </Directory>
-        ErrorLog /srv/www/SUB.SOMEDOMAIN.COM/logs/error.log
-        CustomLog /srv/www/SUB.SOMEDOMAIN.COM/logs/access.log combined
+        # Google Webmaster Tools, Robots Testing Tool 
+        Alias    /googleSOMELONGNUMBER.html    /home/SOMEBODY/public_html/SUBDOMAIN.SOMEDOMAIN.COM-latest/root/googleSOMELONGNUMBER.html
+        ErrorLog /srv/www/SUBDOMAIN.SOMEDOMAIN.COM/logs/error.log
+        CustomLog /srv/www/SUBDOMAIN.SOMEDOMAIN.COM/logs/access.log combined
         <Perl>
-            use lib '/home/SOMEBODY/public_html/SOMEDOMAIN-latest/lib';  # ShinyCMS
+            use lib '/home/SOMEBODY/public_html/SUBDOMAIN.SOMEDOMAIN.COM-latest/lib';  # ShinyCMS
             use lib '/home/SOMEBODY/perl5/lib/perl5';  # local::lib
         </Perl>
-    #   PerlRequire     /home/SOMEBODY/public_html/SOMEDOMAIN-latest/startup.pl  # handled by 'use lib' code above 
+    #   PerlRequire     /home/SOMEBODY/public_html/SUBDOMAIN.SOMEDOMAIN.COM-latest/startup.pl  # handled by 'use lib' code above 
         PerlModule      ShinyCMS
-        Alias   /static     /home/SOMEBODY/public_html/SOMEDOMAIN-latest/root/static
+        Alias   /static     /home/SOMEBODY/public_html/SUBDOMAIN.SOMEDOMAIN.COM-latest/root/static
         <Location />
             SetHandler          modperl 
             PerlResponseHandler +ShinyCMS
@@ -477,6 +481,7 @@ $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
 # CONFIGURE APACHE MOD_FASTCGI
 $ cpanm FCGI FCGI::ProcManager  # NOT ROOT IF local::lib
 $ vi /etc/apt/sources.list
+    # WBRASWELL 201XYZZY 201X.YYZ: enable FastCGI repo
     deb http://us.archive.ubuntu.com/ubuntu/ trusty multiverse
     deb-src http://us.archive.ubuntu.com/ubuntu/ trusty multiverse
 $ apt-get update
@@ -500,6 +505,8 @@ $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
             Order allow,deny
             Allow from all
         </Location>
+        # Google Webmaster Tools, Robots Testing Tool 
+        Alias    /googleSOMELONGNUMBER.html    /home/SOMEBODY/public_html/SOMEDOMAIN.COM-latest/root/googleSOMELONGNUMBER.html
         # Allow Apache to serve static content.
         Alias       /static     /home/SOMEBODY/public_html/SOMEDOMAIN.COM-latest/root/static
         <Location /static>
@@ -544,11 +551,16 @@ $ service apache2 reload
 # CONFIGURE SHINY
 $ vi shinycms.conf
     Update all e-mail addresses
-# Login as admin
-# Admin area -> Users -> List users -> Change passwords for "admin" & "trevor" & "w1n5t0n" DOUBLE CHECK, SHOULD ALREADY BE DONE ABOVE
-# Admin area -> Pages -> List form handlers -> Edit Contact Form -> Update "Email to" Field
-# Admin area -> Pages -> List pages -> Edit Home -> Add image "homepage_added.png" & "Lorem Ipsum Dolor" text
-# Admin area -> Pages -> List templates -> Edit Home -> Delete "video_url" Element
+# http://phpmyadmin.SOMEDOMAIN.COM
+    database "SOMEDOMAIN_COM"
+    table "user" 
+    change usernames "admin", "trevor" & "w1n5t0n"
+# Shiny Login As New Admin User
+# Admin area -> Users -> List Users -> Change Passwords For All 3 Users DOUBLE CHECK, SHOULD ALREADY BE DONE ABOVE
+# Admin area -> Users -> List Users -> Edit All 3 Users -> Update E-Mail, etc.
+# Admin area -> Pages -> List Form Handlers -> Edit Contact Form -> Update "E-mail To" Field
+# Admin area -> Pages -> List Pages -> Edit Home -> Add Image "homepage_added.png" & "Lorem Ipsum Dolor" Text
+# Admin area -> Pages -> List Templates -> Edit Home -> Delete "video_url" Element
 
 
 # [[[ RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]
