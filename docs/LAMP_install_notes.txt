@@ -259,6 +259,7 @@ $ mail
 
 # [[[ UBUNTU, INSTALL WEBMIN ]]]
 $ vi /etc/apt/sources.list
+    # WBRASWELL 201XYZZY 201X.YYZ: enable Webmin repo
     deb http://download.webmin.com/download/repository sarge contrib
 $ wget -q http://www.webmin.com/jcameron-key.asc -O- | sudo apt-key add -  # NOTE HYPHEN AT END OF LINE
 $ apt-get update
@@ -398,7 +399,7 @@ $ vi git_backup__myshinytemplate.com.sh
 $ mv git_backup__myshinytemplate.com.sh git_backup__SOMEDOMAIN.COM.sh
 $ vi git_merge_modified__myshinytemplate.com.sh
 $ mv git_merge_modified__myshinytemplate.com.sh git_merge_modified__SOMEDOMAIN.COM.sh
-$ vi mysqldump__myshinytemplate.com__no_user.sh.redacted
+$ vi mysqldump__myshinytemplate.com__no_user.sh.redacted  # DO NOT ADD PASSWORD HERE
 $ mv mysqldump__myshinytemplate.com__no_user.sh.redacted mysqldump__SOMEDOMAIN.COM__no_user.sh.redacted
 $ mkdir ~/bin; cp mysqldump__SOMEDOMAIN.COM__no_user.sh.redacted ~/bin/mysqldump__SOMEDOMAIN.COM__no_user.sh
 $ vi ~/bin/mysqldump__SOMEDOMAIN.COM__no_user.sh  # ADD PASSWORD, USE SINGLE QUOTES IF SPECIAL CHARACTERS
