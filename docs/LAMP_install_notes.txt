@@ -1,5 +1,5 @@
-LAMP Install Notes 20141126 2014.330
-Copyright (c) 2014 William N. Braswell, Jr.
+LAMP Install Notes 20150220 2015.051
+Copyright (c) 2014, 2015 William N. Braswell, Jr.
 
 Fresh Ubuntu v14.04.1 (Trusty Tahr) from CloudAtCost.com or HostGator.com
 Fresh Ubuntu v14.04 (Trusty Tahr) in Virtual Box
@@ -450,7 +450,7 @@ $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
             SetHandler          modperl 
             PerlResponseHandler +ShinyCMS
         </Location>
-        <Location /static>
+        <Location /static>  # UNNECESSARY???
             SetHandler  default-handler
         </Location>
     </VirtualHost>
@@ -478,7 +478,7 @@ $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
             SetHandler          modperl 
             PerlResponseHandler +ShinyCMS
         </Location>
-        <Location /static>
+        <Location /static>  # UNNECESSARY???
             SetHandler  default-handler
         </Location>
     </VirtualHost>
@@ -513,7 +513,7 @@ $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
         Alias    /googleSOMELONGNUMBER.html    /home/SOMEBODY/public_html/SOMEDOMAIN.COM-latest/root/googleSOMELONGNUMBER.html
         # Allow Apache to serve static content.
         Alias       /static     /home/SOMEBODY/public_html/SOMEDOMAIN.COM-latest/root/static
-        <Location /static>
+        <Location /static>  # UNNECESSARY???
             SetHandler          default-handler
         </Location>
         # Display friendly error page if the FastCGI process is not running.

@@ -6,6 +6,7 @@ echo replace all occurrences of 'FOO' with 'BAR'
 echo $ find_replace_recurse.sh 'FOO' 'BAR' ./
 echo replace all occurrences of '[ ANYTHING GOES HERE 123 #@$ ]' with '< ANYTHING GOES HERE 123 #@$ >'
 echo $ find_replace_recurse.sh '\[(.*)\]' '\<\1\>' ./
+echo BACKSLASH-ESCAPED CHARACTERS: \& \[ \] \< \> \{ \} \|
 echo
 
 echo "ABOUT TO RECURSIVELY FIND AND REPLACE"
