@@ -1,4 +1,4 @@
-LAMP Install Notes 20150220 2015.051
+LAMP Install Notes 20150413 2015.103
 Copyright (c) 2014, 2015 William N. Braswell, Jr.
 
 Fresh Ubuntu v14.04.1 (Trusty Tahr) from CloudAtCost.com or HostGator.com
@@ -60,6 +60,7 @@ $ apt-get upgrade  # confirm nothing to upgrade
 $ reboot
 # CHEAT!!!
     apt-get update; apt-get -y upgrade; apt-get -y install aptitude; aptitude -y safe-upgrade; apt-get -f install; reboot
+$ apt-get install perl-doc 
 $ apt-get install vim
 $ apt-get install linuxlogo
 $ apt-get install git
@@ -74,7 +75,7 @@ $ apt-get install update-manager
 $ apt-get install xpra
 $ apt-get install clamav clamav-daemon
 # CHEAT!!!
-    apt-get -y install vim linuxlogo git lynx screen xterm x11-apps gkrellm xchat firefox update-manager xpra clamav clamav-daemon
+    apt-get -y install perl-doc vim linuxlogo git lynx screen xterm x11-apps gkrellm xchat firefox update-manager xpra clamav clamav-daemon
 # CLAMAV ANTI-VIRUS
 $ freshclam
 $ clamscan -r /home
