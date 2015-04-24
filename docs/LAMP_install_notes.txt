@@ -1,4 +1,4 @@
-LAMP Install Notes 20150413 2015.103
+LAMP Install Notes 20150423 2015.113
 Copyright (c) 2014, 2015 William N. Braswell, Jr.
 
 Fresh Ubuntu v14.04.1 (Trusty Tahr) from CloudAtCost.com or HostGator.com
@@ -95,6 +95,14 @@ $ update-manager  # DON'T FORGET THIS CRITICAL SECURITY STEP!
     # install security updates only
     # never remind of dist upgrade
     # enable Ubuntu repositories only, disable restricted & multiverse
+# HEIRLOOM TOOLS (bdiff)
+$ apt-get install zip unzip
+$ apt-get install zlib1g-dev libncurses5-dev libssl-dev
+$ wget https://github.com/halcyon/ubuntu-heirloom/archive/master.zip
+$ unzip master.zip
+$ cd ubuntu-heirloom-master
+$ ./build.sh
+$ /usr/5bin/bdiff
 
 
 # [[[ BENCHMARKING ]]]  # MAY NEED TO UPDATE THIS SECTION
