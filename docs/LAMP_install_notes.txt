@@ -26,7 +26,7 @@ $ vi /etc/hosts  # add cloudhost entry
 $ ssh-keygen  # if not already done in the past
 $ ssh-copy-id SOMEBODY@SUBDOMAIN.SOMEDOMAIN.COM
 $ ssh SOMEBODY@SUBDOMAIN.SOMEDOMAIN.COM  # may be prompted once to unlock keyring, then passwordless
-$ scp ~/.vimrc ~/.gitconfig SUBDOMAIN.SOMEDOMAIN.COM:~/
+$ scp ~/.bashrc ~/.vimrc ~/.gitconfig SUBDOMAIN.SOMEDOMAIN.COM:~/
 
 
 # [[[ UBUNTU, CONFIGURE CLOUD NETWORKING ]]]
