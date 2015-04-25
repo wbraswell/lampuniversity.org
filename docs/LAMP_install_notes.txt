@@ -140,7 +140,7 @@ $ xpra stop
 # [[[ UBUNTU, INSTALL NFS ]]]
 # SERVER MACHINE
 $ apt-get install nfs-kernel-server nfs-common
-$ mkdir /nfs_exported
+$ mkdir /nfs_exported; chmod a+rwX /nfs_exported
 $ vi /etc/exports
     /nfs_exported *(rw,sync,no_root_squash)
     /home         *(rw,sync,no_root_squash)
@@ -149,7 +149,7 @@ $ echo 'hello world' > /nfs_exported/hello.txt
 $ cat /nfs_exported/howdy.txt; rm /nfs_exported/howdy.txt
 # CLIENT MACHINE
 $ apt-get install nfs-kernel-server nfs-common
-$ mkdir -p /nfs_imported/SUBDOMAIN
+$ mkdir -p /nfs_imported/SUBDOMAIN; chmod a+rwX /nfs_imported/SUBDOMAIN
 $ mount SUBDOMAIN.SOMEDOMAIN.COM:/nfs_exported /nfs_imported/SUBDOMAIN  # manual test
 $ vi /etc/fstab
     SUBDOMAIN.SOMEDOMAIN.COM:/nfs_exported /nfs_imported/SUBDOMAIN nfs rsize=8192,wsize=8192,timeo=14,intr
