@@ -1,4 +1,4 @@
-LAMP Install Notes 20150423 2015.113
+LAMP Install Notes 20150425 2015.115
 Copyright (c) 2014, 2015 William N. Braswell, Jr.
 
 Fresh Ubuntu v14.04.1 (Trusty Tahr) from CloudAtCost.com or HostGator.com
@@ -38,7 +38,7 @@ $ vi /etc/hosts  # modify localhost entry, public entry if present
     127.0.1.1       SUBDOMAIN_OR_SOMEDOMAIN  # === EDIT THIS LINE TO BE YOUR LOCAL HOSTNAME ===
     # === REMOVE LOCAL HOSTNAME IF APPEARING BELOW ===
     XXX.YYY.ZZZ.YYY                  SUBDOMAIN.SOMEDOMAIN.COM  # godaddy DNS A record
-$ vi /etc/hostname  # enter real dot-separated FQDN, or single word if no real FQDN
+$ vi /etc/hostname  # enter real dot-separated FQDN registered w/ godaddy etc, or single word if no real FQDN
 $ vi /etc/network/interfaces  # append following
     dns-nameservers 8.8.8.8 8.8.4.4
 $ reboot
@@ -60,6 +60,8 @@ $ apt-get upgrade  # confirm nothing to upgrade
 $ reboot
 # CHEAT!!!
     apt-get update; apt-get -y upgrade; apt-get -y install aptitude; aptitude -y safe-upgrade; apt-get -f install; reboot
+$ apt-get install g++
+$ apt-get install zip unzip
 $ apt-get install perl-doc 
 $ apt-get install vim
 $ apt-get install linuxlogo
@@ -75,7 +77,7 @@ $ apt-get install update-manager
 $ apt-get install xpra
 $ apt-get install clamav clamav-daemon
 # CHEAT!!!
-    apt-get -y install perl-doc vim linuxlogo git lynx screen xterm x11-apps gkrellm xchat firefox update-manager xpra clamav clamav-daemon
+    apt-get -y install g++ zip unzip perl-doc vim linuxlogo git lynx screen xterm x11-apps gkrellm xchat firefox update-manager xpra clamav clamav-daemon
 # CLAMAV ANTI-VIRUS
 $ freshclam
 $ clamscan -r /home
@@ -88,6 +90,8 @@ $ /etc/init.d/clamav-daemon status
 $ /etc/init.d/clamav-freshclam start
 $ /etc/init.d/clamav-freshclam status
 $ clamdscan -V
+# CHEAT!!!
+    freshclam; clamscan -r /home; cd /home/wbraswell; wget http://www.eicar.org/download/eicar.com; clamscan -r /home; clamscan --infected --remove --recursive /home; clamscan -r /home; /etc/init.d/clamav-daemon start; /etc/init.d/clamav-daemon status; /etc/init.d/clamav-freshclam start; /etc/init.d/clamav-freshclam status; clamdscan -V
 # ENABLE X WINDOWS PER INSTRUCTIONS BELOW
 $ update-manager  # DON'T FORGET THIS CRITICAL SECURITY STEP!
     # enable security updates only
@@ -95,30 +99,15 @@ $ update-manager  # DON'T FORGET THIS CRITICAL SECURITY STEP!
     # install security updates only
     # never remind of dist upgrade
     # enable Ubuntu repositories only, disable restricted & multiverse
+# LAMP UNIVERSITY TOOLS; as user, not root
+$ wget https://github.com/wbraswell/lampuniversity.org/archive/master.zip; mv master.zip lampuniversity.org-master.zip; unzip lampuniversity.org-master.zip
+$ mkdir ~/bin; cp lampuniversity.org-master/bin/* ~/bin
+# topmem.sh
 # HEIRLOOM TOOLS (bdiff)
-$ apt-get install zip unzip
 $ apt-get install zlib1g-dev libncurses5-dev libssl-dev
-$ wget https://github.com/halcyon/ubuntu-heirloom/archive/master.zip
-$ unzip master.zip
-$ cd ubuntu-heirloom-master
-$ ./build.sh
+$ wget https://github.com/halcyon/ubuntu-heirloom/archive/master.zip; mv master.zip ubuntu-heirloom-master.zip; unzip ubuntu-heirloom-master.zip
+$ cd ubuntu-heirloom-master; ./build.sh
 $ /usr/5bin/bdiff
-
-
-# [[[ BENCHMARKING ]]]  # MAY NEED TO UPDATE THIS SECTION
-$ linuxlogo
-# CPUMINER
-$ apt-get install libcurl4-openssl-dev
-$ apt-get install libncurses5-dev
-$ apt-get install pkg-config
-$ apt-get install automake
-$ apt-get install yasm
-$ git clone https://github.com/pooler/cpuminer.git
-$ cd cpuminer
-$ ./autogen.sh
-$ ./configure CFLAGS="-O3"
-$ make
-$ ./minerd --url=http://GETWORK.POOL.COM --userpass=SOMEBODY:SOMEPASS
 
 
 # [[[ UBUNTU, INSTALL X WINDOWS & XPRA ]]]
@@ -146,6 +135,35 @@ $ xpra start :100 --start-child=xterm  # multi-session connection
 $ export DISPLAY=:100.0  # multi-session connection
 $ xeyes  # multi-session connection
 $ xpra stop
+
+
+# [[[ UBUNTU, INSTALL NFS ]]]
+# SERVER MACHINE
+$ apt-get install nfs-kernel-server nfs-common
+$ mkdir /nfs_exported
+$ vi /etc/exports
+    /nfs_exported *(rw,sync,no_root_squash)
+    /home         *(rw,sync,no_root_squash)
+$ service nfs-kernel-server start
+$ echo 'hello world' > /nfs_exported/hello.txt
+$ cat /nfs_exported/howdy.txt; rm /nfs_exported/howdy.txt
+# CLIENT MACHINE
+$ apt-get install nfs-kernel-server nfs-common
+$ mkdir -p /nfs_imported/SUBDOMAIN
+$ mount SUBDOMAIN.SOMEDOMAIN.COM:/nfs_exported /nfs_imported/SUBDOMAIN  # manual test
+$ vi /etc/fstab
+    SUBDOMAIN.SOMEDOMAIN.COM:/nfs_exported /nfs_imported/SUBDOMAIN nfs rsize=8192,wsize=8192,timeo=14,intr
+$ echo "howdy y'all" > /nfs_imported/SUBDOMAIN/howdy.txt
+$ cat /nfs_imported/SUBDOMAIN/hello.txt; rm /nfs_imported/SUBDOMAIN/hello.txt
+
+
+# [[[ BENCHMARKING ]]]  # MAY NEED TO UPDATE THIS SECTION
+$ linuxlogo
+# CPUMINER
+$ apt-get install libcurl4-openssl-dev libncurses5-dev pkg-config automake yasm
+$ git clone https://github.com/pooler/cpuminer.git
+$ cd cpuminer; ./autogen.sh; ./configure CFLAGS="-O3"; make
+$ ./minerd --url=http://GETWORK.POOL.COM --userpass=SOMEBODY:SOMEPASS
 
 
 # [[[ UBUNTU, INSTALL APACHE & MOD_PERL ]]]
