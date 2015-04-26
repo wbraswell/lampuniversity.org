@@ -1,4 +1,4 @@
-LAMP Install Notes 20150425 2015.115
+LAMP Install Notes 20150426 2015.116
 Copyright (c) 2014, 2015 William N. Braswell, Jr.
 
 Fresh Ubuntu v14.04.1 (Trusty Tahr) from CloudAtCost.com or HostGator.com
@@ -15,11 +15,12 @@ $ useradd SOMEBODY
 $ passwd SOMEBODY
 $ cp -a /etc/skel /home/SOMEBODY
 $ chown -R SOMEBODY.SOMEBODY /home/SOMEBODY
+$ chmod -R go-rwx /home/SOMEBODY
 $ chsh SOMEBODY
     /bin/bash
 $ vi /etc/group  # add SOMEBODY to group "sudo", allows running root commands (like update-manager) via sudo in xpra
 # CHEAT!!!
-    userdel user; rm -Rf /home/user; useradd wbraswell; passwd wbraswell; cp -a /etc/skel /home/wbraswell; chown -R wbraswell.wbraswell /home/wbraswell; chsh wbraswell; vi /etc/group 
+    userdel user; rm -Rf /home/user; useradd wbraswell; passwd wbraswell; cp -a /etc/skel /home/wbraswell; chown -R wbraswell.wbraswell /home/wbraswell; chmod -R go-rwx /home/wbraswell; chsh wbraswell; vi /etc/group 
 # USER MACHINE
 $ vi /etc/hosts  # add cloudhost entry
 	SOMEIP	SUBDOMAIN.SOMEDOMAIN.COM
@@ -68,7 +69,7 @@ $ apt-get install linuxlogo
 $ apt-get install git
 $ apt-get install lynx
 $ apt-get install screen
-$ apt-get install xterm  # trigger installation of X windows
+$ apt-get install xterm xfce4-terminal  # trigger installation of X windows
 $ apt-get install x11-apps  # contains xeyes for basic X testing
 $ apt-get install gkrellm
 $ apt-get install xchat
@@ -77,7 +78,7 @@ $ apt-get install update-manager
 $ apt-get install xpra
 $ apt-get install clamav clamav-daemon
 # CHEAT!!!
-    apt-get -y install g++ zip unzip perl-doc vim linuxlogo git lynx screen xterm x11-apps gkrellm xchat firefox update-manager xpra clamav clamav-daemon
+    apt-get -y install g++ zip unzip perl-doc vim linuxlogo git lynx screen xterm xfce4-terminal x11-apps gkrellm xchat firefox update-manager xpra clamav clamav-daemon
 # CLAMAV ANTI-VIRUS
 $ freshclam
 $ clamscan -r /home
@@ -131,10 +132,10 @@ $ xpra attach ssh:SUBDOMAIN.SOMEDOMAIN.COM:100  # multi-session connection
 # CLOUD MACHINE
 $ export DISPLAY=USERHOST:0.0
 $ xeyes  # single-session connection
-$ xpra start :100 --start-child=xterm  # multi-session connection
-$ export DISPLAY=:100.0  # multi-session connection
+$ xpra start :100 --start-child=xfce4-terminal  # multi-session connection
+$ echo "export DISPLAY=:100.0" >> ~/.bashrc; . ~/.bashrc  # default to multi-session connection
 $ xeyes  # multi-session connection
-$ xpra stop
+$ xpra stop  # probably skip this command, leave xpra running
 
 
 # [[[ UBUNTU, INSTALL NFS ]]]
