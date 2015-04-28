@@ -1,4 +1,4 @@
-LAMP Install Notes 20150426 2015.116
+LAMP Install Notes 20150427 2015.117
 Copyright (c) 2014, 2015 William N. Braswell, Jr.
 
 Fresh Ubuntu v14.04.1 (Trusty Tahr) from CloudAtCost.com or HostGator.com
@@ -43,6 +43,11 @@ $ vi /etc/hostname  # enter real dot-separated FQDN registered w/ godaddy etc, o
 $ vi /etc/network/interfaces  # append following
     dns-nameservers 8.8.8.8 8.8.4.4
 $ reboot
+$ cat /etc/resolv.conf  # confirm following
+    nameserver 8.8.8.8
+    nameserver 8.8.4.4
+# CHEAT!!!
+    mv /tmp/hosts /etc/hosts; vi /etc/hosts; vi /etc/hostname; vi /etc/network/interfaces; reboot
 $ cat /etc/resolv.conf  # confirm following
     nameserver 8.8.8.8
     nameserver 8.8.4.4
@@ -143,8 +148,8 @@ $ xpra stop  # probably skip this command, leave xpra running
 $ apt-get install nfs-kernel-server nfs-common
 $ mkdir /nfs_exported; chmod a+rwX /nfs_exported
 $ vi /etc/exports
-    /nfs_exported *(rw,sync,no_root_squash)
-    /home         *(rw,sync,no_root_squash)
+    /nfs_exported *(rw,sync,no_root_squash,no_subtree_check)
+    /home         *(rw,sync,no_root_squash,no_subtree_check)
 $ service nfs-kernel-server start
 $ echo 'hello world' > /nfs_exported/hello.txt
 $ cat /nfs_exported/howdy.txt; rm /nfs_exported/howdy.txt
@@ -197,7 +202,7 @@ $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf  # repeat for each enabled
         ErrorLog /srv/www/SOMEDOMAIN.COM/logs/error.log
         CustomLog /srv/www/SOMEDOMAIN.COM/logs/access.log combined
     </VirtualHost>
-    # OR
+        # OR
     # SUBDOMAIN
     <VirtualHost *:80>
         ServerName SUBDOMAIN.SOMEDOMAIN.COM
@@ -306,9 +311,9 @@ $ apt-get install libcatalyst-modules-perl
 # [[[ UBUNTU, INSTALL HAND-COMPILED PERL, OR PERLBREW & CPANMINUS; COPIED FROM RPERL INSTALL DOC ]]]
 # [[[ DO NOT MIX WITH LOCAL::LIB ]]]
 $ wget http://www.cpan.org/src/5.0/perl-5.20.1.tar.bz2; bunzip2 perl-5.20.1.tar.bz2; cd perl-5.20.1; perl Makefile.PL; make; make test; make install
-# OR
+    # OR
 $ sudo apt-get install perlbrew
-# OR
+    # OR
 $ curl -L http://install.perlbrew.pl | bash
 $ perlbrew init
 $ perlbrew mirror  # Arlington, TX #222 http://mirror.uta.edu/CPAN/
@@ -338,7 +343,7 @@ $ set | grep perl5
 # [[[ UBUNTU, INSTALL CATALYST TUTORIAL ]]]
 $ cpanm Template
 $ cpanm Task::Catalyst::Tutorial
-# OR FOR FIREWALLED NETWORKS
+    # OR FOR FIREWALLED NETWORKS
 $ cpanm --mirror http://cpan.msi.umn.edu/ Template
 $ cpanm --mirror http://cpan.msi.umn.edu/ Task::Catalyst::Tutorial
 
@@ -423,6 +428,10 @@ $ vi README.md
 $ vi external-fastcgi-server
 $ vi fastcgi_start__myshinytemplate.com.sh
 $ mv fastcgi_start__myshinytemplate.com.sh fastcgi_start__SOMEDOMAIN.COM.sh
+$ vi fastcgi_myshinytemplate.com.conf
+$ my fastcgi_myshinytemplate.com.conf fastcgi_SOMEDOMAIN.COM.conf
+$ vi fastcgi_myshinytemplate.com-init.d
+$ my fastcgi_myshinytemplate.com-init.d fastcgi_SOMEDOMAIN.COM-init.d
 $ vi git_backup__myshinytemplate.com.sh
 $ mv git_backup__myshinytemplate.com.sh git_backup__SOMEDOMAIN.COM.sh
 $ vi git_merge_modified__myshinytemplate.com.sh
@@ -482,7 +491,7 @@ $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
             SetHandler  default-handler
         </Location>
     </VirtualHost>
-    # OR
+        # OR
     # SUBDOMAIN
     <VirtualHost *:80>
         ServerName SUBDOMAIN.SOMEDOMAIN.COM
@@ -547,16 +556,24 @@ $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
         # Display friendly error page if the FastCGI process is not running.
         ErrorDocument   502     /home/SOMEBODY/public_html/SOMEDOMAIN.COM-latest/root/offline.html
         # Connect to the external server.
-        FastCgiExternalServer   /tmp/SOMEDOMAIN.COM.fcgi -socket /tmp/SOMEDOMAIN.COM.socket
+        FastCgiExternalServer   /tmp/SOMEDOMAIN.COM.fcgi -socket /tmp/SOMEDOMAIN.COM.socket -idle-timeout 900
         Alias           /       /tmp/SOMEDOMAIN.COM.fcgi/
     </VirtualHost>
 $ cd /home/SOMEBODY/public_html/SOMEDOMAIN-latest
 $ vi modified/offline.html
     <b>ERROR 502:</b> FastCGI Process Not Running, Please Inform Site Administrator <a href="mailto:SOMEBODY@SUBDOMAIN.SOMEDOMAIN.COM">ADMIN NAME</a>
+# START FASTCGI SERVER, MANUAL
 $ ~/bin/fastcgi_start__SOMEDOMAIN.COM.sh  # LOCAL::LIB, RUN AS USER SOMEBODY BY USER SOMEBODY, MUST HAVE CREATED SYMLINKS IN EDIT-MYSHINYTEMPLATE-FILES SECTION ABOVE
-# OR
+    # OR
 $ sudo -Eu SOMEBODY /home/SOMEBODY/public_html/SOMEDOMAIN-latest/bin/external-fastcgi-server  # PERLBREW, RUN AS USER SOMEBODY BY USER root
 $ cat /tmp/SOMEDOMAIN.COM.pid
+# START FASTCGI SERVER, AUTOMATIC
+$ ln -s /home/SOMEBODY/public_html/SOMEDOMAIN-latest/modified/fastcgi_SOMEDOMAIN.COM.conf /etc/init  # UPSTART, MOST MODERN LINUX DISTROS
+$ reboot
+$ service fastcgi_SOMEDOMAIN.COM status
+    # OR
+$ ln -s /home/SOMEBODY/public_html/SOMEDOMAIN-latest/modified/fastcgi_SOMEDOMAIN.COM-init.d /etc/init.d  # SYSV-INIT, OLDER LINUX DISTROS
+$ reboot
 # CREATE APACHE DIRECTORIES
 $ mkdir -p /srv/www/SOMEDOMAIN.COM/public_html
 $ mkdir /srv/www/SOMEDOMAIN.COM/logs
@@ -586,7 +603,7 @@ $ service apache2 reload
 
 # [[[ RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]
 $ mkdir RapidApp-latest; git clone https://github.com/vanstyn/RapidApp.git RapidApp-latest  # NO MAKEFILE ON GITHUB, CAN'T MAKE OR INSTALL!
-# OR
+    # OR
 $ mysql --user=root --password  # required for DBD::mysql `make test` 
     mysql> GRANT ALL PRIVILEGES ON test.* TO 'SOMEBODY'@'localhost';
 $ cpanm DBD::mysql MooseX::NonMoose RapidApp
