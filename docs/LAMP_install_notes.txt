@@ -65,7 +65,7 @@ $ apt-get -f install  # confirm nothing to upgrade
 $ apt-get upgrade  # confirm nothing to upgrade
 $ reboot
 # CHEAT!!!
-    apt-get update; apt-get -y upgrade; apt-get -y install aptitude; aptitude -y safe-upgrade; apt-get -f install; reboot
+    locale-gen en_US.UTF-8; dpkg-reconfigure locales; apt-get update; apt-get -y upgrade; apt-get -y install aptitude; aptitude -y safe-upgrade; apt-get -f install; reboot
 $ apt-get install g++
 $ apt-get install zip unzip
 $ apt-get install perl-doc 
@@ -141,6 +141,8 @@ $ xpra start :100 --start-child=xfce4-terminal  # multi-session connection
 $ echo "export DISPLAY=:100.0" >> ~/.bashrc; . ~/.bashrc  # default to multi-session connection
 $ xeyes  # multi-session connection
 $ xpra stop  # probably skip this command, leave xpra running
+#CHEAT!!!
+    export DISPLAY=scouthouse:0.0; xeyes; xpra start :100 --start-child=xfce4-terminal; echo "export DISPLAY=:100.0" >> ~/.bashrc; . ~/.bashrc; xeyes
 
 
 # [[[ UBUNTU, INSTALL NFS ]]]

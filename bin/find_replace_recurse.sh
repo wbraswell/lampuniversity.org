@@ -1,18 +1,22 @@
 #!/bin/bash
-# Copyright © 2014, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.20.0.
+# Copyright © 2014, 2015, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.20.0.
 
-echo EXAMPLES:
-echo replace all occurrences of 'FOO' with 'BAR'
-echo $ find_replace_recurse.sh 'FOO' 'BAR' ./
-echo replace all occurrences of '[ ANYTHING GOES HERE 123 #@$ ]' with '< ANYTHING GOES HERE 123 #@$ >'
-echo $ find_replace_recurse.sh '\[(.*)\]' '\<\1\>' ./
-echo BACKSLASH-ESCAPED CHARACTERS: \& \[ \] \< \> \{ \} \|
+echo "EXAMPLES:"
+echo "replace all occurrences of 'FOO' with 'BAR'"
+echo "$ find_replace_recurse.sh 'FOO' 'BAR' ./"
+echo "replace all occurrences of '[ ANYTHING GOES HERE 123 #@$ ]' with '< ANYTHING GOES HERE 123 #@$ >'"
+echo "$ find_replace_recurse.sh '\[(.*)\]' '<\1>' ./"
+echo 'BACKSLASH-ESCAPED CHARACTERS, find text: & [ ] ( ) { } | / \'
+echo 'NON-BACKSLASH-ESCAPED CHARACTERS, find text: < > #'
+echo 'BACKSLASH-ESCAPED CHARACTERS, replace text: / \'
+echo 'BACKSLASH-ESCAPED CHARACTERS, replace text matches: 1 2 3 ...'
+echo 'NON-BACKSLASH-ESCAPED CHARACTERS, replace text: < > # { }'
 echo
 
 echo "ABOUT TO RECURSIVELY FIND AND REPLACE"
-echo "find text: $1"
-echo "replace text: $2"
-echo "directory: $3"
+echo "find text:    '$1'"
+echo "replace text: '$2'"
+echo "directory:    $3"
 
 read -p "Are you sure? " -r
 echo
