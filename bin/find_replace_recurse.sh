@@ -8,9 +8,9 @@ echo "replace all occurrences of '[ ANYTHING GOES HERE 123 #@$ ]' with '< ANYTHI
 echo "$ find_replace_recurse.sh '\[(.*)\]' '<\1>' ./"
 echo 'BACKSLASH-ESCAPED CHARACTERS, find text: & [ ] ( ) { } | / \'
 echo 'NON-BACKSLASH-ESCAPED CHARACTERS, find text: < > #'
-echo 'BACKSLASH-ESCAPED CHARACTERS, replace text: / \'
+echo 'BACKSLASH-ESCAPED CHARACTERS, replace text: / \ #'
 echo 'BACKSLASH-ESCAPED CHARACTERS, replace text matches: 1 2 3 ...'
-echo 'NON-BACKSLASH-ESCAPED CHARACTERS, replace text: < > # { }'
+echo 'NON-BACKSLASH-ESCAPED CHARACTERS, replace text: < > { }'
 echo
 
 echo "ABOUT TO RECURSIVELY FIND AND REPLACE"
