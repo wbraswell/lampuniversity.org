@@ -1,4 +1,4 @@
-LAMP Install Notes 20150427 2015.117
+LAMP Install Notes 20150524 2015.144
 Copyright (c) 2014, 2015 William N. Braswell, Jr.
 
 Fresh Ubuntu v14.04.1 (Trusty Tahr) from CloudAtCost.com or HostGator.com
@@ -462,6 +462,7 @@ $ ./script/shinycms_server.pl
 $ mysqldump --user=SOME_MYSQL_USER --password='SOME_MYSQL_PASS' SOMEDOMAIN_COM --lock-all-tables --ignore-table=SOMEDOMAIN_COM.user > SOMEDOMAIN_COM__no_user.sql  # NO USER, BACKUP
 $ mysql --user=root --password
     mysql> CREATE DATABASE SOMEDOMAIN_COM;  # NO USER, CREATE EMPTY DB TO RECEIVE RESTORE
+    mysql> GRANT ALL PRIVILEGES ON SOMEDOMAIN_COM.* TO 'SOME_MYSQL_USER'@'localhost' IDENTIFIED BY 'SOME_MYSQL_PASS';
 $ mysql --user=SOME_MYSQL_USER --password='SOME_MYSQL_PASS' SOMEDOMAIN_COM < SOMEDOMAIN_COM__no_user.sql  # NO USER TABLE, YES MYSQL USER, RESTORE 
 # CONFIGURE APACHE MOD_PERL
 $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
