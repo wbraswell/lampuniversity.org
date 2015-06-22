@@ -1,8 +1,10 @@
-LAMP Install Notes 20150524 2015.144
+LAMP Install Notes 20150622 2015.173
 Copyright (c) 2014, 2015 William N. Braswell, Jr.
 
-Fresh Ubuntu v14.04.1 (Trusty Tahr) from CloudAtCost.com or HostGator.com
-Fresh Ubuntu v14.04 (Trusty Tahr) in Virtual Box
+Tested Using:
+Fresh Xubuntu v14.04.2 (Trusty Tahr)
+Fresh  Ubuntu v14.04.1 (Trusty Tahr) from CloudAtCost.com or HostGator.com
+Fresh  Ubuntu v14.04   (Trusty Tahr) in Virtual Box
 
 # [[[ UNINDENT ]]]
 :%s/^\ \ \ \ //g
@@ -80,10 +82,11 @@ $ apt-get install gkrellm
 $ apt-get install xchat
 $ apt-get install firefox
 $ apt-get install update-manager
+$ apt-get install unetbootin
 $ apt-get install xpra
 $ apt-get install clamav clamav-daemon
 # CHEAT!!!
-    apt-get -y install g++ zip unzip perl-doc vim linuxlogo git lynx screen xterm xfce4-terminal x11-apps gkrellm xchat firefox update-manager xpra clamav clamav-daemon
+    apt-get -y install g++ zip unzip perl-doc vim linuxlogo git lynx screen xterm xfce4-terminal x11-apps gkrellm xchat firefox update-manager unetbootin xpra clamav clamav-daemon
 # CLAMAV ANTI-VIRUS
 $ freshclam
 $ clamscan -r /home
@@ -105,6 +108,12 @@ $ update-manager  # DON'T FORGET THIS CRITICAL SECURITY STEP!
     # install security updates only
     # never remind of dist upgrade
     # enable Ubuntu repositories only, disable restricted & multiverse
+# GOOGLE CHROME & LIBREOFFICE
+$ wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - 
+$ sh -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+$ apt-get update 
+$ apt-get install google-chrome-stable
+$ apt-get install libreoffice
 # LAMP UNIVERSITY TOOLS; as user, not root
 $ wget https://github.com/wbraswell/lampuniversity.org/archive/master.zip; mv master.zip lampuniversity.org-master.zip; unzip lampuniversity.org-master.zip
 $ mkdir ~/bin; cp lampuniversity.org-master/bin/* ~/bin
@@ -143,6 +152,13 @@ $ xeyes  # multi-session connection
 $ xpra stop  # probably skip this command, leave xpra running
 #CHEAT!!!
     export DISPLAY=scouthouse:0.0; xeyes; xpra start :100 --start-child=xfce4-terminal; echo "export DISPLAY=:100.0" >> ~/.bashrc; . ~/.bashrc; xeyes
+
+
+# [[[ UBUNTU, SET UP XFCE WINDOW MANAGER ]]]
+$ apt-get install indicator-multiload
+$ indicator-multiload &  # NOT AS ROOT
+# Left-click on indicator-multiload applet -> Preferences -> Select Processor, Memory, Network, Harddisk, Autostart
+# Right-click on top panel -> Panel -> Add New Items -> Workspace Switcher -> Add
 
 
 # [[[ UBUNTU, INSTALL NFS ]]]
