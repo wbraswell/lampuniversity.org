@@ -1,4 +1,4 @@
-LAMP Install Notes 20150622 2015.173
+LAMP Install Notes 20150804 2015.216
 Copyright (c) 2014, 2015 William N. Braswell, Jr.
 
 Tested Using:
@@ -65,9 +65,10 @@ $ apt-get install aptitude
 $ aptitude safe-upgrade
 $ apt-get -f install  # confirm nothing to upgrade
 $ apt-get upgrade  # confirm nothing to upgrade
+$ apt-get autoremove
 $ reboot
 # CHEAT!!!
-    locale-gen en_US.UTF-8; dpkg-reconfigure locales; apt-get update; apt-get -y upgrade; apt-get -y install aptitude; aptitude -y safe-upgrade; apt-get -f install; reboot
+    locale-gen en_US.UTF-8; dpkg-reconfigure locales; apt-get update; apt-get -y upgrade; apt-get -y install aptitude; aptitude -y safe-upgrade; apt-get -f install; apt-get -y autoremove; reboot
 $ apt-get install g++
 $ apt-get install zip unzip
 $ apt-get install perl-doc 
@@ -103,7 +104,7 @@ $ clamdscan -V
     freshclam; clamscan -r /home; cd /home/wbraswell; wget http://www.eicar.org/download/eicar.com; clamscan -r /home; clamscan --infected --remove --recursive /home; clamscan -r /home; /etc/init.d/clamav-daemon start; /etc/init.d/clamav-daemon status; /etc/init.d/clamav-freshclam start; /etc/init.d/clamav-freshclam status; clamdscan -V
 # ENABLE X WINDOWS PER INSTRUCTIONS BELOW
 $ update-manager  # DON'T FORGET THIS CRITICAL SECURITY STEP!
-    # enable security updates only
+    # enable security & recommended updates only
     # check for updates daily
     # install security updates only
     # never remind of dist upgrade
@@ -123,6 +124,24 @@ $ apt-get install zlib1g-dev libncurses5-dev libssl-dev
 $ wget https://github.com/halcyon/ubuntu-heirloom/archive/master.zip; mv master.zip ubuntu-heirloom-master.zip; unzip ubuntu-heirloom-master.zip
 $ cd ubuntu-heirloom-master; ./build.sh
 $ /usr/5bin/bdiff
+
+
+# [[[ UBUNTU, SET UP XFCE WINDOW MANAGER ]]]
+$ apt-get install indicator-multiload
+# NOT ROOT
+$ indicator-multiload &
+# Left-click on indicator-multiload applet -> Preferences -> Select Processor, Memory, Network, Harddisk, Autostart
+# Right-click on top panel -> Panel -> Add New Items -> Workspace Switcher -> Add
+# Left-click on clock applet -> Properties -> Clock Options -> Format -> Custom Format
+    %a %b%d %Y%m%d %Y.%j %H%M.%S
+$ rm -Rf ~/Videos/ ~/Templates/ ~/Public/ ~/Pictures/ ~/Music/ ~/Documents/
+
+
+# [[[ UBUNTU, ENABLE WIFI ]]]
+# DELL LATITUDE D430
+$ apt-get install firmware-b43-installer
+$ apt-get remove bcmwl-kernel-source
+$ reboot
 
 
 # [[[ UBUNTU, INSTALL X WINDOWS & XPRA ]]]
@@ -152,13 +171,6 @@ $ xeyes  # multi-session connection
 $ xpra stop  # probably skip this command, leave xpra running
 #CHEAT!!!
     export DISPLAY=scouthouse:0.0; xeyes; xpra start :100 --start-child=xfce4-terminal; echo "export DISPLAY=:100.0" >> ~/.bashrc; . ~/.bashrc; xeyes
-
-
-# [[[ UBUNTU, SET UP XFCE WINDOW MANAGER ]]]
-$ apt-get install indicator-multiload
-$ indicator-multiload &  # NOT AS ROOT
-# Left-click on indicator-multiload applet -> Preferences -> Select Processor, Memory, Network, Harddisk, Autostart
-# Right-click on top panel -> Panel -> Add New Items -> Workspace Switcher -> Add
 
 
 # [[[ UBUNTU, INSTALL NFS ]]]
