@@ -55,6 +55,10 @@ $ cat /etc/resolv.conf  # confirm following
     nameserver 8.8.4.4
 
 
+# [[[ UBUNTU, FIX BROKEN SWAP DEVICE ]]]
+# when installed from USB drive, update UUID in /etc/fstab and /etc/crypttab to reflect new /dev/sd* drive letters
+
+
 # [[[ UBUNTU, UPDATE OPERATING SYSTEM PACKAGES ]]]
 $ locale-gen en_US.UTF-8; dpkg-reconfigure locales  # fix "perl: warning: Setting locale failed."
 $ apt-get update
@@ -70,11 +74,13 @@ $ reboot
 # CHEAT!!!
     locale-gen en_US.UTF-8; dpkg-reconfigure locales; apt-get update; apt-get -y upgrade; apt-get -y install aptitude; aptitude -y safe-upgrade; apt-get -f install; apt-get -y autoremove; reboot
 $ apt-get install g++
-$ apt-get install zip unzip
+$ apt-get install zip unzip  # LAMP University
 $ apt-get install perl-doc 
 $ apt-get install vim
 $ apt-get install linuxlogo
-$ apt-get install git
+$ apt-get install git  # RPerl
+$ apt-get install curl  # RPerl
+$ apt-get install astyle  # RPerl
 $ apt-get install lynx
 $ apt-get install screen
 $ apt-get install xterm xfce4-terminal  # trigger installation of X windows
@@ -83,11 +89,12 @@ $ apt-get install gkrellm
 $ apt-get install xchat
 $ apt-get install firefox
 $ apt-get install update-manager
+$ apt-get install indicator-multiload
 $ apt-get install unetbootin
 $ apt-get install xpra
-$ apt-get install clamav clamav-daemon
+$ apt-get install clamav clamav-daemon  # SKIP ON LOW-MEMORY SYSTEMS
 # CHEAT!!!
-    apt-get -y install g++ zip unzip perl-doc vim linuxlogo git lynx screen xterm xfce4-terminal x11-apps gkrellm xchat firefox update-manager unetbootin xpra clamav clamav-daemon
+    apt-get -y install g++ zip unzip perl-doc vim linuxlogo git curl astyle lynx screen xterm xfce4-terminal x11-apps gkrellm xchat firefox update-manager indicator-multiload unetbootin xpra clamav clamav-daemon
 # CLAMAV ANTI-VIRUS
 $ freshclam
 $ clamscan -r /home
@@ -127,7 +134,6 @@ $ /usr/5bin/bdiff
 
 
 # [[[ UBUNTU, SET UP XFCE WINDOW MANAGER ]]]
-$ apt-get install indicator-multiload
 # NOT ROOT
 $ indicator-multiload &
 # Left-click on indicator-multiload applet -> Preferences -> Select Processor, Memory, Network, Harddisk, Autostart
