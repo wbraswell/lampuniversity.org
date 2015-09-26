@@ -1,4 +1,4 @@
-LAMP Install Notes 20150804 2015.216
+LAMP Install Notes 20150926 2015.269
 Copyright (c) 2014, 2015 William N. Braswell, Jr.
 
 Tested Using:
@@ -344,8 +344,23 @@ $ apt-get install libcatalyst-devel-perl
 $ apt-get install libcatalyst-modules-perl
 
 
+# [[[ UBUNTU, INSTALL CPANM & LOCAL::LIB; COPIED FROM RPERL INSTALL DOC ]]]
+# [[[ YOU SHOULD USE THIS UNLESS YOU HAVE NO CHOICE ]]]
+# [[[ DO NOT MIX WITH PERLBREW, BELOW ]]]
+# ROOT
+$ apt-get install curl
+# NOT ROOT
+$ curl -L cpanmin.us | perl - -l $HOME/perl5 App::cpanminus local::lib
+$ echo 'eval $(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)' >> ~/.bashrc
+$ source ~/.bashrc  # optionally logout & login
+$ set | grep perl5
+    # ensure the following 4 environmental variables are updated to include ~/perl5: 
+    # PERL_MM_OPT, PERL_MB_OPT, PERL5LIB, PATH
+
+
 # [[[ UBUNTU, INSTALL HAND-COMPILED PERL, OR PERLBREW & CPANMINUS; COPIED FROM RPERL INSTALL DOC ]]]
-# [[[ DO NOT MIX WITH LOCAL::LIB ]]]
+# [[[ DO NOT USE THIS UNLESS YOU HAVE NO CHOICE ]]]
+# [[[ DO NOT MIX WITH LOCAL::LIB, ABOVE ]]]
 $ wget http://www.cpan.org/src/5.0/perl-5.20.1.tar.bz2; bunzip2 perl-5.20.1.tar.bz2; cd perl-5.20.1; perl Makefile.PL; make; make test; make install
     # OR
 $ sudo apt-get install perlbrew
@@ -361,19 +376,6 @@ $ perlbrew install perl-5.20.1
 $ perlbrew use perl-5.20.1  # TEMPORARY
 $ perlbrew switch perl-5.20.1  # PERMANENT
 $ perlbrew install-cpanm
-
-
-# [[[ UBUNTU, INSTALL CPANM & LOCAL::LIB; COPIED FROM RPERL INSTALL DOC ]]]
-# [[[ DO NOT MIX WITH PERLBREW ]]]
-# ROOT
-$ apt-get install curl
-# NOT ROOT
-$ curl -L cpanmin.us | perl - -l $HOME/perl5 App::cpanminus local::lib
-$ echo 'eval $(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)' >> ~/.bashrc
-$ source ~/.bashrc  # optionally logout & login
-$ set | grep perl5
-    # ensure the following 4 environmental variables are updated to include ~/perl5: 
-    # PERL_MM_OPT, PERL_MB_OPT, PERL5LIB, PATH
 
 
 # [[[ UBUNTU, INSTALL CATALYST TUTORIAL ]]]
