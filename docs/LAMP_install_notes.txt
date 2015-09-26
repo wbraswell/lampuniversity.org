@@ -416,7 +416,7 @@ $ cd MOUNTED_DIR; sh ./VBoxLinuxAdditions.run
 
 
 # [[[ SHINYCMS FROM GITHUB & LATEST CATALYST FROM CPAN ]]]
-# Prerequisites: LAMP, mod_perl, Postfix; Catalyst will be installed from CPAN
+# [ Prerequisites: LAMP, mod_fastcgi OR mod_perl, Postfix; Catalyst will be installed from CPAN ]
 $ sudo apt-get install expat libexpat1-dev libxml2-dev zlib1g-dev
 $ mysql --user=root --password  # required for DBD::mysql `make test`
     mysql> GRANT ALL PRIVILEGES ON test.* TO 'SOMEBODY'@'localhost' IDENTIFIED BY 'MYSQL_TEMP_PASSWORD';  # WRONGLY CREATES PASSWORD
@@ -429,7 +429,7 @@ $ mv myshinytemplate.com-latest SOMEDOMAIN.COM-latest  # OR MANUALLY MERGE INTO 
 $ cd SOMEDOMAIN.COM-latest; perl Makefile.PL; make; make test; make install  # DO NOT USE: CPANPLUS ERROR, USE FOLLOWING COMMANDS INSTEAD
 $ cd SOMEDOMAIN.COM-latest; perl Makefile.PL
 $ cpanm --installdeps .  # NOTE THE DOT AT THE END OF THIS COMMAND; RUN TWICE TO MAKE SURE ALL DEPENDENCIES ARE MET
-# CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES
+# [ CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES ]
 $ mysql --user=root --password
     mysql> CREATE DATABASE SOMEDOMAIN_COM;
     mysql> GRANT ALL PRIVILEGES ON SOMEDOMAIN_COM.* TO 'SOME_MYSQL_USER'@'localhost' IDENTIFIED BY 'SOME_MYSQL_PASS';
@@ -486,7 +486,7 @@ $ grep -nr MyShiny ./*
     # ENSURE NO FILES REMAIN
 $ find | grep myshiny
     # ENSURE NO FILES REMAIN
-# BUILD DEMO DATA & RUN TESTS
+# [ BUILD DEMO DATA & RUN TESTS ]
 $ ./bin/database/build-with-demo-data  # YES DEMO DATA, INCLUDING USER CREDENTIALS admin/changeme
 $ export TEST_POD=1
 $ perl Makefile.PL; make; make test
@@ -494,13 +494,72 @@ $ ./script/shinycms_server.pl
     # LOG IN AS ADMIN, CREDENTIALS admin/changeme
     # CHANGE ALL PASSWORDS NOW!!!
     # Admin area -> Users -> List users -> Change passwords for "admin" & "trevor" & "w1n5t0n"
-# BACKUP & RESTORE DATABASE
+# [ BACKUP & RESTORE DATABASE ]
 $ mysqldump --user=SOME_MYSQL_USER --password='SOME_MYSQL_PASS' SOMEDOMAIN_COM --lock-all-tables --ignore-table=SOMEDOMAIN_COM.user > SOMEDOMAIN_COM__no_user.sql  # NO USER, BACKUP
 $ mysql --user=root --password
     mysql> CREATE DATABASE SOMEDOMAIN_COM;  # NO USER, CREATE EMPTY DB TO RECEIVE RESTORE
     mysql> GRANT ALL PRIVILEGES ON SOMEDOMAIN_COM.* TO 'SOME_MYSQL_USER'@'localhost' IDENTIFIED BY 'SOME_MYSQL_PASS';
 $ mysql --user=SOME_MYSQL_USER --password='SOME_MYSQL_PASS' SOMEDOMAIN_COM < SOMEDOMAIN_COM__no_user.sql  # NO USER TABLE, YES MYSQL USER, RESTORE 
-# CONFIGURE APACHE MOD_PERL
+# [ CONFIGURE APACHE MOD_FASTCGI ]
+# [ YOU SHOULD USE THIS UNLESS YOU HAVE NO CHOICE ]
+# [ DO NOT MIX WITH APACHE MOD_PERL, BELOW ]
+$ cpanm FCGI FCGI::ProcManager  # NOT ROOT IF local::lib
+$ vi /etc/apt/sources.list
+    # WBRASWELL 201XYZZY 201X.YYZ: enable FastCGI repo
+    deb http://us.archive.ubuntu.com/ubuntu/ trusty multiverse
+    deb-src http://us.archive.ubuntu.com/ubuntu/ trusty multiverse
+$ apt-get update
+$ apt-get -f install
+$ apt-get install libapache2-mod-fastcgi
+$ a2enmod fastcgi
+$ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
+    <VirtualHost *:80>
+        ServerName SOMEDOMAIN.COM
+        ServerAlias www.SOMEDOMAIN.COM
+        ServerAdmin webmaster@SOMEDOMAIN.COM
+    #    DocumentRoot /srv/www/SOMEDOMAIN.COM/public_html/  # mod_fastcgi overrides below
+        <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre
+            Require all granted
+        </Directory>
+        ErrorLog /srv/www/SOMEDOMAIN.COM/logs/error.log
+        CustomLog /srv/www/SOMEDOMAIN.COM/logs/access.log combined
+    # MOD_FASTCGI
+        DocumentRoot    /home/SOMEBODY/public_html/SOMEDOMAIN.COM-latest/root
+        <Location />
+            Order allow,deny
+            Allow from all
+        </Location>
+        # Google Webmaster Tools, Robots Testing Tool 
+        Alias    /googleSOMELONGNUMBER.html    /home/SOMEBODY/public_html/SOMEDOMAIN.COM-latest/root/googleSOMELONGNUMBER.html
+        # Allow Apache to serve static content.
+        Alias       /static     /home/SOMEBODY/public_html/SOMEDOMAIN.COM-latest/root/static
+        <Location /static>  # UNNECESSARY???
+            SetHandler          default-handler
+        </Location>
+        # Display friendly error page if the FastCGI process is not running.
+        ErrorDocument   502     /home/SOMEBODY/public_html/SOMEDOMAIN.COM-latest/root/offline.html
+        # Connect to the external server.
+        FastCgiExternalServer   /tmp/SOMEDOMAIN.COM.fcgi -socket /tmp/SOMEDOMAIN.COM.socket -idle-timeout 900
+        Alias           /       /tmp/SOMEDOMAIN.COM.fcgi/
+    </VirtualHost>
+$ cd /home/SOMEBODY/public_html/SOMEDOMAIN-latest
+$ vi modified/offline.html
+    <b>ERROR 502:</b> FastCGI Process Not Running, Please Inform Site Administrator <a href="mailto:SOMEBODY@SUBDOMAIN.SOMEDOMAIN.COM">ADMIN NAME</a>
+# START FASTCGI SERVER, MANUAL
+$ ~/bin/fastcgi_start__SOMEDOMAIN.COM.sh  # LOCAL::LIB, RUN AS USER SOMEBODY BY USER SOMEBODY, MUST HAVE CREATED SYMLINKS IN EDIT-MYSHINYTEMPLATE-FILES SECTION ABOVE
+    # OR
+$ sudo -Eu SOMEBODY /home/SOMEBODY/public_html/SOMEDOMAIN-latest/bin/external-fastcgi-server  # PERLBREW, RUN AS USER SOMEBODY BY USER root
+$ cat /tmp/SOMEDOMAIN.COM.pid
+# START FASTCGI SERVER, AUTOMATIC
+$ ln -s /home/SOMEBODY/public_html/SOMEDOMAIN-latest/modified/fastcgi_SOMEDOMAIN.COM.conf /etc/init  # UPSTART, MOST MODERN LINUX DISTROS
+$ reboot
+$ service fastcgi_SOMEDOMAIN.COM status
+    # OR
+$ ln -s /home/SOMEBODY/public_html/SOMEDOMAIN-latest/modified/fastcgi_SOMEDOMAIN.COM-init.d /etc/init.d  # SYSV-INIT, OLDER LINUX DISTROS
+$ reboot
+# [ CONFIGURE APACHE MOD_PERL ]
+# [ DO NOT USE THIS UNLESS YOU HAVE NO CHOICE ]
+# [ DO NOT MIX WITH APACHE MOD_FASTCGI, ABOVE ]
 $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
     # DOMAIN
     <VirtualHost *:80>
@@ -558,68 +617,13 @@ $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
             SetHandler  default-handler
         </Location>
     </VirtualHost>
-# CONFIGURE APACHE MOD_FASTCGI
-$ cpanm FCGI FCGI::ProcManager  # NOT ROOT IF local::lib
-$ vi /etc/apt/sources.list
-    # WBRASWELL 201XYZZY 201X.YYZ: enable FastCGI repo
-    deb http://us.archive.ubuntu.com/ubuntu/ trusty multiverse
-    deb-src http://us.archive.ubuntu.com/ubuntu/ trusty multiverse
-$ apt-get update
-$ apt-get -f install
-$ apt-get install libapache2-mod-fastcgi
-$ a2enmod fastcgi
-$ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
-    <VirtualHost *:80>
-        ServerName SOMEDOMAIN.COM
-        ServerAlias www.SOMEDOMAIN.COM
-        ServerAdmin webmaster@SOMEDOMAIN.COM
-    #    DocumentRoot /srv/www/SOMEDOMAIN.COM/public_html/  # mod_fastcgi overrides below
-        <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre
-            Require all granted
-        </Directory>
-        ErrorLog /srv/www/SOMEDOMAIN.COM/logs/error.log
-        CustomLog /srv/www/SOMEDOMAIN.COM/logs/access.log combined
-    # MOD_FASTCGI
-        DocumentRoot    /home/SOMEBODY/public_html/SOMEDOMAIN.COM-latest/root
-        <Location />
-            Order allow,deny
-            Allow from all
-        </Location>
-        # Google Webmaster Tools, Robots Testing Tool 
-        Alias    /googleSOMELONGNUMBER.html    /home/SOMEBODY/public_html/SOMEDOMAIN.COM-latest/root/googleSOMELONGNUMBER.html
-        # Allow Apache to serve static content.
-        Alias       /static     /home/SOMEBODY/public_html/SOMEDOMAIN.COM-latest/root/static
-        <Location /static>  # UNNECESSARY???
-            SetHandler          default-handler
-        </Location>
-        # Display friendly error page if the FastCGI process is not running.
-        ErrorDocument   502     /home/SOMEBODY/public_html/SOMEDOMAIN.COM-latest/root/offline.html
-        # Connect to the external server.
-        FastCgiExternalServer   /tmp/SOMEDOMAIN.COM.fcgi -socket /tmp/SOMEDOMAIN.COM.socket -idle-timeout 900
-        Alias           /       /tmp/SOMEDOMAIN.COM.fcgi/
-    </VirtualHost>
-$ cd /home/SOMEBODY/public_html/SOMEDOMAIN-latest
-$ vi modified/offline.html
-    <b>ERROR 502:</b> FastCGI Process Not Running, Please Inform Site Administrator <a href="mailto:SOMEBODY@SUBDOMAIN.SOMEDOMAIN.COM">ADMIN NAME</a>
-# START FASTCGI SERVER, MANUAL
-$ ~/bin/fastcgi_start__SOMEDOMAIN.COM.sh  # LOCAL::LIB, RUN AS USER SOMEBODY BY USER SOMEBODY, MUST HAVE CREATED SYMLINKS IN EDIT-MYSHINYTEMPLATE-FILES SECTION ABOVE
-    # OR
-$ sudo -Eu SOMEBODY /home/SOMEBODY/public_html/SOMEDOMAIN-latest/bin/external-fastcgi-server  # PERLBREW, RUN AS USER SOMEBODY BY USER root
-$ cat /tmp/SOMEDOMAIN.COM.pid
-# START FASTCGI SERVER, AUTOMATIC
-$ ln -s /home/SOMEBODY/public_html/SOMEDOMAIN-latest/modified/fastcgi_SOMEDOMAIN.COM.conf /etc/init  # UPSTART, MOST MODERN LINUX DISTROS
-$ reboot
-$ service fastcgi_SOMEDOMAIN.COM status
-    # OR
-$ ln -s /home/SOMEBODY/public_html/SOMEDOMAIN-latest/modified/fastcgi_SOMEDOMAIN.COM-init.d /etc/init.d  # SYSV-INIT, OLDER LINUX DISTROS
-$ reboot
-# CREATE APACHE DIRECTORIES
+# [ CREATE APACHE DIRECTORIES ]
 $ mkdir -p /srv/www/SOMEDOMAIN.COM/public_html
 $ mkdir /srv/www/SOMEDOMAIN.COM/logs
 $ vi /srv/www/SOMEDOMAIN.COM/public_html/index.html  # create static test page
     SOMEDOMAIN.COM STATIC PAGE
 $ a2ensite SOMEDOMAIN.COM
-# CONFIGURE APACHE PERMISSIONS
+# [ CONFIGURE APACHE PERMISSIONS ]
 $ vi /etc/group  # allow SOMEBODY user to modify permissions
     www-data:x:33:SOMEBODY
 $ chown -R SOMEBODY:www-data /home/SOMEBODY/
@@ -627,7 +631,7 @@ $ chmod -R u+rwX,o+rX,o-w /home/SOMEBODY/public_html/SOMEDOMAIN-latest
 $ chmod -R g+rwX /home/SOMEBODY/public_html/SOMEDOMAIN-latest/root/static/cms-uploads/
 $ chmod -R g+rX /home/SOMEBODY/
 $ service apache2 reload
-# CONFIGURE SHINY
+# [ CONFIGURE SHINY ]
 # http://phpmyadmin.SOMEDOMAIN.COM
     database "SOMEDOMAIN_COM"
     table "user" 
