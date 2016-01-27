@@ -1,4 +1,4 @@
-LAMP Install Notes 20160122 20160122
+LAMP Install Notes 20160126 20160126
 Copyright (c) 2014, 2015, 2016 William N. Braswell, Jr.
 
 Tested Using:
@@ -435,7 +435,7 @@ $ mysql --user=root --password
     mysql> CREATE DATABASE SOMEDOMAIN_COM;
     mysql> GRANT ALL PRIVILEGES ON SOMEDOMAIN_COM.* TO 'SOME_MYSQL_USER'@'localhost' IDENTIFIED BY 'SOME_MYSQL_PASS';
     mysql> QUIT
-$ mv shinycms.conf.redacted modified/shinycms.conf; ln -s modified/shinycms.conf ./shinycms.conf
+$ rm modified/shinycms.conf; mv shinycms.conf.redacted modified/shinycms.conf; ln -s modified/shinycms.conf ./shinycms.conf
 $ vi shinycms.conf
     name   ShinyCMS
     author SOME BODY <SOMEBODY@EXTERNALDOMAIN.COM>
@@ -459,7 +459,6 @@ $ grep -nr myshiny ./*
     # :%s/myshinytemplate\.com/SOMEDOMAIN\.COM/g
     # :%s/myshinytemplate_com/SOMEDOMAIN_COM/g
     # :%s/MyShinyTemplate\.com/SOMEDOMAIN\.COM/g
-    # :%s/MyShinyTemplate/SOMEDOMAIN/g
     # :%s/template_user/SOME_MYSQL_USER/g
     # :%s/wbraswell/SOMEBODY/g
 $ cd modified
@@ -468,9 +467,9 @@ $ vi external-fastcgi-server
 $ vi fastcgi_start__myshinytemplate.com.sh
 $ mv fastcgi_start__myshinytemplate.com.sh fastcgi_start__SOMEDOMAIN.COM.sh
 $ vi fastcgi_myshinytemplate.com.conf
-$ my fastcgi_myshinytemplate.com.conf fastcgi_SOMEDOMAIN.COM.conf
+$ mv fastcgi_myshinytemplate.com.conf fastcgi_SOMEDOMAIN.COM.conf
 $ vi fastcgi_myshinytemplate.com-init.d
-$ my fastcgi_myshinytemplate.com-init.d fastcgi_SOMEDOMAIN.COM-init.d
+$ mv fastcgi_myshinytemplate.com-init.d fastcgi_SOMEDOMAIN.COM-init.d
 $ vi git_backup__myshinytemplate.com.sh
 $ mv git_backup__myshinytemplate.com.sh git_backup__SOMEDOMAIN.COM.sh
 $ vi git_merge_modified__myshinytemplate.com.sh
@@ -486,6 +485,8 @@ $ grep -nr myshiny ./*
 $ grep -nr MyShiny ./*
     # ENSURE NO FILES REMAIN
 $ find | grep myshiny
+$ find | grep MyShiny
+$ find | grep template_user
     # ENSURE NO FILES REMAIN
 # [ BUILD DEMO DATA & RUN TESTS ]
 $ ./bin/database/build-with-demo-data  # YES DEMO DATA, INCLUDING USER CREDENTIALS admin/changeme
@@ -644,7 +645,7 @@ $ service apache2 reload
 # Admin area -> Users -> List Users -> Edit All 3 Users -> Update E-Mail, etc.
 # Admin area -> Pages -> List Form Handlers -> Edit Contact Form -> Update "E-mail To" Field
 # Admin area -> Pages -> List Pages -> Edit Home -> Add Image "/static/cms-uploads/images/homepage_added.png" & "Lorem Ipsum Dolor" Text
-# Admin area -> Pages -> List Templates -> Edit Home -> Delete "video_url" Element
+# Admin area -> Pages -> List Templates -> Edit Homepage -> Delete "video_url" Element -> Update
 
 
 # [[[ RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]
