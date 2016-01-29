@@ -1,4 +1,4 @@
-LAMP Install Notes 20160126 20160126
+LAMP Install Notes 20160128 20160128
 Copyright (c) 2014, 2015, 2016 William N. Braswell, Jr.
 
 Tested Using:
@@ -125,6 +125,7 @@ $ apt-get install libreoffice
 # LAMP UNIVERSITY TOOLS; as user, not root
 $ wget https://github.com/wbraswell/lampuniversity.org/archive/master.zip; mv master.zip lampuniversity.org-master.zip; unzip lampuniversity.org-master.zip
 $ mkdir ~/bin; cp lampuniversity.org-master/bin/* ~/bin
+# LOGOUT & LOGIN to reset PATH to include ~/bin
 $ topmem.sh
 # HEIRLOOM TOOLS (bdiff)
 $ apt-get install zlib1g-dev libncurses5-dev libssl-dev
