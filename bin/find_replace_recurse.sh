@@ -1,5 +1,7 @@
 #!/bin/bash
-# Copyright © 2014, 2015, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.20.0.
+# Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.20.0.
+
+VERSION=0.010_000
 
 echo "EXAMPLES:"
 echo "replace all occurrences of 'FOO' with 'BAR'"
@@ -21,12 +23,28 @@ echo "find text:    '$1'"
 echo "replace text: '$2'"
 echo "directory:    $3"
 
-read -p "Are you sure? " -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]
+if [[ $4 =~ ^YES$ ]]
 then
+    echo "Skipping prompt, I hope you're sure!"
+    PASS=1;
+else
+    read -p "Are you sure? " -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+        PASS=1;
+    else
+        PASS=0;
+    fi
+fi
+
+if [ "$PASS" -eq 1 ]
+then
+    echo 'Recursively finding and replacing...'
     sed -ri -e "s/$1/$2/g" $(grep -Elr --binary-files=without-match "$1" "$3")
 
     # wrongly edits binary files, will corrupt .git/index files, database files, etc
 #    find $3 -type f -readable -writable -exec sed -i "s/$1/$2/g" {} \;
+
+    echo 'DONE!'
 fi
