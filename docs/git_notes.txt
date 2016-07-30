@@ -1,5 +1,43 @@
-Git Notes 20141113 2014.317
-Copyright (c) 2014 William N. Braswell, Jr.
+Git Notes 20160729 2016.211
+Copyright (c) 2014, 2015, 2016 William N. Braswell, Jr.
+
+# [[[ INDIVIDUAL COMMANDS ]]]
+# [[[ INDIVIDUAL COMMANDS ]]]
+# [[[ INDIVIDUAL COMMANDS ]]]
+
+# START HERE, NEED ADD: git clone, git add, git commit, git push
+# START HERE, NEED ADD: git clone, git add, git commit, git push
+# START HERE, NEED ADD: git clone, git add, git commit, git push
+
+# [[[ UPDATES LOCAL .git/ DATABASE ONLY, DOES NOT CHANGE LOCAL BRANCH ]]]
+$ git remote update
+# MOSTLY EQUALS, BUT BETTER THAN
+$ git fetch
+
+
+# [[[ NO LOCAL CHANGES MADE, REMOTE CHANGES MADE BY SOMEONE ELSE, GET REMOTE CHANGES ]]]
+$ git pull
+# EQUALS
+$ git fetch; git merge
+
+
+# [[[ LOCAL CHANGES MADE, REMOTE CHANGES COMMITTED TO GITHUB BY SOMEONE ELSE, 
+#     GET REMOTE CHANGES W/OUT LOSING LOCAL CHANGES ]]]
+$ git remote update; git rebase -i origin/master
+# MOSTLY EQUALS, BUT BETTER THAN
+$ git pull --rebase
+# MOSTLY EQUALS, BUT BETTER THAN
+$ git fetch; git rebase
+
+
+# [[[ LOCAL CHANGES MADE, HIDE LOCAL CHANGES BY STORING ON STASH STACK, REVERT TO PREVIOUS COMMIT ]]]
+# like a commit to a new local-only branch w/ a serialized name on a special stack
+$ git stash
+
+
+# [[[ COMMON COMMAND SEQUENCES ]]]
+# [[[ COMMON COMMAND SEQUENCES ]]]
+# [[[ COMMON COMMAND SEQUENCES ]]]
 
 # [[[ SET UP SSH KEYS ]]]
 # https://help.github.com/articles/generating-ssh-keys
@@ -17,6 +55,7 @@ $ git config --global user.name "FIRSTNAME LASTNAME"
 $ git config --global core.editor "vim"
 # manually create github repository via webui, if not already done
 
+
 # [[[ GET STARTED, REMOTE -> LOCAL -> REMOTE, WITHOUT AUTOMATIC REPOSITORY INITIALIZATION BY GITHUB ]]]
 $ cd GIT_REPOS_DIR
 $ git init
@@ -26,17 +65,20 @@ $ git remote add origin URL_FROM_GITHUB
 $ git pull origin master
 $ git push origin master
 
+
 # [[[ GET STARTED, REMOTE -> LOCAL -> REMOTE, WITH AUTOMATIC REPOSITORY INITIALIZATION BY GITHUB ]]]
 $ git clone URL_FROM_GITHUB ./GITHUB_REPO_NAME-latest
 $ cd GITHUB_REPO_NAME-latest
 $ git checkout gh-pages  # ONLY IF USING GITHUB PAGES
 $ git reset --hard origin/gh-pages  # ONLY IF USING GITHUB PAGES
 
+
 # [[[ UPDATE CODE CHANGES, LOCAL -> REMOTE ]]]
 $ git add -A
 $ git commit -a
     # (Initial Commit;) Major Comment, Minor Comments
 $ git push origin master
+
 
 # [[[ UPDATE GITHUB PAGES, LOCAL -> REMOTE ]]]
 $ git checkout -b gh-pages  # CREATES LOCAL BRANCH
@@ -46,6 +88,7 @@ $ git add -A
 $ git commit -a
 $ git push origin gh-pages
 $ git checkout master
+
 
 # [[[ CREATE NEW BRANCH, LOCAL -> REMOTE -> LOCAL -> REMOTE ]]]
 $ cd GIT_REPOS_DIR
@@ -60,6 +103,7 @@ $ git diff
 $ git add -A
 $ git commit -a
 $ git push origin NEW_BRANCH
+
 
 # [[[ MERGE NEW BRANCH BACK INTO MASTER BRANCH ]]]
 $ cd GIT_REPOS_DIR
@@ -86,10 +130,12 @@ $ git push origin :NEW_BRANCH
     To git@github.com:USER_NAME/PROJECT_NAME.git
      - [deleted]         NEW_BRANCH
 
-# [[[ FIX BROKEN LOCAL GH-PAGES REPO, THROW AWAY LOCAL CODE AND REPLACE WITH ALL REMOTE CODE ]]]
+
+# [[[ FIX BROKEN LOCAL GH-PAGES BRANCH, THROW AWAY LOCAL CODE & REPLACE WITH ALL REMOTE CODE ]]]
 $ git fetch
 $ git checkout gh-pages
 $ git reset --hard origin/gh-pages
+
 
 # [[[ UNDO GIT ADD BEFORE GIT COMMIT ]]]
 # [ UNDO SINGLE FILE ADD ]
@@ -98,6 +144,7 @@ $ git reset HEAD FILE_YOU_DIDNT_MEAN_TO_ADD  # "HEAD" is a real git keyword, do 
 # [ UNDO ALL ADDS ]
 $ git reset HEAD
 
+
 # [[[ REVERT TO 3 COMMITS AGO, WITHOUT LOSING CURRENT WORK ]]]
 $ git reset HEAD~3
 $ git diff
@@ -105,3 +152,12 @@ $ vi TO_EDIT_DIFFS
 $ git add -A
 $ git commit -a
 $ git push origin INSERT_BRANCH
+
+
+# [[[ LOCAL CHANGES MADE, REMOTE CHANGES COMMITTED TO GITHUB BY SOMEONE ELSE, 
+#     GET REMOTE CHANGES W/OUT LOSING LOCAL CHANGES, ADD LOCAL CHANGES AFTER REMOTE CHANGES ]]]
+$ git commit -a
+$ git remote update
+$ git rebase -i origin/master
+$ git push origin master
+
