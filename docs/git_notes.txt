@@ -1,4 +1,4 @@
-Git Notes 20160729 2016.211
+Git Notes 20160801 2016.214
 Copyright (c) 2014, 2015, 2016 William N. Braswell, Jr.
 
 # [[[ INDIVIDUAL COMMANDS ]]]
@@ -161,3 +161,7 @@ $ git remote update
 $ git rebase -i origin/master
 $ git push origin master
 
+
+# [[[ FIX LATEST COMMIT MESSAGE AFTER PUSH TO REMOTE GITHUB ]]]
+$ git commit --amend
+$ git push --force origin master
