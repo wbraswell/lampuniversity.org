@@ -1,10 +1,11 @@
-LAMP Install Notes 20160407 2016.098
+LAMP Install Notes 20160815 2016.228
 Copyright (c) 2014, 2015, 2016 William N. Braswell, Jr.
 
 Tested Using:
 Fresh Xubuntu v14.04.2 (Trusty Tahr)
 Fresh  Ubuntu v14.04.1 (Trusty Tahr) from CloudAtCost.com or HostGator.com
 Fresh  Ubuntu v14.04   (Trusty Tahr) in Virtual Box
+Fresh Xubuntu v16.04.1 (Xenial Xerus)
 
 # [[[ UNINDENT ]]]
 :%s/^\ \ \ \ //g
@@ -74,6 +75,7 @@ $ reboot
 # CHEAT!!!
     locale-gen en_US.UTF-8; dpkg-reconfigure locales; apt-get update; apt-get -y upgrade; apt-get -y install aptitude; aptitude -y safe-upgrade; apt-get -f install; apt-get -y autoremove; reboot
 $ apt-get install g++
+$ apt-get install ssh
 $ apt-get install zip unzip  # LAMP University
 $ apt-get install perl-doc 
 $ apt-get install vim
@@ -87,7 +89,13 @@ $ apt-get install xterm xfce4-terminal  # trigger installation of X windows
 $ apt-get install x11-apps  # contains xeyes for basic X testing
 $ apt-get install gkrellm
 $ apt-get install xchat
+
+# NEED FIX: xchat not included in Ubuntu v16.04
+# NEED FIX: xchat not included in Ubuntu v16.04
+# NEED FIX: xchat not included in Ubuntu v16.04
+
 $ apt-get install firefox
+$ apt-get install chromium-browser
 $ apt-get install update-manager
 $ apt-get install indicator-multiload
 $ apt-get install unetbootin
@@ -95,7 +103,12 @@ $ apt-get install xpra
 $ apt-get remove gvfs-daemons  # OPTIONAL, GVSF: uninstall gvfs to speed up thunar file explorer
 $ apt-get install clamav clamav-daemon  # SKIP ON LOW-MEMORY SYSTEMS
 # CHEAT!!!
-    apt-get -y install g++ zip unzip perl-doc vim linuxlogo git curl astyle lynx screen xterm xfce4-terminal x11-apps gkrellm xchat firefox update-manager indicator-multiload unetbootin xpra clamav clamav-daemon; apt-get remove gvfs-daemons
+    apt-get -y install g++ ssh zip unzip perl-doc vim linuxlogo git curl astyle lynx screen xterm xfce4-terminal x11-apps gkrellm xchat firefox chromium-browser update-manager indicator-multiload unetbootin xpra clamav clamav-daemon; apt-get remove gvfs-daemons
+
+# NEED FIX: xchat not included in Ubuntu v16.04
+# NEED FIX: xchat not included in Ubuntu v16.04
+# NEED FIX: xchat not included in Ubuntu v16.04
+
 # CLAMAV ANTI-VIRUS
 $ freshclam
 $ clamscan -r /home
@@ -117,6 +130,11 @@ $ update-manager  # DON'T FORGET THIS CRITICAL SECURITY STEP!
     # install security updates only
     # never remind of dist upgrade
     # enable Ubuntu repositories only, disable restricted & multiverse
+
+# NEED ANSWER: why disable security updates from restricted & multiverse repos?
+# NEED ANSWER: why disable security updates from restricted & multiverse repos?
+# NEED ANSWER: why disable security updates from restricted & multiverse repos?
+
 # OPTIONAL, GVFS: if gvfs not uninstalled, at least disable network mounting
 $ vi /usr/share/gvfs/mounts/network.mount
     AutoMount=false
@@ -126,11 +144,25 @@ $ sh -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/a
 $ apt-get update 
 $ apt-get install google-chrome-stable
 $ apt-get install libreoffice
+# ECLIPSE & EPIC
+$ apt-get install eclipse-cdt
+# Help -> Install New Software -> Add -> http://www.epic-ide.org/updates -> Install
+# UBUNTU SDK
+$ add-apt-repository ppa:ubuntu-sdk-team/ppa
+$ apt-get update; apt-get dist-upgrade
+$ apt-get install ubuntu-sdk-ide
+$ apt-get install ubuntu-sdk-dev ubuntu-sdk-api-tools  # NEED ANSWER: what are these extras packages for?
+
+# NEED FIX ubuntu sdk install commands?
+# NEED FIX ubuntu sdk install commands?
+# NEED FIX ubuntu sdk install commands?
+
 # LAMP UNIVERSITY TOOLS; as user, not root
 $ wget https://github.com/wbraswell/lampuniversity.org/archive/master.zip; mv master.zip lampuniversity.org-master.zip; unzip lampuniversity.org-master.zip
 $ mkdir ~/bin; cp lampuniversity.org-master/bin/* ~/bin
 # LOGOUT & LOGIN to reset PATH to include ~/bin
 $ topmem.sh
+$ rm -Rf lampuniversity.org*
 # HEIRLOOM TOOLS (bdiff)
 $ apt-get install zlib1g-dev libncurses5-dev libssl-dev
 $ wget https://github.com/halcyon/ubuntu-heirloom/archive/master.zip; mv master.zip ubuntu-heirloom-master.zip; unzip ubuntu-heirloom-master.zip
@@ -140,10 +172,14 @@ $ /usr/5bin/bdiff
 
 # [[[ UBUNTU, SET UP XFCE WINDOW MANAGER ]]]
 # NOT ROOT
-# Right-click on top panel -> Panel -> Panel Preferences -> Green Plus Sign -> Select New Panel -> Items -> Add Windows Buttons & Separator & Workspace Switcher
-    -> Select First Panel -> Items -> Remove Workspace Switcher
+# Right-click on top panel -> Panel -> Panel Preferences -> Green Plus Sign -> Select New Panel -> Items Tab -> Add Windows Buttons & Separator & Workspace Switcher
+    -> Separator Settings -> Expand -> Workspace Settings -> 6 Workspaces: Browsers1, E-Mail, Browsers2, Files, Office, Terminals
+    -> Drag Second Panel Down To Bottom Of Screen
+    -> Display Tab -> Lock Panel & Row Size 20 Pixels & Length 100% 
+    -> Select First Panel -> Items -> Remove Workspace Switcher & Window Buttons -> Add Action Buttons
+    -> Close Panel Preferences
 $ indicator-multiload &
-# Left-click on indicator-multiload applet -> Preferences -> Select Processor, Memory, Network, Harddisk, Autostart
+# Left-click on indicator-multiload applet -> Preferences -> Select Processor, Memory, Network, Harddisk, Autostart -> Colors Built-In Schemes Traditional
 # Left-click on clock applet -> Properties -> Clock Options -> Format -> Custom Format
     %a %b%d %Y%m%d %Y.%j %H%M.%S
 $ rm -Rf ~/Videos/ ~/Templates/ ~/Public/ ~/Pictures/ ~/Music/ ~/Documents/
