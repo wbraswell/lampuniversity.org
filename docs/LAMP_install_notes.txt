@@ -166,7 +166,7 @@ $ /usr/5bin/bdiff
     -> Select First Panel -> Items -> Remove Workspace Switcher & Window Buttons -> Add Action Buttons
     -> Close Panel Preferences
 $ indicator-multiload &
-# Left-click on indicator-multiload applet -> Preferences -> Select Processor, Memory, Network, Harddisk, Autostart -> Colors Built-In Schemes Traditional
+# Left-click on indicator-multiload applet -> Preferences -> Select Processor, Memory, Network, Harddisk, Autostart -> Colors Built-In Schemes Traditional, Cached Color Black
 # Left-click on clock applet -> Properties -> Clock Options -> Format -> Custom Format
     %a %b%d %Y%m%d %Y.%j %H%M.%S
 $ rm -Rf ~/Videos/ ~/Templates/ ~/Public/ ~/Pictures/ ~/Music/ ~/Documents/
