@@ -1,4 +1,4 @@
-LAMP Install Notes 20160815 2016.228
+LAMP Install Notes 20160816 2016.229
 Copyright (c) 2014, 2015, 2016 William N. Braswell, Jr.
 
 Tested Using:
@@ -59,6 +59,8 @@ $ cat /etc/resolv.conf  # confirm following
 # [[[ UBUNTU, FIX BROKEN SWAP DEVICE ]]]
 # when installed from USB drive, update UUID in /etc/fstab and /etc/crypttab to reflect new /dev/sd* drive letters
 
+# [[[ UBUNTU, INSTALL EXPERIMENTAL UBUNTU SDK FIRST ]]]
+$ apt-get install ubuntu-sdk
 
 # [[[ UBUNTU, UPDATE OPERATING SYSTEM PACKAGES ]]]
 $ locale-gen en_US.UTF-8; dpkg-reconfigure locales  # fix "perl: warning: Setting locale failed."
@@ -88,12 +90,7 @@ $ apt-get install screen
 $ apt-get install xterm xfce4-terminal  # trigger installation of X windows
 $ apt-get install x11-apps  # contains xeyes for basic X testing
 $ apt-get install gkrellm
-$ apt-get install xchat
-
-# NEED FIX: xchat not included in Ubuntu v16.04
-# NEED FIX: xchat not included in Ubuntu v16.04
-# NEED FIX: xchat not included in Ubuntu v16.04
-
+$ apt-get install hexchat
 $ apt-get install firefox
 $ apt-get install chromium-browser
 $ apt-get install update-manager
@@ -103,12 +100,7 @@ $ apt-get install xpra
 $ apt-get remove gvfs-daemons  # OPTIONAL, GVSF: uninstall gvfs to speed up thunar file explorer
 $ apt-get install clamav clamav-daemon  # SKIP ON LOW-MEMORY SYSTEMS
 # CHEAT!!!
-    apt-get -y install g++ ssh zip unzip perl-doc vim linuxlogo git curl astyle lynx screen xterm xfce4-terminal x11-apps gkrellm xchat firefox chromium-browser update-manager indicator-multiload unetbootin xpra clamav clamav-daemon; apt-get remove gvfs-daemons
-
-# NEED FIX: xchat not included in Ubuntu v16.04
-# NEED FIX: xchat not included in Ubuntu v16.04
-# NEED FIX: xchat not included in Ubuntu v16.04
-
+    apt-get -y install g++ ssh zip unzip perl-doc vim linuxlogo git curl astyle lynx screen xterm xfce4-terminal x11-apps gkrellm hexchat firefox chromium-browser update-manager indicator-multiload unetbootin xpra clamav clamav-daemon; apt-get remove gvfs-daemons
 # CLAMAV ANTI-VIRUS
 $ freshclam
 $ clamscan -r /home
@@ -129,35 +121,29 @@ $ update-manager  # DON'T FORGET THIS CRITICAL SECURITY STEP!
     # check for updates daily
     # install security updates only
     # never remind of dist upgrade
-    # enable Ubuntu repositories only, disable restricted & multiverse
-
-# NEED ANSWER: why disable security updates from restricted & multiverse repos?
-# NEED ANSWER: why disable security updates from restricted & multiverse repos?
-# NEED ANSWER: why disable security updates from restricted & multiverse repos?
+    # enable Ubuntu repositories only, disable restricted & multiverse  # NEED ANSWER: why disable security updates from restricted & multiverse repos?
 
 # OPTIONAL, GVFS: if gvfs not uninstalled, at least disable network mounting
 $ vi /usr/share/gvfs/mounts/network.mount
     AutoMount=false
-# GOOGLE CHROME & LIBREOFFICE
+
+
+# [[[ UBUNTU, EXTRA OPERATING SYSTEM PACKAGES ]]]
 $ wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - 
 $ sh -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
 $ apt-get update 
 $ apt-get install google-chrome-stable
 $ apt-get install libreoffice
-# ECLIPSE & EPIC
+$ apt-get install pithos
+$ apt-get install gimp
 $ apt-get install eclipse-cdt
-# Help -> Install New Software -> Add -> http://www.epic-ide.org/updates -> Install
-# UBUNTU SDK
-$ add-apt-repository ppa:ubuntu-sdk-team/ppa
-$ apt-get update; apt-get dist-upgrade
-$ apt-get install ubuntu-sdk-ide
-$ apt-get install ubuntu-sdk-dev ubuntu-sdk-api-tools  # NEED ANSWER: what are these extras packages for?
+	# Help -> Install New Software -> Add -> http://www.epic-ide.org/updates -> Install
+# CHEAT!!!
+	wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -; sh -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'; apt-get update; apt-get -y install google-chrome-stable libreoffice pithos gimp eclipse-cdt
 
-# NEED FIX ubuntu sdk install commands?
-# NEED FIX ubuntu sdk install commands?
-# NEED FIX ubuntu sdk install commands?
 
-# LAMP UNIVERSITY TOOLS; as user, not root
+# [[[ UBUNTU, LAMP UNIVERSITY TOOLS ]]]
+# as user, not root
 $ wget https://github.com/wbraswell/lampuniversity.org/archive/master.zip; mv master.zip lampuniversity.org-master.zip; unzip lampuniversity.org-master.zip
 $ mkdir ~/bin; cp lampuniversity.org-master/bin/* ~/bin
 # LOGOUT & LOGIN to reset PATH to include ~/bin
@@ -186,9 +172,10 @@ $ rm -Rf ~/Videos/ ~/Templates/ ~/Public/ ~/Pictures/ ~/Music/ ~/Documents/
 
 
 # [[[ UBUNTU, ENABLE WIFI ]]]
-# DELL LATITUDE D430
-$ apt-get install firmware-b43-installer
+# DELL LATITUDE D430 & D630
+# SYMPTOMS: NO WIFI, CAN NOT SHUTDOWN OR REBOOT OR SUSPEND
 $ apt-get remove bcmwl-kernel-source
+$ apt-get install firmware-b43-installer
 $ reboot
 
 
