@@ -59,8 +59,10 @@ $ cat /etc/resolv.conf  # confirm following
 # [[[ UBUNTU, FIX BROKEN SWAP DEVICE ]]]
 # when installed from USB drive, update UUID in /etc/fstab and /etc/crypttab to reflect new /dev/sd* drive letters
 
-# [[[ UBUNTU, INSTALL EXPERIMENTAL UBUNTU SDK FIRST ]]]
+
+# [[[ UBUNTU, INSTALL EXPERIMENTAL UBUNTU SDK BEFORE OTHER PACKAGES ]]]
 $ apt-get install ubuntu-sdk
+
 
 # [[[ UBUNTU, UPDATE OPERATING SYSTEM PACKAGES ]]]
 $ locale-gen en_US.UTF-8; dpkg-reconfigure locales  # fix "perl: warning: Setting locale failed."
@@ -122,7 +124,6 @@ $ update-manager  # DON'T FORGET THIS CRITICAL SECURITY STEP!
     # install security updates only
     # never remind of dist upgrade
     # enable Ubuntu repositories only, disable restricted & multiverse  # NEED ANSWER: why disable security updates from restricted & multiverse repos?
-
 # OPTIONAL, GVFS: if gvfs not uninstalled, at least disable network mounting
 $ vi /usr/share/gvfs/mounts/network.mount
     AutoMount=false
