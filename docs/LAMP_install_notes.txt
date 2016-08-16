@@ -175,7 +175,7 @@ $ rm -Rf ~/Videos/ ~/Templates/ ~/Public/ ~/Pictures/ ~/Music/ ~/Documents/
 # [[[ UBUNTU, ENABLE WIFI ]]]
 # DELL LATITUDE D430 & D630
 # SYMPTOMS: NO WIFI, CAN NOT SHUTDOWN OR REBOOT OR SUSPEND
-$ apt-get remove bcmwl-kernel-source
+$ apt-get remove bcmwl-kernel-source dkms
 $ apt-get install firmware-b43-installer
 $ reboot
 
