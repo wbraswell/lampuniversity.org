@@ -129,6 +129,18 @@ $ vi /usr/share/gvfs/mounts/network.mount
     AutoMount=false
 
 
+# [[[ UBUNTU, FIX BROKEN SCREENSAVER ]]]
+# SYMPTOMS: MOUSE CURSOR DISAPPEARS AFTER SCREENSAVER (CTRL-ALT-F1 FOR TEMPORARY FIX)
+$ wget https://www.spacetelescope.org/static/images/zip/top100/top100-large.zip; unzip top100-large.zip
+$ mkdir ~/.xscreensaver_glslideshow; mv top100/ ~/.xscreensaver_glslideshow/
+	# alternative manual download source:  http://www.jpl.nasa.gov/spaceimages/searchwp.php?category=featured
+$ apt-get remove light-locker
+$ apt-get install xscreensaver xscreensaver-data-extra xscreensaver-gl
+	# Click main Xubuntu app menu -> Settings -> Screensaver -> The XScreenSaver daemon doesn't seem to be running on display ":0.0".  Launch it now?  OK -> Blank & Lock After 10 Mins 
+	# -> Mode, Only One Screensaver -> GLSlideshow -> Settings -> Advanced -> glslideshow -root -delay 46565 -duration 5 -zoom 85 -> Close GLSlideshow Settings
+	# -> Advanced Tab -> Image Manipulation -> Choose Random Image -> Browse -> Select Image Folder ~/.xscreensaver_glslideshow/top100
+
+
 # [[[ UBUNTU, EXTRA OPERATING SYSTEM PACKAGES ]]]
 $ wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - 
 $ sh -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
@@ -167,6 +179,7 @@ $ /usr/5bin/bdiff
     -> Close Panel Preferences
 $ indicator-multiload &
 # Left-click on indicator-multiload applet -> Preferences -> Select Processor, Memory, Network, Harddisk, Autostart -> Colors Built-In Schemes Traditional, Cached Color Black
+# Right-click on indicator-multiload applet -> Move -> Drag to left of indicator plugin icons
 # Right-click on clock applet -> Properties -> Format -> Custom Format
     %a %b%d %Y%m%d %Y.%j %H%M.%S
 $ rm -Rf ~/Videos/ ~/Templates/ ~/Public/ ~/Pictures/ ~/Music/ ~/Documents/
