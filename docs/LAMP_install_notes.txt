@@ -64,6 +64,14 @@ $ cat /etc/resolv.conf  # confirm following
 $ apt-get install ubuntu-sdk
 
 
+# NEED FIX: bad to do APT upgrade below?  breaks ability to install ubuntu-sdk & gvim etc???
+# NEED FIX: bad to do APT upgrade below?  breaks ability to install ubuntu-sdk & gvim etc???
+# NEED FIX: bad to do APT upgrade below?  breaks ability to install ubuntu-sdk & gvim etc???
+
+# vim-gtk3 Has Unmet Dependencies After `apt-get upgrade` In Ubuntu 16.04.1 Xenial
+# https://bugs.launchpad.net/ubuntu/+source/vim/+bug/1613949
+
+
 # [[[ UBUNTU, UPDATE OPERATING SYSTEM PACKAGES ]]]
 $ locale-gen en_US.UTF-8; dpkg-reconfigure locales  # fix "perl: warning: Setting locale failed."
 $ apt-get update
@@ -137,7 +145,7 @@ $ mkdir ~/.xscreensaver_glslideshow; mv top100/ ~/.xscreensaver_glslideshow/
 $ apt-get remove light-locker
 $ apt-get install xscreensaver xscreensaver-data-extra xscreensaver-gl
 	# Click main Xubuntu app menu -> Settings -> Screensaver -> The XScreenSaver daemon doesn't seem to be running on display ":0.0".  Launch it now?  OK -> Blank & Lock After 10 Mins 
-	# -> Mode, Only One Screensaver -> GLSlideshow -> Settings -> Advanced -> glslideshow -root -delay 46565 -duration 5 -zoom 85 -> Close GLSlideshow Settings
+	# -> Mode, Only One Screensaver -> GLSlideshow -> Settings -> Advanced -> glslideshow -root -delay 46565 -duration 10 -zoom 85 -> Close GLSlideshow Settings
 	# -> Advanced Tab -> Image Manipulation -> Choose Random Image -> Browse -> Select Image Folder ~/.xscreensaver_glslideshow/top100
 
 
