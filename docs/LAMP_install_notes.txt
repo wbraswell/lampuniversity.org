@@ -1,4 +1,4 @@
-LAMP Install Notes 20160816 2016.229
+LAMP Install Notes 20160818 2016.231
 Copyright (c) 2014, 2015, 2016 William N. Braswell, Jr.
 
 Tested Using:
@@ -180,7 +180,7 @@ $ /usr/5bin/bdiff
 # [[[ UBUNTU, SET UP XFCE WINDOW MANAGER ]]]
 # NOT ROOT
 # Right-click on top panel -> Panel -> Panel Preferences -> Green Plus Sign -> Select New Panel -> Items Tab -> Add Windows Buttons & Separator & Workspace Switcher
-    -> Separator Settings -> Expand -> Workspace Settings -> 6 Workspaces: Browsers1, E-Mail, Browsers2, Files, Office, Terminals
+    -> Windows Buttons Settings -> Sorting Order: None, Allow Drag-and-Drop -> Separator Settings -> Expand -> Workspace Settings -> 6 Workspaces: Browsers1, E-Mail, Browsers2, Files, Office, Terminals
     -> Drag Second Panel Down To Bottom Of Screen
     -> Display Tab -> Lock Panel & Row Size 20 Pixels & Length 100% 
     -> Select First Panel -> Items -> Remove Workspace Switcher & Window Buttons -> Add Action Buttons
