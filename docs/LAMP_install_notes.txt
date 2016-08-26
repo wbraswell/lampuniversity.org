@@ -1,4 +1,4 @@
-LAMP Install Notes 20160818 2016.231
+LAMP Install Notes 20160822 2016.235
 Copyright (c) 2014, 2015, 2016 William N. Braswell, Jr.
 
 Tested Using:
@@ -157,6 +157,7 @@ $ apt-get install google-chrome-stable
 $ apt-get install libreoffice
 $ apt-get install pithos
 $ apt-get install gimp
+$ apt-get install tesseract-ocr gimagereader
 $ apt-get install eclipse-cdt
 	# Help -> Install New Software -> Add -> http://www.epic-ide.org/updates -> Install
 # CHEAT!!!
@@ -185,7 +186,7 @@ $ /usr/5bin/bdiff
     -> Display Tab -> Lock Panel & Row Size 20 Pixels & Length 100% 
     -> Select First Panel -> Items -> Remove Workspace Switcher & Window Buttons -> Add Action Buttons
     -> Close Panel Preferences
-$ indicator-multiload &
+$ indicator-multiload --trayicon &
 # Left-click on indicator-multiload applet -> Preferences -> Select Processor, Memory, Network, Harddisk, Autostart -> Colors Built-In Schemes Traditional, Cached Color Black
 # Right-click on indicator-multiload applet -> Move -> Drag to left of indicator plugin icons
 # Right-click on clock applet -> Properties -> Format -> Custom Format
