@@ -5,11 +5,12 @@ source $VIMRUNTIME/mswin.vim
 behave mswin
 
 " enable system clipboard
-set clipboard=unnamed
+:set clipboard=unnamed
 
-set smartindent
-set tabstop=4
-set shiftwidth=4
-set expandtab
+:set paste  " ERROR: causes noexpandtab, must be called before expandtab setting below
 
-set paste
+" always use 4 space characters instead of 1 tab character
+:set expandtab
+:set smartindent
+:set tabstop=4
+:set shiftwidth=4

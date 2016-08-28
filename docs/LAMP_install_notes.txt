@@ -1,4 +1,4 @@
-LAMP Install Notes 20160822 2016.235
+LAMP Install Notes 20160828 2016.241
 Copyright (c) 2014, 2015, 2016 William N. Braswell, Jr.
 
 Tested Using:
@@ -158,6 +158,7 @@ $ apt-get install libreoffice
 $ apt-get install pithos
 $ apt-get install gimp
 $ apt-get install tesseract-ocr gimagereader
+$ apt-get install fuse go-mtpfs
 $ apt-get install eclipse-cdt
 	# Help -> Install New Software -> Add -> http://www.epic-ide.org/updates -> Install
 # CHEAT!!!
