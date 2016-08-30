@@ -1,4 +1,4 @@
-LAMP Install Notes 20160828 2016.241
+LAMP Install Notes 20160829 2016.242
 Copyright (c) 2014, 2015, 2016 William N. Braswell, Jr.
 
 Tested Using:
@@ -161,6 +161,7 @@ $ apt-get install tesseract-ocr gimagereader
 $ apt-get install fuse go-mtpfs
 $ apt-get install eclipse-cdt
 	# Help -> Install New Software -> Add -> http://www.epic-ide.org/updates -> Install
+    $ wget http://www.viplugin.com/files/viPlugin_1.20.3.zip; unzip viPlugin_1.20.3.zip; mv features/* ~/.eclipse/org.eclipse.FOO/features/; mv plugins/* ~/.eclipse/org.eclipse.FOO/plugins; rm -Rf features plugins
 # CHEAT!!!
 	wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -; sh -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'; apt-get update; apt-get -y install google-chrome-stable libreoffice pithos gimp eclipse-cdt
 
