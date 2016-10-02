@@ -1,4 +1,4 @@
-LAMP Install Notes 20160829 2016.242
+LAMP Install Notes 20161002 2016.276
 Copyright (c) 2014, 2015, 2016 William N. Braswell, Jr.
 
 Tested Using:
@@ -10,7 +10,8 @@ Fresh Xubuntu v16.04.1 (Xenial Xerus)
 # [[[ UNINDENT ]]]
 :%s/^\ \ \ \ //g
 
-# [[[ UBUNTU, CONFIGURE OPERATING SYSTEM USERS ]]]
+
+# [[[ LINUX, CONFIGURE OPERATING SYSTEM USERS ]]]
 $ passwd  # reset root password;  NEED FIX: disable root account???
 $ userdel user  # remove default user
 $ rm -Rf /home/user
@@ -33,7 +34,7 @@ $ ssh SOMEBODY@SUBDOMAIN.SOMEDOMAIN.COM  # may be prompted once to unlock keyrin
 $ scp ~/.bashrc ~/.vimrc ~/.gitconfig SUBDOMAIN.SOMEDOMAIN.COM:~/
 
 
-# [[[ UBUNTU, CONFIGURE CLOUD NETWORKING ]]]
+# [[[ LINUX, CONFIGURE CLOUD NETWORKING ]]]
 # USER MACHINE
 $ scp /etc/hosts SUBDOMAIN.SOMEDOMAIN.COM:/tmp/hosts
 # CLOUD MACHINE
@@ -56,11 +57,15 @@ $ cat /etc/resolv.conf  # confirm following
     nameserver 8.8.4.4
 
 
-# [[[ UBUNTU, FIX BROKEN SWAP DEVICE ]]]
+# [[[ UBUNTU LINUX, FIX BROKEN SWAP DEVICE ]]]
 # when installed from USB drive, update UUID in /etc/fstab and /etc/crypttab to reflect new /dev/sd* drive letters
 
 
-# [[[ UBUNTU, INSTALL EXPERIMENTAL UBUNTU SDK BEFORE OTHER PACKAGES ]]]
+# [[[ UBUNTU LINUX, FIX BROKEN LOCALE ]]]
+$ locale-gen en_US.UTF-8; dpkg-reconfigure locales  # fix "perl: warning: Setting locale failed."
+
+
+# [[[ UBUNTU LINUX, INSTALL EXPERIMENTAL UBUNTU SDK BEFORE OTHER PACKAGES ]]]
 $ apt-get install ubuntu-sdk
 
 
@@ -72,8 +77,7 @@ $ apt-get install ubuntu-sdk
 # https://bugs.launchpad.net/ubuntu/+source/vim/+bug/1613949
 
 
-# [[[ UBUNTU, UPDATE OPERATING SYSTEM PACKAGES ]]]
-$ locale-gen en_US.UTF-8; dpkg-reconfigure locales  # fix "perl: warning: Setting locale failed."
+# [[[ UBUNTU LINUX, UPGRADE ALL OPERATING SYSTEM PACKAGES ]]]
 $ apt-get update
 $ apt-get upgrade
 $ apt-get -f install  # confirm no errors, only non-upgraded packages allowable
@@ -85,7 +89,12 @@ $ apt-get upgrade  # confirm nothing to upgrade
 $ apt-get autoremove
 $ reboot
 # CHEAT!!!
-    locale-gen en_US.UTF-8; dpkg-reconfigure locales; apt-get update; apt-get -y upgrade; apt-get -y install aptitude; aptitude -y safe-upgrade; apt-get -f install; apt-get -y autoremove; reboot
+    apt-get update; apt-get -y upgrade; apt-get -y install aptitude; aptitude -y safe-upgrade; apt-get -f install; apt-get -y autoremove; reboot
+
+
+# [[[ UBUNTU LINUX, UPDATE & INSTALL BASE OPERATING SYSTEM PACKAGES ]]]
+$ apt-get update
+$ apt-get -f install  # confirm no errors
 $ apt-get install g++
 $ apt-get install ssh
 $ apt-get install zip unzip  # LAMP University
@@ -108,9 +117,12 @@ $ apt-get install indicator-multiload
 $ apt-get install unetbootin
 $ apt-get install xpra
 $ apt-get remove gvfs-daemons  # OPTIONAL, GVSF: uninstall gvfs to speed up thunar file explorer
-$ apt-get install clamav clamav-daemon  # SKIP ON LOW-MEMORY SYSTEMS
 # CHEAT!!!
-    apt-get -y install g++ ssh zip unzip perl-doc vim linuxlogo git curl astyle lynx screen xterm xfce4-terminal x11-apps gkrellm hexchat firefox chromium-browser update-manager indicator-multiload unetbootin xpra clamav clamav-daemon; apt-get remove gvfs-daemons
+    apt-get -y install g++ ssh zip unzip perl-doc vim linuxlogo git curl astyle lynx screen xterm xfce4-terminal x11-apps gkrellm hexchat firefox chromium-browser update-manager indicator-multiload unetbootin xpra; apt-get remove gvfs-daemons
+
+
+# [[[ UBUNTU LINUX, INSTALL & TEST CLAMAV ANTI-VIRUS ]]]
+$ apt-get install clamav clamav-daemon  # SKIP ON LOW-MEMORY SYSTEMS
 # CLAMAV ANTI-VIRUS
 $ freshclam
 $ clamscan -r /home
@@ -137,7 +149,7 @@ $ vi /usr/share/gvfs/mounts/network.mount
     AutoMount=false
 
 
-# [[[ UBUNTU, FIX BROKEN SCREENSAVER ]]]
+# [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER ]]]
 # SYMPTOMS: MOUSE CURSOR DISAPPEARS AFTER SCREENSAVER (CTRL-ALT-F1 FOR TEMPORARY FIX)
 $ wget https://www.spacetelescope.org/static/images/zip/top100/top100-large.zip; unzip top100-large.zip
 $ mkdir ~/.xscreensaver_glslideshow; mv top100/ ~/.xscreensaver_glslideshow/
@@ -149,7 +161,7 @@ $ apt-get install xscreensaver xscreensaver-data-extra xscreensaver-gl
 	# -> Advanced Tab -> Image Manipulation -> Choose Random Image -> Browse -> Select Image Folder ~/.xscreensaver_glslideshow/top100
 
 
-# [[[ UBUNTU, EXTRA OPERATING SYSTEM PACKAGES ]]]
+# [[[ UBUNTU LINUX, UPDATE & INSTALL EXTRA OPERATING SYSTEM PACKAGES ]]]
 $ wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - 
 $ sh -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
 $ apt-get update 
@@ -166,21 +178,23 @@ $ apt-get install eclipse-cdt
 	wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -; sh -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'; apt-get update; apt-get -y install google-chrome-stable libreoffice pithos gimp eclipse-cdt
 
 
-# [[[ UBUNTU, LAMP UNIVERSITY TOOLS ]]]
+# [[[ LINUX, INSTALL LAMP UNIVERSITY TOOLS ]]]
 # as user, not root
 $ wget https://github.com/wbraswell/lampuniversity.org/archive/master.zip; mv master.zip lampuniversity.org-master.zip; unzip lampuniversity.org-master.zip
 $ mkdir ~/bin; cp lampuniversity.org-master/bin/* ~/bin
 # LOGOUT & LOGIN to reset PATH to include ~/bin
 $ topmem.sh
 $ rm -Rf lampuniversity.org*
-# HEIRLOOM TOOLS (bdiff)
+
+
+# [[[ UBUNTU LINUX, INSTALL HEIRLOOM TOOLS (including bdiff) ]]]
 $ apt-get install zlib1g-dev libncurses5-dev libssl-dev
 $ wget https://github.com/halcyon/ubuntu-heirloom/archive/master.zip; mv master.zip ubuntu-heirloom-master.zip; unzip ubuntu-heirloom-master.zip
 $ cd ubuntu-heirloom-master; ./build.sh
 $ /usr/5bin/bdiff
 
 
-# [[[ UBUNTU, SET UP XFCE WINDOW MANAGER ]]]
+# [[[ UBUNTU LINUX, SET UP XFCE WINDOW MANAGER ]]]
 # NOT ROOT
 # Right-click on top panel -> Panel -> Panel Preferences -> Green Plus Sign -> Select New Panel -> Items Tab -> Add Windows Buttons & Separator & Workspace Switcher
     -> Windows Buttons Settings -> Sorting Order: None, Allow Drag-and-Drop -> Separator Settings -> Expand -> Workspace Settings -> 6 Workspaces: Browsers1, E-Mail, Browsers2, Files, Office, Terminals
@@ -196,7 +210,7 @@ $ indicator-multiload --trayicon &
 $ rm -Rf ~/Videos/ ~/Templates/ ~/Public/ ~/Pictures/ ~/Music/ ~/Documents/
 
 
-# [[[ UBUNTU, ENABLE WIFI ]]]
+# [[[ UBUNTU LINUX, ENABLE BROADCOM B43 WIFI ]]]
 # DELL LATITUDE D430 & D630
 # SYMPTOMS: NO WIFI, CAN NOT SHUTDOWN OR REBOOT OR SUSPEND
 $ apt-get remove bcmwl-kernel-source dkms
@@ -204,7 +218,7 @@ $ apt-get install firmware-b43-installer
 $ reboot
 
 
-# [[[ UBUNTU, INSTALL X WINDOWS & XPRA ]]]
+# [[[ UBUNTU LINUX, INSTALL X WINDOWS & XPRA ]]]
 # USER MACHINE
     # MUST OPEN FIREWALL tcp port 6000 
 $ vi /etc/gdm/custom.conf  # GDM ONLY
@@ -233,7 +247,7 @@ $ xpra stop  # probably skip this command, leave xpra running
     export DISPLAY=scouthouse:0.0; xeyes; xpra start :100 --start-child=xfce4-terminal; echo "export DISPLAY=:100.0" >> ~/.bashrc; . ~/.bashrc; xeyes
 
 
-# [[[ UBUNTU, INSTALL NFS ]]]
+# [[[ UBUNTU LINUX, INSTALL NFS ]]]
 # SERVER MACHINE
 $ apt-get install nfs-kernel-server nfs-common
 $ mkdir /nfs_exported; chmod a+rwX /nfs_exported
@@ -253,7 +267,7 @@ $ echo "howdy y'all" > /nfs_imported/SUBDOMAIN/howdy.txt
 $ cat /nfs_imported/SUBDOMAIN/hello.txt; rm /nfs_imported/SUBDOMAIN/hello.txt
 
 
-# [[[ BENCHMARKING ]]]  # MAY NEED TO UPDATE THIS SECTION
+# [[[ UBUNTU LINUX, PERFORMANCE BENCHMARKING ]]]  # MAY NEED TO UPDATE THIS SECTION
 $ linuxlogo
 # CPUMINER
 $ apt-get install libcurl4-openssl-dev libncurses5-dev pkg-config automake yasm
@@ -262,10 +276,19 @@ $ cd cpuminer; ./autogen.sh; ./configure CFLAGS="-O3"; make
 $ ./minerd --url=http://GETWORK.POOL.COM --userpass=SOMEBODY:SOMEPASS
 
 
-# [[[ UBUNTU, INSTALL APACHE & MOD_PERL ]]]
+# [[[ UBUNTU LINUX IN VIRTUALBOX, INSTALL VIRTUALBOX GUEST ADDITIONS ]]]
+$ apt-get install dkms
+# download VBoxGuestAdditions.iso from http://download.virtualbox.org/virtualbox/
+$ cd MOUNTED_DIR; sh ./VBoxLinuxAdditions.run
+
+
+# [[[ UBUNTU LINUX, INSTALL APACHE & MOD_PERL ]]]
 # for subdomains, ensure CNAME alias set in hosting provider DNS zone file: * @
 $ apt-get install apache2
 $ apt-get install libapache2-mod-perl2
+
+
+# [[[ APACHE, ENABLE DOMAIN(S) ]]]
 $ vi /etc/apache2/apache2.conf
     # WBRASWELL XYZZY: fix "Could not reliably determine the server's fully qualified domain name"
     ServerName localhost
@@ -322,10 +345,13 @@ $ vi /etc/group
     # add user to www-data group
 
 
-# [[[ UBUNTU, INSTALL MYSQL ]]]
+# [[[ UBUNTU LINUX, INSTALL MYSQL & PHPMYADMIN ]]]
 $ apt-get install mysql-server mysql-client libmysqlclient-dev phpmyadmin
     # DO NOT CONFIGURE APACHE AUTOMATICALLY
     # DO CONFIGURE DATABASE WITH DBCONFIG-COMMON
+
+
+# [[[ MYSQL & APACHE, ENABLE PHPMYADMIN ]]]
 $ mysql --user=root --password
     mysql> SHOW VARIABLES LIKE 'have_innodb';
     +---------------+-------+
@@ -357,7 +383,7 @@ $ php5enmod mcrypt
 $ service apache2 reload
 
 
-# [[[ UBUNTU, INSTALL POSTFIX ]]]
+# [[[ UBUNTU LINUX, INSTALL POSTFIX ]]]
 # Outgoing E-Mail
 $ apt-get install postfix
     # Internet Site config option
@@ -380,7 +406,7 @@ $ apt-get install mailutils
 $ mail
 
 
-# [[[ UBUNTU, INSTALL WEBMIN ]]]
+# [[[ UBUNTU LINUX, INSTALL WEBMIN ]]]
 $ vi /etc/apt/sources.list
     # WBRASWELL 201XYZZY 201X.YYZ: enable Webmin repo
     deb http://download.webmin.com/download/repository sarge contrib
@@ -390,7 +416,7 @@ $ apt-get install webmin
 # https://SOMEDOMAIN.COM:10000  # NOTE THE 's' IN 'https'
 
 
-# [[[ UBUNTU, INSTALL CATALYST, SYSTEM-WIDE ]]]
+# [[[ UBUNTU LINUX, INSTALL PERL CATALYST, SYSTEM-WIDE ]]]
 $ apt-get install libmodule-install-perl
 $ apt-get install libcatalyst-engine-apache-perl
 $ service apache2 restart
@@ -398,7 +424,7 @@ $ apt-get install libcatalyst-devel-perl
 $ apt-get install libcatalyst-modules-perl
 
 
-# [[[ UBUNTU, INSTALL CPANM & LOCAL::LIB; COPIED FROM RPERL INSTALL DOC ]]]
+# [[[ UBUNTU LINUX, INSTALL PERL CPANM & LOCAL::LIB; COPIED FROM RPERL INSTALL DOC ]]]
 # [[[ YOU SHOULD USE THIS UNLESS YOU HAVE NO CHOICE ]]]
 # [[[ DO NOT MIX WITH PERLBREW, BELOW ]]]
 # ROOT
@@ -412,7 +438,7 @@ $ set | grep perl5
     # PERL_MM_OPT, PERL_MB_OPT, PERL5LIB, PATH
 
 
-# [[[ UBUNTU, INSTALL HAND-COMPILED PERL, OR PERLBREW & CPANMINUS; COPIED FROM RPERL INSTALL DOC ]]]
+# [[[ UBUNTU LINUX, INSTALL HAND-COMPILED PERL, OR PERLBREW & CPANMINUS; COPIED FROM RPERL INSTALL DOC ]]]
 # [[[ DO NOT USE THIS UNLESS YOU HAVE NO CHOICE ]]]
 # [[[ DO NOT MIX WITH LOCAL::LIB, ABOVE ]]]
 $ wget http://www.cpan.org/src/5.0/perl-5.20.1.tar.bz2; bunzip2 perl-5.20.1.tar.bz2; cd perl-5.20.1; perl Makefile.PL; make; make test; make install
@@ -432,7 +458,7 @@ $ perlbrew switch perl-5.20.1  # PERMANENT
 $ perlbrew install-cpanm
 
 
-# [[[ UBUNTU, INSTALL CATALYST TUTORIAL ]]]
+# [[[ PERL CATALYST, INSTALL TUTORIAL ]]]
 $ cpanm Template
 $ cpanm Task::Catalyst::Tutorial
     # OR FOR FIREWALLED NETWORKS
@@ -440,7 +466,7 @@ $ cpanm --mirror http://cpan.msi.umn.edu/ Template
 $ cpanm --mirror http://cpan.msi.umn.edu/ Task::Catalyst::Tutorial
 
 
-# [[[ CHECK VERSIONS OF CATALYST ]]]
+# [[[ PERL CATALYST, CHECK VERSIONS ]]]
 $ dpkg -p libcatalyst-perl
     # v5.90002 tutorial; v5.80022 Ubuntu v10.04.4; v5.90007 Ubuntu v12.04.3; v5.90007 Ubuntu v12.04.4; v5.90053 Ubuntu v14.04.1
 $ perl -V
@@ -463,15 +489,19 @@ $ perl -MTask::Catalyst::Tutorial\ 999
     # >= v0.06; v0.06 Ubuntu v12.04.4
 
 
-# [[[ UBUNTU IN VIRTUALBOX, INSTALL VIRTUALBOX GUEST ADDITIONS ]]]
-$ apt-get install dkms
-# download VBoxGuestAdditions.iso from http://download.virtualbox.org/virtualbox/
-$ cd MOUNTED_DIR; sh ./VBoxLinuxAdditions.run
-
-
-# [[[ SHINYCMS FROM GITHUB & LATEST CATALYST FROM CPAN ]]]
-# [ Prerequisites: LAMP, mod_fastcgi OR mod_perl, Postfix; Catalyst will be installed from CPAN ]
+# [[[ UBUNTU LINUX, INSTALL PERL CATALYST PREREQUISITES ]]]
+# [ Prerequisites: LAMP, mod_fastcgi OR mod_perl, Postfix ]
 $ sudo apt-get install expat libexpat1-dev libxml2-dev zlib1g-dev
+$ vi /etc/apt/sources.list
+    # WBRASWELL 201XYZZY 201X.YYZ: enable FastCGI repo
+    deb http://us.archive.ubuntu.com/ubuntu/ trusty multiverse
+    deb-src http://us.archive.ubuntu.com/ubuntu/ trusty multiverse
+$ apt-get update
+$ apt-get -f install
+$ apt-get install libapache2-mod-fastcgi
+
+
+# [[[ PERL CATALYST, INSTALL SHINYCMS FROM GITHUB & LATEST CATALYST FROM CPAN ]]]
 $ mysql --user=root --password  # required for DBD::mysql `make test`
     mysql> GRANT ALL PRIVILEGES ON test.* TO 'SOMEBODY'@'localhost' IDENTIFIED BY 'MYSQL_TEMP_PASSWORD';  # WRONGLY CREATES PASSWORD
     mysql> GRANT ALL PRIVILEGES ON test.* TO 'SOMEBODY'@'localhost';
@@ -559,13 +589,6 @@ $ mysql --user=SOME_MYSQL_USER --password='SOME_MYSQL_PASS' SOMEDOMAIN_COM < SOM
 # [ YOU SHOULD USE THIS UNLESS YOU HAVE NO CHOICE ]
 # [ DO NOT MIX WITH APACHE MOD_PERL, BELOW ]
 $ cpanm FCGI FCGI::ProcManager  # NOT ROOT IF local::lib
-$ vi /etc/apt/sources.list
-    # WBRASWELL 201XYZZY 201X.YYZ: enable FastCGI repo
-    deb http://us.archive.ubuntu.com/ubuntu/ trusty multiverse
-    deb-src http://us.archive.ubuntu.com/ubuntu/ trusty multiverse
-$ apt-get update
-$ apt-get -f install
-$ apt-get install libapache2-mod-fastcgi
 $ a2enmod fastcgi
 $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
     <VirtualHost *:80>
@@ -701,7 +724,7 @@ $ service apache2 reload
 # Admin area -> Pages -> List Templates -> Edit Homepage -> Delete "video_url" Element -> Update
 
 
-# [[[ RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]
+# [[[ PERL CATALYST, INSTALL RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]
 $ mkdir RapidApp-latest; git clone https://github.com/vanstyn/RapidApp.git RapidApp-latest  # NO MAKEFILE ON GITHUB, CAN'T MAKE OR INSTALL!
     # OR
 $ mysql --user=root --password  # required for DBD::mysql `make test` 
@@ -717,7 +740,7 @@ $ cd BlueBox-latest; perl Makefile.PL; cpanm --installdeps .  # NO MAKE OR TEST
 $ script/bluebox_server.pl  # admin/pass
 
 
-# [[[ MOODLE FROM GITHUB ]]]
+# [[[ UBUNTU LINUX, INSTALL MOODLE FROM GITHUB ]]]
 $ apt-get install curl libcurl3 libcurl3-gnutls php5-curl graphviz
 $ cd public_html
 $ mkdir -p SOMEDOMAIN-latest/moodle SOMEDOMAIN-latest/moodledata
