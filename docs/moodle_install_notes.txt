@@ -1,0 +1,35 @@
+Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
+
+# [[[ UBUNTU LINUX, INSTALL MOODLE FROM GITHUB ]]]
+$ apt-get install curl libcurl3 libcurl3-gnutls php5-curl graphviz
+$ cd public_html
+$ mkdir -p SOMEDOMAIN-latest/moodle SOMEDOMAIN-latest/moodledata
+$ git clone --depth=1 -b MOODLE_27_STABLE --single-branch git://git.moodle.org/moodle.git SOMEDOMAIN-latest/moodle
+# CONFIGURE MYSQL
+$ mysql --user=root --password
+    mysql> CREATE DATABASE subdomain_somedomain_com_moodle DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+    mysql> GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,CREATE TEMPORARY TABLES,DROP,INDEX,ALTER ON subdomain_somedomain_com_moodle.* TO subsomedomain_user@localhost IDENTIFIED BY 'MYSQL_SUBDOMAIN_PASSWORD';  # BROKEN, causes LOCK TABLES error during mysqldump
+    mysql> GRANT ALL PRIVILEGES ON subdomain_somedomain_com_moodle.* TO subsomedomain_user@localhost IDENTIFIED BY 'MYSQL_SUBDOMAIN_PASSWORD';
+# CONFIGURE APACHE
+$ vi /etc/group  # allow SOMEBODY user to modify permissions
+    www-data:x:33:SOMEBODY
+$ chown -R SOMEBODY:www-data /home/SOMEBODY/public_html/SOMEDOMAIN-latest
+$ chmod -R a-rwx /home/SOMEBODY/public_html/SOMEDOMAIN-latest
+$ chmod -R u+rwX /home/SOMEBODY/public_html/SOMEDOMAIN-latest
+$ chmod -R g+rX /home/SOMEBODY/public_html/SOMEDOMAIN-latest
+$ chmod -R g+rwX /home/SOMEBODY/public_html/SOMEDOMAIN-latest/moodledata
+$ chmod -R o-rwx /home/SOMEBODY/public_html/SOMEDOMAIN-latest
+# ENABLE MOODLE IN APACHE; simply place moodle files in Apache serving path
+$ cd /srv/www/SOMEDOMAIN.COM; mv public_html public_html.static; ln -s /home/SOMEBODY/public_html/SOMEDOMAIN-latest/moodle ./public_html
+# INSTALL MOODLE
+$ cd /home/SOMEBODY/public_html/SOMEDOMAIN-latest/moodle/admin/cli
+$ php ./install.php
+    # RE-RUN chmod's ABOVE
+# Browser SOMEDOMAIN.COM -> Login -> Administration -> Site administration -> Plugins -> Message Outputs -> Email
+# Browser SOMEDOMAIN.COM -> Login -> Administration -> Site administration -> Server -> System paths
+$ sudo -u www-data /usr/bin/php /home/SOMEBODY/public_html/SOMEDOMAIN-latest/moodle/admin/cli/cron.php  # TEST CRON JOB
+$ crontab -u www-data -e
+    */1 * * * * /usr/bin/php  /home/SOMEBODY/public_html/SOMEDOMAIN-latest/moodle/admin/cli/cron.php >/dev/null
+$ vi /etc/postfix/main.cf
+    relay_domains = gmail.com USERDOMAIN1.COM USERDOMAIN2.COM # ADD ALL DOMAINS FROM MOODLE USER PROFILE E-MAILS
+$ service postfix reload
