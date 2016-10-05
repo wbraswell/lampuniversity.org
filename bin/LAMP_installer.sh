@@ -1,8 +1,64 @@
 #!/bin/bash
-# Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
+# Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
+# LAMP Installer Script v0.000_100
 
-echo [[[ LAMP Installer Script ]]]
+echo [[[\<\<\< LAMP Installer Script \>\>\>]]]
 echo
-echo Choose one or press <ENTER> for 0...
+echo \ 0. [[[ LINUX, CONFIGURE OPERATING SYSTEM USERS ]]]
+echo \ 1. [[[ LINUX, CONFIGURE CLOUD NETWORKING ]]]
+echo \ 2. [[[ UBUNTU LINUX, FIX BROKEN SWAP DEVICE ]]]
+echo \ 3. [[[ UBUNTU LINUX, FIX BROKEN LOCALE ]]]
+echo \ 4. [[[ UBUNTU LINUX, INSTALL EXPERIMENTAL UBUNTU SDK BEFORE OTHER PACKAGES ]]]
+echo \ 5. [[[ UBUNTU LINUX, UPGRADE ALL OPERATING SYSTEM PACKAGES ]]]
+echo \ 6. [[[ UBUNTU LINUX, UPDATE \& INSTALL BASE OPERATING SYSTEM PACKAGES ]]]
+echo \ 7. [[[ UBUNTU LINUX, INSTALL \& TEST CLAMAV ANTI-VIRUS ]]]
+echo \ 8. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER ]]]
+echo \ 9. [[[ UBUNTU LINUX, UPDATE \& INSTALL EXTRA OPERATING SYSTEM PACKAGES ]]]
+echo 10.  [[[ LINUX, INSTALL LAMP UNIVERSITY TOOLS ]]]
+echo 11.  [[[ UBUNTU LINUX, SET UP XFCE WINDOW MANAGER ]]]
+echo 12.  [[[ UBUNTU LINUX, ENABLE BROADCOM B43 WIFI ]]]
+echo 13.  [[[ UBUNTU LINUX, INSTALL X WINDOWS \& XPRA ]]]
+echo 14.  [[[ UBUNTU LINUX, INSTALL NFS ]]]
+echo 15.  [[[ UBUNTU LINUX, PERFORMANCE BENCHMARKING ]]]
+echo 16.  [[[ APACHE, ENABLE DOMAIN\(S\) ]]]
+echo 17.  [[[ UBUNTU LINUX, INSTALL MYSQL \& PHPMYADMIN ]]]
+echo 18.  [[[ MYSQL \& APACHE, ENABLE PHPMYADMIN ]]]
+echo 19.  [[[ UBUNTU LINUX, INSTALL POSTFIX ]]]
+echo 20.  [[[ UBUNTU LINUX, INSTALL WEBMIN ]]]
+echo 21.  [[[ UBUNTU LINUX, INSTALL PERL CATALYST, SYSTEM-WIDE ]]]
+echo 22.  [[[ UBUNTU LINUX, INSTALL PERL CPANM \& LOCAL::LIB\; COPIED FROM RPERL INSTALL DOC ]]]
+echo 23.  [[[ UBUNTU LINUX, INSTALL HAND-COMPILED PERL, OR PERLBREW \& CPANMINUS\; COPIED FROM RPERL INSTALL DOC ]]]
+echo 24.  [[[ PERL CATALYST, INSTALL TUTORIAL ]]]
+echo 25.  [[[ PERL CATALYST, CHECK VERSIONS ]]]
+echo 26.  [[[ UBUNTU LINUX, INSTALL PERL CATALYST PREREQUISITES ]]]
+echo 27.  [[[ PERL CATALYST, INSTALL SHINYCMS FROM GITHUB \& LATEST CATALYST FROM CPAN ]]]
+echo 28.  [[[ PERL CATALYST, INSTALL RAPIDAPP FROM GITHUB \& LATEST CATALYST FROM CPAN ]]]
 echo
-echo 
+
+while true; do
+    read -p "Please enter your menu choice number, or press \<ENTER\> for 0... " MENU_CHOICE
+    case $MENU_CHOICE in
+        [0-9]|1[0-9]|2[0-8] ) echo YOU CHOSE $MENU_CHOICE; echo; break;;
+        * ) echo "Please choose a number from the menu!"; echo;;
+	esac
+done
+
+if [ $MENU_CHOICE -le 0 ]; then
+	echo 0. [[[ LINUX, CONFIGURE OPERATING SYSTEM USERS ]]]
+fi
+
+if [ $MENU_CHOICE -le 1 ]; then
+	echo 1. [[[ LINUX, CONFIGURE CLOUD NETWORKING ]]]
+fi
+
+if [ $MENU_CHOICE -le 2 ]; then
+	echo 2. [[[ UBUNTU LINUX, FIX BROKEN SWAP DEVICE ]]]
+fi
+
+if [ $MENU_CHOICE -le 3 ]; then
+	echo 3. [[[ UBUNTU LINUX, FIX BROKEN LOCALE ]]]
+fi
+
+if [ $MENU_CHOICE -le 4 ]; then
+	echo 4. [[[ UBUNTU LINUX, INSTALL EXPERIMENTAL UBUNTU SDK BEFORE OTHER PACKAGES ]]]
+fi
