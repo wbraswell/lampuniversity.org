@@ -435,9 +435,10 @@ $ apt-get install libcatalyst-devel-perl
 $ apt-get install libcatalyst-modules-perl
 
 
-# [[[ UBUNTU LINUX, INSTALL PERL CPANM & LOCAL::LIB; COPIED FROM RPERL INSTALL DOC ]]]
+# [[[ UBUNTU LINUX, INSTALL PERL CPANM & LOCAL::LIB ]]]
 # [[ YOU SHOULD USE THIS UNLESS YOU HAVE NO CHOICE ]]
 # [[ DO NOT MIX WITH PERLBREW, BELOW ]]
+# [[ COPIED FROM RPERL INSTALL DOC ]]
 # ROOT
 $ apt-get install curl
 # NOT ROOT
@@ -449,9 +450,10 @@ $ set | grep perl5
     # PERL_MM_OPT, PERL_MB_OPT, PERL5LIB, PATH
 
 
-# [[[ UBUNTU LINUX, INSTALL HAND-COMPILED PERL, OR PERLBREW & CPANMINUS; COPIED FROM RPERL INSTALL DOC ]]]
-# [[ DO NOT USE THIS UNLESS YOU HAVE NO CHOICE ]]
+# [[[ UBUNTU LINUX, INSTALL HAND-COMPILED PERL, OR PERLBREW & CPANMINUS ]]]
+# [[ DO NOT USE THIS UNLESS YOU HAVE NO CHOICE!!! ]]
 # [[ DO NOT MIX WITH LOCAL::LIB, ABOVE ]]
+# [[ COPIED FROM RPERL INSTALL DOC ]]
 $ wget http://www.cpan.org/src/5.0/perl-5.20.1.tar.bz2; bunzip2 perl-5.20.1.tar.bz2; cd perl-5.20.1; perl Makefile.PL; make; make test; make install
     # OR
 $ sudo apt-get install perlbrew
