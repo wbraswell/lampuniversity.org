@@ -2,38 +2,45 @@
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script v0.001_000
 
-P () {  # Prompt user for input
-    echo 'STARTING P()'; echo; echo
+# enable extended pattern matching in case statements
+shopt -s extglob
+
+P () {  # _P_rompt user for input
     while true; do
             read -p "Please type the $1... " USER_INPUT
         case $USER_INPUT in
-            [a-zA-Z0-9_] ) echo; break;;
-            * ) echo "Please enter the $1! "; echo;;
+            [abcdefghijklmnopqrstuvwxyz]+([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.]) ) echo; break;;
+            * ) echo "Please type the $1! "; echo;;
         esac
     done
-    return $USER_INPUT
 }
-# START HERE: fix P() and D()
-P 'new foo to be created'
-P
 
-D () {  # prompt user for input w/ Default value
+N () {  # prompt user for _N_umeric input
+    while true; do
+            read -p "Please type the $1... " USER_INPUT
+        case $USER_INPUT in
+            [0123456789]+([0123456789.]) ) echo; break;;
+            * ) echo "Please type the $1! "; echo;;
+        esac
+    done
+}
+
+D () {  # prompt user for input w/ _D_efault value
     while true; do
             read -p "Please type the $1, or press <ENTER> for $2... " USER_INPUT
         case $USER_INPUT in
-            [a-zA-Z0-9_] ) echo; break;;
-            '' ) echo; MENU_CHOICE=$2; break;;
-            * ) echo "Please enter the $1, or press <ENTER> for $2! "; echo;;
+            [abcdefghijklmnopqrstuvwxyz]+([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.]) ) echo; break;;
+            '' ) echo; USER_INPUT=$2; break;;
+            * ) echo "Please type the $1, or press <ENTER> for $2! "; echo;;
         esac
     done
-    return $USER_INPUT
 }
 
-S () {  # Sudo command
+S () {  # _S_udo command
     B sudo $@
 }
 
-B () {  # Bash command
+B () {  # _B_ash command
     echo '$' "$@"
     while true; do
         read -p 'Run above command, yes or no?  [yes] ' -n 1 PROMPT_INPUT
@@ -103,7 +110,7 @@ echo
 while true; do
     read -p 'Please type your main menu choice number, or press <ENTER> for 0... ' MENU_CHOICE
     case $MENU_CHOICE in
-        [0-9]|[12][0-9]|3[0-2] ) echo; break;;
+        [0123456789]|[12][0123456789]|3[012] ) echo; break;;
         '' ) echo; MENU_CHOICE=0; break;;
         * ) echo 'Please choose a number from the menu!'; echo;;
     esac
@@ -125,6 +132,8 @@ while true; do
     esac
 done
 
+D 'preferred text editor' 'vi'
+EDITOR=$USER_INPUT
 
 if [ $MENU_CHOICE -le 0 ]; then
     echo '0. [[[ LINUX, CONFIGURE OPERATING SYSTEM USERS ]]]'
@@ -137,31 +146,36 @@ if [ $MENU_CHOICE -le 0 ]; then
         S userdel user
         S rm -Rf /home/user
         echo '[ Create New User ]'
-        USERNAME=P 'new username to be created'
+        P 'new username to be created'
+        USERNAME=$USER_INPUT
         S useradd $USERNAME
         S passwd $USERNAME
         S cp -a /etc/skel /home/$USERNAME
         S chown -R $USERNAME.$USERNAME /home/$USERNAME
         S chmod -R go-rwx /home/$USERNAME
         S chsh -s /bin/bash $USERNAME
-        EDITOR=D 'preferred text editor' 'vi'
         echo "[ Manually Add $USERNAME To User Group sudo, Allows Running root Commands (Like update-manager) Via sudo In xpra ]"
         S $EDITOR /etc/group
         echo "[ Take Note Of IP Address For Use On Local User System ]"
-        ifconfig
+        B ifconfig
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo '1. [[[ EXISTING MACHINE; CLIENT; LOCAL USER SYSTEM ]]]'
-        USERNAME=P "new machine's user name"
-        IP_ADDRESS=P "new machine's IP address (ex: 123.145.167.189)"
-        DOMAIN_NAME=P "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
-        echo "[ Manually Add New Machine IP Address & Domain Name, Copy Data From The Next Line ]"
-        echo "[ $IP_ADDRESS $DOMAIN_NAME ]"
+        P "new machine's user name"
+        USERNAME=$USER_INPUT
+        N "new machine's IP address (ex: 123.145.167.189)"
+        IP_ADDRESS=$USER_INPUT
+        P "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        DOMAIN_NAME=$USER_INPUT
+        echo "[ Manually Add New Machine IP Address & Domain Name ]"
+        echo "[ Copy Data From The Next Line ]"
+        echo $IP_ADDRESS $DOMAIN_NAME
+        echo
         S $EDITOR /etc/hosts
         echo "[ Enable Passwordless SSH ]"
         echo "[ Do Not Re-Run ssh-keygen If Already Done In The Past ]"
-        echo "[ You May Be Prompted Once To Unlock Keyring, Passwordless Thereafter ]"
         B ssh-keygen
         B ssh-copy-id $USERNAME@$DOMAIN_NAME
+        echo "[ You May Be Prompted Once To Unlock Keyring, Passwordless Thereafter ]"
         B ssh $USERNAME@$DOMAIN_NAME
         B ssh $USERNAME@$DOMAIN_NAME
         echo "[ Copy Run Commands & Config Files To New Machine: bash, vi, git ]"
