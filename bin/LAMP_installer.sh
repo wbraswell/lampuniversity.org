@@ -1,9 +1,23 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.001_000
+# LAMP Installer Script v0.002_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
+
+C () {  # _C_onfirm user action
+    echo $1
+    while true; do
+        read -p 'Did you do it, yes or no?  [yes] ' -n 1 PROMPT_INPUT
+        case $PROMPT_INPUT in
+            n|N ) echo; echo; echo $1;;
+            y|Y ) echo; echo; break;;
+#            ' ' ) echo;;  # NEED FIX: space ' ' should not trigger empty ''
+            ''  ) echo; break;;
+            *   ) echo;;
+        esac
+    done
+}
 
 P () {  # _P_rompt user for input
     while true; do
@@ -156,8 +170,9 @@ if [ $MENU_CHOICE -le 0 ]; then
         S chsh -s /bin/bash $USERNAME
         echo "[ Manually Add $USERNAME To User Group sudo, Allows Running root Commands (Like update-manager) Via sudo In xpra ]"
         S $EDITOR /etc/group
-        echo "[ Take Note Of IP Address For Use On Local User System ]"
+        echo "[ Take Note Of IP Address For Use On Existing Machine ]"
         B ifconfig
+        C 'Please Run This LAMP Installer Section 0 On Existing Machine Now...'
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo '1. [[[ EXISTING MACHINE; CLIENT; LOCAL USER SYSTEM ]]]'
         P "new machine's user name"

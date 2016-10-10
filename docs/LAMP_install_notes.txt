@@ -11,29 +11,6 @@ Fresh Xubuntu v16.04.1 (Xenial Xerus)
 :%s/^\ \ \ \ //g
 
 
-# [[[ LINUX, CONFIGURE OPERATING SYSTEM USERS ]]]
-$ passwd  # reset root password;  NEED FIX: disable root account???
-$ userdel user  # remove default user
-$ rm -Rf /home/user
-$ useradd SOMEBODY
-$ passwd SOMEBODY
-$ cp -a /etc/skel /home/SOMEBODY
-$ chown -R SOMEBODY.SOMEBODY /home/SOMEBODY
-$ chmod -R go-rwx /home/SOMEBODY
-$ chsh SOMEBODY
-    /bin/bash
-$ vi /etc/group  # add SOMEBODY to group "sudo", allows running root commands (like update-manager) via sudo in xpra
-# CHEAT!!!
-    userdel user; rm -Rf /home/user; useradd wbraswell; passwd wbraswell; cp -a /etc/skel /home/wbraswell; chown -R wbraswell.wbraswell /home/wbraswell; chmod -R go-rwx /home/wbraswell; chsh wbraswell; vi /etc/group 
-# USER MACHINE
-$ vi /etc/hosts  # add cloudhost entry
-	SOMEIP	SUBDOMAIN.SOMEDOMAIN.COM
-$ ssh-keygen  # if not already done in the past
-$ ssh-copy-id SOMEBODY@SUBDOMAIN.SOMEDOMAIN.COM
-$ ssh SOMEBODY@SUBDOMAIN.SOMEDOMAIN.COM  # may be prompted once to unlock keyring, then passwordless
-$ scp ~/.bashrc ~/.vimrc ~/.gitconfig SUBDOMAIN.SOMEDOMAIN.COM:~/
-
-
 # [[[ LINUX, CONFIGURE CLOUD NETWORKING ]]]
 # USER MACHINE
 $ scp /etc/hosts SUBDOMAIN.SOMEDOMAIN.COM:/tmp/hosts
