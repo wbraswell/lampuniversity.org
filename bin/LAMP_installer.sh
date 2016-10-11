@@ -79,7 +79,7 @@ echo  '    [[[<<< LAMP Installer Script >>>]]]'
 echo  '          [[[<<< Main Menu >>>]]]'
 echo
 
-echo  '             <<< LOCAL CLI >>>'
+echo  '        <<< LOCAL CLI SECTIONS >>>'
 echo \ '0. [[[        LINUX, CONFIGURE OPERATING SYSTEM USERS ]]]'
 echo \ '1. [[[        LINUX, CONFIGURE CLOUD NETWORKING ]]]'
 echo \ '2. [[[ UBUNTU LINUX, FIX BROKEN SWAP DEVICE ]]]'
@@ -94,7 +94,7 @@ echo  '10. [[[ UBUNTU LINUX, INSTALL BROADCOM B43 WIFI ]]]'
 echo  '11. [[[ UBUNTU LINUX, PERFORMANCE BENCHMARKING ]]]'
 echo
 
-echo  '             <<< LOCAL GUI >>>'
+echo  '        <<< LOCAL GUI SECTIONS >>>'
 echo  '12. [[[ UBUNTU LINUX, INSTALL BASE GUI OPERATING SYSTEM PACKAGES ]]]'
 echo  '13. [[[ UBUNTU LINUX, INSTALL EXTRA GUI OPERATING SYSTEM PACKAGES ]]]'
 echo  '14. [[[ UBUNTU LINUX, INSTALL XPRA ]]]'
@@ -103,7 +103,7 @@ echo  '16. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER ]]]'
 echo  '17. [[[ UBUNTU LINUX, CONFIGURE XFCE WINDOW MANAGER ]]]'
 echo
 
-echo  '             <<< SERVICES >>>'
+echo  '         <<< SERVICE SECTIONS >>>'
 echo  '18. [[[ UBUNTU LINUX,   INSTALL NFS ]]]'
 echo  '19. [[[ UBUNTU LINUX,   INSTALL APACHE & MOD_PERL ]]]'
 echo  '20. [[[ APACHE,         CONFIGURE DOMAIN(S) ]]]'
@@ -122,13 +122,15 @@ echo  '32. [[[ PERL CATALYST,  CHECK VERSIONS ]]]'
 echo
 
 while true; do
-    read -p 'Please type your main menu choice number, or press <ENTER> for 0... ' MENU_CHOICE
+    read -p 'Please type your chosen main menu section number, or press <ENTER> for 0... ' MENU_CHOICE
     case $MENU_CHOICE in
         [0123456789]|[12][0123456789]|3[012] ) echo; break;;
         '' ) echo; MENU_CHOICE=0; break;;
-        * ) echo 'Please choose a number from the menu!'; echo;;
+        * ) echo 'Please choose a section number from the menu!'; echo;;
     esac
 done
+
+CURRENT_SECTION=0
 
 
 echo  '          [[[<<< Machine Menu >>>]]]'
@@ -172,9 +174,10 @@ if [ $MENU_CHOICE -le 0 ]; then
         S $EDITOR /etc/group
         echo "[ Take Note Of IP Address For Use On Existing Machine ]"
         B ifconfig
-        C 'Please Run This LAMP Installer Section 0 On Existing Machine Now...'
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo '1. [[[ EXISTING MACHINE; CLIENT; LOCAL USER SYSTEM ]]]'
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
         P "new machine's user name"
         USERNAME=$USER_INPUT
         N "new machine's IP address (ex: 123.145.167.189)"
@@ -198,22 +201,52 @@ if [ $MENU_CHOICE -le 0 ]; then
     fi
 fi
 
+CURRENT_SECTION=$((CURRENT_SECTION+1))
+
 if [ $MENU_CHOICE -le 1 ]; then
     echo '1. [[[ LINUX, CONFIGURE CLOUD NETWORKING ]]]'
     echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
 fi
+
+CURRENT_SECTION=$((CURRENT_SECTION+1))
 
 if [ $MENU_CHOICE -le 2 ]; then
     echo '2. [[[ UBUNTU LINUX, FIX BROKEN SWAP DEVICE ]]]'
     echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+    fi
 fi
+
+CURRENT_SECTION=$((CURRENT_SECTION+1))
 
 if [ $MENU_CHOICE -le 3 ]; then
     echo '3. [[[ UBUNTU LINUX, FIX BROKEN LOCALE ]]]'
     echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+    fi
 fi
+
+CURRENT_SECTION=$((CURRENT_SECTION+1))
 
 if [ $MENU_CHOICE -le 4 ]; then
     echo '4. [[[ UBUNTU LINUX, INSTALL EXPERIMENTAL UBUNTU SDK BEFORE OTHER PACKAGES ]]]'
     echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+    fi
 fi
+
+CURRENT_SECTION=$((CURRENT_SECTION+1))
