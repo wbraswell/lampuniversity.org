@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.002_000
+# LAMP Installer Script v0.003_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -20,32 +20,44 @@ C () {  # _C_onfirm user action
 }
 
 P () {  # _P_rompt user for input
+    if [ $1 != '__EMPTY__' ]; then
+        USER_INPUT=$1
+        return
+    fi
     while true; do
-            read -p "Please type the $1... " USER_INPUT
+            read -p "Please type the $2... " USER_INPUT
         case $USER_INPUT in
             [abcdefghijklmnopqrstuvwxyz]+([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.]) ) echo; break;;
-            * ) echo "Please type the $1! "; echo;;
+            * ) echo "Please type the $2! "; echo;;
         esac
     done
 }
 
 N () {  # prompt user for _N_umeric input
+    if [ $1 != '__EMPTY__' ]; then
+        USER_INPUT=$1
+        return
+    fi
     while true; do
-            read -p "Please type the $1... " USER_INPUT
+            read -p "Please type the $2... " USER_INPUT
         case $USER_INPUT in
             [0123456789]+([0123456789.]) ) echo; break;;
-            * ) echo "Please type the $1! "; echo;;
+            * ) echo "Please type the $2! "; echo;;
         esac
     done
 }
 
 D () {  # prompt user for input w/ _D_efault value
+    if [ $1 != '__EMPTY__' ]; then
+        USER_INPUT=$1
+        return
+    fi
     while true; do
-            read -p "Please type the $1, or press <ENTER> for $2... " USER_INPUT
+            read -p "Please type the $2, or press <ENTER> for $3... " USER_INPUT
         case $USER_INPUT in
             [abcdefghijklmnopqrstuvwxyz]+([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.]) ) echo; break;;
-            '' ) echo; USER_INPUT=$2; break;;
-            * ) echo "Please type the $1, or press <ENTER> for $2! "; echo;;
+            '' ) echo; USER_INPUT=$3; break;;
+            * ) echo "Please type the $2, or press <ENTER> for $3! "; echo;;
         esac
     done
 }
@@ -148,8 +160,11 @@ while true; do
     esac
 done
 
-D 'preferred text editor' 'vi'
-EDITOR=$USER_INPUT
+# ALL VARIABLES
+EDITOR='__EMPTY__'
+USERNAME='__EMPTY__'
+IP_ADDRESS='__EMPTY__'
+DOMAIN_NAME='__EMPTY__'
 
 if [ $MENU_CHOICE -le 0 ]; then
     echo '0. [[[ LINUX, CONFIGURE OPERATING SYSTEM USERS ]]]'
@@ -162,7 +177,7 @@ if [ $MENU_CHOICE -le 0 ]; then
         S userdel user
         S rm -Rf /home/user
         echo '[ Create New User ]'
-        P 'new username to be created'
+        P $USERNAME 'new username to be created'
         USERNAME=$USER_INPUT
         S useradd $USERNAME
         S passwd $USERNAME
@@ -171,6 +186,8 @@ if [ $MENU_CHOICE -le 0 ]; then
         S chmod -R go-rwx /home/$USERNAME
         S chsh -s /bin/bash $USERNAME
         echo "[ Manually Add $USERNAME To User Group sudo, Allows Running root Commands (Like update-manager) Via sudo In xpra ]"
+        D $EDITOR 'preferred text editor' 'vi'
+        EDITOR=$USER_INPUT
         S $EDITOR /etc/group
         echo "[ Take Note Of IP Address For Use On Existing Machine ]"
         B ifconfig
@@ -178,16 +195,18 @@ if [ $MENU_CHOICE -le 0 ]; then
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo '1. [[[ EXISTING MACHINE; CLIENT; LOCAL USER SYSTEM ]]]'
         C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        P "new machine's user name"
+        P $USERNAME "new machine's user name"
         USERNAME=$USER_INPUT
-        N "new machine's IP address (ex: 123.145.167.189)"
+        N $IP_ADDRESS "new machine's IP address (ex: 123.145.167.189)"
         IP_ADDRESS=$USER_INPUT
-        P "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
         DOMAIN_NAME=$USER_INPUT
         echo "[ Manually Add New Machine IP Address & Domain Name ]"
         echo "[ Copy Data From The Next Line ]"
         echo $IP_ADDRESS $DOMAIN_NAME
         echo
+        D $EDITOR 'preferred text editor' 'vi'
+        EDITOR=$USER_INPUT
         S $EDITOR /etc/hosts
         echo "[ Enable Passwordless SSH ]"
         echo "[ Do Not Re-Run ssh-keygen If Already Done In The Past ]"
@@ -208,9 +227,40 @@ if [ $MENU_CHOICE -le 1 ]; then
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        echo
+        D $EDITOR 'preferred text editor' 'vi'
+        EDITOR=$USER_INPUT
     elif [ $MACHINE_CHOICE -eq 1 ]; then
+        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        DOMAIN_NAME=$USER_INPUT
+        B scp /etc/hosts $DOMAIN_NAME:/tmp/hosts
         C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
+
+
+
+
+# CLOUD MACHINE
+$ mv /tmp/hosts /etc/hosts
+$ vi /etc/hosts  # modify localhost entry, public entry if present
+    127.0.1.1       SUBDOMAIN_OR_SOMEDOMAIN  # === EDIT THIS LINE TO BE YOUR LOCAL HOSTNAME ===
+    # === REMOVE LOCAL HOSTNAME IF APPEARING BELOW ===
+    XXX.YYY.ZZZ.YYY                  SUBDOMAIN.SOMEDOMAIN.COM  # godaddy DNS A record
+$ vi /etc/hostname  # enter real dot-separated FQDN registered w/ godaddy etc, or single word if no real FQDN
+$ vi /etc/network/interfaces  # append following
+    dns-nameservers 8.8.8.8 8.8.4.4
+$ reboot
+$ cat /etc/resolv.conf  # confirm following
+    nameserver 8.8.8.8
+    nameserver 8.8.4.4
+# CHEAT!!!
+    mv /tmp/hosts /etc/hosts; vi /etc/hosts; vi /etc/hostname; vi /etc/network/interfaces; reboot
+$ cat /etc/resolv.conf  # confirm following
+    nameserver 8.8.8.8
+    nameserver 8.8.4.4
+
+
+
 fi
 
 CURRENT_SECTION=$((CURRENT_SECTION+1))
