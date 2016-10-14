@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.003_000
+# LAMP Installer Script v0.004_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -189,7 +189,7 @@ if [ $MENU_CHOICE -le 0 ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
         S $EDITOR /etc/group
-        echo "[ Take Note Of IP Address For Use On Existing Machine ]"
+        echo '[ Take Note Of IP Address For Use On Existing Machine ]'
         B ifconfig
         C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
     elif [ $MACHINE_CHOICE -eq 1 ]; then
@@ -201,21 +201,21 @@ if [ $MENU_CHOICE -le 0 ]; then
         IP_ADDRESS=$USER_INPUT
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
         DOMAIN_NAME=$USER_INPUT
-        echo "[ Manually Add New Machine IP Address & Domain Name ]"
-        echo "[ Copy Data From The Next Line ]"
+        echo '[ Manually Add New Machine IP Address & Domain Name ]'
+        echo '[ Copy Data From The Following Line ]'
         echo $IP_ADDRESS $DOMAIN_NAME
         echo
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
         S $EDITOR /etc/hosts
-        echo "[ Enable Passwordless SSH ]"
-        echo "[ Do Not Re-Run ssh-keygen If Already Done In The Past ]"
+        echo '[ Enable Passwordless SSH ]'
+        echo '[ Do Not Re-Run ssh-keygen If Already Done In The Past ]'
         B ssh-keygen
         B ssh-copy-id $USERNAME@$DOMAIN_NAME
-        echo "[ You May Be Prompted Once To Unlock Keyring, Passwordless Thereafter ]"
+        echo '[ You May Be Prompted Once To Unlock Keyring, Passwordless Thereafter ]'
         B ssh $USERNAME@$DOMAIN_NAME
         B ssh $USERNAME@$DOMAIN_NAME
-        echo "[ Copy Run Commands & Config Files To New Machine: bash, vi, git ]"
+        echo '[ Copy Run Commands & Config Files To New Machine: bash, vi, git ]'
         B scp ~/.bashrc ~/.vimrc ~/.gitconfig $DOMAIN_NAME:~/
     fi
 fi
@@ -227,41 +227,40 @@ if [ $MENU_CHOICE -le 1 ]; then
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        echo
+        S mv /tmp/hosts /etc/hosts
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
+        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        DOMAIN_NAME=$USER_INPUT
+        echo '[ Manually Modify Hosts File; Update localhost Entry, Disable Public Entry If Present ]'
+        echo '[ Follow Directions From The Following Line ]'
+        echo "127.0.1.1       $DOMAIN_NAME  # === EDIT THIS LINE TO BE YOUR LOCAL HOSTNAME AKA FULLY-QUALIFIED DOMAIN NAME ==="
+        echo '# === COMMENT OR REMOVE LOCAL HOSTNAME IF APPEARING BELOW ==='
+        echo '...'
+        echo "111.222.111.222 foo.com  # ignore this entry
+        echo "123.123.123.123 $DOMAIN_NAME  # === THIS IS THE ENTRY WHICH NEEDS TO BE DISABLED ==="
+        echo "100.200.100.200 bar.com  # ignore this entry
+        echo '...'
+        S $EDITOR /etc/hosts
+        echo '[ Modify Hostname File ]'
+        S echo $DOMAIN_NAME > /etc/hostname
+        echo '[ Modify Network Interfaces File, Append Google DNS Servers To End Of File ]'
+        S echo -e "\ndns-nameservers 8.8.8.8 8.8.4.4" >> /etc/network/interfaces
+        echo '[ Reboot, Then Check /etc/resolv.conf File To Confirm The Following Lines Have Been Appended ]'
+        echo 'nameserver 8.8.8.8'
+        echo 'nameserver 8.8.4.4'
+        S reboot
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
         DOMAIN_NAME=$USER_INPUT
         B scp /etc/hosts $DOMAIN_NAME:/tmp/hosts
         C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
-
-
-
-
-# CLOUD MACHINE
-$ mv /tmp/hosts /etc/hosts
-$ vi /etc/hosts  # modify localhost entry, public entry if present
-    127.0.1.1       SUBDOMAIN_OR_SOMEDOMAIN  # === EDIT THIS LINE TO BE YOUR LOCAL HOSTNAME ===
-    # === REMOVE LOCAL HOSTNAME IF APPEARING BELOW ===
-    XXX.YYY.ZZZ.YYY                  SUBDOMAIN.SOMEDOMAIN.COM  # godaddy DNS A record
-$ vi /etc/hostname  # enter real dot-separated FQDN registered w/ godaddy etc, or single word if no real FQDN
-$ vi /etc/network/interfaces  # append following
-    dns-nameservers 8.8.8.8 8.8.4.4
-$ reboot
-$ cat /etc/resolv.conf  # confirm following
-    nameserver 8.8.8.8
-    nameserver 8.8.4.4
-# CHEAT!!!
-    mv /tmp/hosts /etc/hosts; vi /etc/hosts; vi /etc/hostname; vi /etc/network/interfaces; reboot
-$ cat /etc/resolv.conf  # confirm following
-    nameserver 8.8.8.8
-    nameserver 8.8.4.4
-
-
-
 fi
+
+# START HERE: test section 1 above
+# START HERE: test section 1 above
+# START HERE: test section 1 above
 
 CURRENT_SECTION=$((CURRENT_SECTION+1))
 
