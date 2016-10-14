@@ -1,6 +1,7 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.004_000
+
+# LAMP Installer Script v0.005_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -67,9 +68,23 @@ S () {  # _S_udo command
 }
 
 B () {  # _B_ash command
-    echo '$' "$@"
+    COMMAND="       ${02} ${03} ${04} ${05} ${06} ${07} ${08} ${09} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} \
+        ${20} ${21} ${22} ${23} ${24} ${25} ${26} ${27} ${28} ${29} ${30} ${31} ${32} ${33} ${34} ${35} ${36} ${37} ${38} ${39} \
+        ${40} ${41} ${42} ${43} ${44} ${45} ${46} ${47} ${48} ${49} ${50} ${51} ${52} ${53} ${54} ${55} ${56} ${57} ${58} ${59} \
+        ${60} ${61} ${62} ${63} ${64} ${65} ${66} ${67} ${68} ${69} ${70} ${71} ${72} ${73} ${74} ${75} ${76} ${77} ${78} ${79} \
+        ${80} ${81} ${82} ${83} ${84} ${85} ${86} ${87} ${88} ${89} ${90} ${91} ${92} ${93} ${94} ${95} ${96} ${97} ${98} ${99} "
+    if [ $1 = 'sudo' ]; then
+        COMMAND_FULL="sudo bash -c ' $COMMAND '"
+        PROMPT='Run above command AS ROOT, yes or no?  [yes] '
+    else
+        COMMAND="$1 $COMMAND"
+        COMMAND_FULL="bash -c ' $COMMAND '"
+        PROMPT='Run above command, yes or no?  [yes] '
+    fi
+    echo '$' $COMMAND
+    
     while true; do
-        read -p 'Run above command, yes or no?  [yes] ' -n 1 PROMPT_INPUT
+        read -p "$PROMPT" -n 1 PROMPT_INPUT
         case $PROMPT_INPUT in
             n|N ) echo; echo; return;;
             y|Y ) echo; break;;
@@ -77,12 +92,13 @@ B () {  # _B_ash command
             * ) echo;;
         esac
     done
-    #    bash -xc " \  # -x replaced w/ echo above
-    bash -c " ${01} ${02} ${03} ${04} ${05} ${06} ${07} ${08} ${09} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} \
-        ${20} ${21} ${22} ${23} ${24} ${25} ${26} ${27} ${28} ${29} ${30} ${31} ${32} ${33} ${34} ${35} ${36} ${37} ${38} ${39} \
-        ${40} ${41} ${42} ${43} ${44} ${45} ${46} ${47} ${48} ${49} ${50} ${51} ${52} ${53} ${54} ${55} ${56} ${57} ${58} ${59} \
-        ${60} ${61} ${62} ${63} ${64} ${65} ${66} ${67} ${68} ${69} ${70} ${71} ${72} ${73} ${74} ${75} ${76} ${77} ${78} ${79} \
-        ${80} ${81} ${82} ${83} ${84} ${85} ${86} ${87} ${88} ${89} ${90} ${91} ${92} ${93} ${94} ${95} ${96} ${97} ${98} ${99} "
+
+#    $COMMAND_FULL  # ERROR: -c: line 0: unexpected EOF while looking for matching `''
+    if [ $1 = 'sudo' ]; then
+        sudo bash -c " $COMMAND "
+    else
+        bash -c " $COMMAND "
+    fi
     echo
 }
 #B echo DUMMY COMMAND $MENU_CHOICE 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49
@@ -233,22 +249,24 @@ if [ $MENU_CHOICE -le 1 ]; then
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
         DOMAIN_NAME=$USER_INPUT
         echo '[ Manually Modify Hosts File; Update localhost Entry, Disable Public Entry If Present ]'
-        echo '[ Follow Directions From The Following Line ]'
-        echo "127.0.1.1       $DOMAIN_NAME  # === EDIT THIS LINE TO BE YOUR LOCAL HOSTNAME AKA FULLY-QUALIFIED DOMAIN NAME ==="
+        echo '[ Example File Content On The Following Lines ]'
+        echo "127.0.1.1       $DOMAIN_NAME  # === EDIT THIS LINE TO BE YOUR LOCAL HOSTNAME AKA FULLY-QUALIFIED DOMAIN NAME, AS SHOWN HERE ==="
         echo '# === COMMENT OR REMOVE LOCAL HOSTNAME IF APPEARING BELOW ==='
         echo '...'
-        echo "111.222.111.222 foo.com  # ignore this entry
-        echo "123.123.123.123 $DOMAIN_NAME  # === THIS IS THE ENTRY WHICH NEEDS TO BE DISABLED ==="
-        echo "100.200.100.200 bar.com  # ignore this entry
+        echo '111.222.111.222 foo.com  # ignore this entry'
+        echo "#123.123.123.123 $DOMAIN_NAME  # === THIS IS THE ENTRY WHICH NEEDS TO BE DISABLED, AS SHOWN HERE ==="
+        echo '100.200.100.200 bar.com  # ignore this entry'
         echo '...'
+        echo
         S $EDITOR /etc/hosts
         echo '[ Modify Hostname File ]'
-        S echo $DOMAIN_NAME > /etc/hostname
+        S "echo $DOMAIN_NAME > /etc/hostname"  # DEV NOTE: must wrap redirects in quotes
         echo '[ Modify Network Interfaces File, Append Google DNS Servers To End Of File ]'
-        S echo -e "\ndns-nameservers 8.8.8.8 8.8.4.4" >> /etc/network/interfaces
+        S 'echo -e "\ndns-nameservers 8.8.8.8 8.8.4.4" >> /etc/network/interfaces'  # DEV NOTE: must wrap redirects in quotes
         echo '[ Reboot, Then Check /etc/resolv.conf File To Confirm The Following Lines Have Been Appended ]'
         echo 'nameserver 8.8.8.8'
         echo 'nameserver 8.8.4.4'
+        echo
         S reboot
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
