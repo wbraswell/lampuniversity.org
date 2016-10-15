@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 
-# LAMP Installer Script v0.005_000
+# LAMP Installer Script v0.006_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -110,7 +110,7 @@ echo
 echo  '        <<< LOCAL CLI SECTIONS >>>'
 echo \ '0. [[[        LINUX, CONFIGURE OPERATING SYSTEM USERS ]]]'
 echo \ '1. [[[        LINUX, CONFIGURE CLOUD NETWORKING ]]]'
-echo \ '2. [[[ UBUNTU LINUX, FIX BROKEN SWAP DEVICE ]]]'
+echo \ '2. [[[ UBUNTU LINUX, USB INSTALL, FIX BROKEN SWAP DEVICE ]]]'
 echo \ '3. [[[ UBUNTU LINUX, FIX BROKEN LOCALE ]]]'
 echo \ '4. [[[ UBUNTU LINUX, INSTALL EXPERIMENTAL UBUNTU SDK BEFORE OTHER PACKAGES ]]]'
 echo \ '5. [[[ UBUNTU LINUX, UPGRADE ALL OPERATING SYSTEM PACKAGES ]]]'
@@ -276,19 +276,26 @@ if [ $MENU_CHOICE -le 1 ]; then
     fi
 fi
 
-# START HERE: test section 1 above
-# START HERE: test section 1 above
-# START HERE: test section 1 above
-
 CURRENT_SECTION=$((CURRENT_SECTION+1))
 
 if [ $MENU_CHOICE -le 2 ]; then
-    echo '2. [[[ UBUNTU LINUX, FIX BROKEN SWAP DEVICE ]]]'
+    echo '2. [[[ UBUNTU LINUX, USB INSTALL, FIX BROKEN SWAP DEVICE ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        echo '[ WARNING: This section only applies to Ubuntu installed from a USB drive! ]'
+        echo '[ Manually Update UUID Entries In /etc/fstab & /etc/crypttab Files To Reflect New /dev/sd* Drive Letters ]'
+        B ls -l /dev/sd*
+ 
+
+# determine device
+$ blkid /dev/sdXX
+# copy UUID
+$ vi /etc/fstab
+$ vi /etc/crypttab
+
+
     elif [ $MACHINE_CHOICE -eq 1 ]; then
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+         echo "Nothing To Do On Existing Machine!"
     fi
 fi
 

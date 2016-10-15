@@ -11,31 +11,14 @@ Fresh Xubuntu v16.04.1 (Xenial Xerus)
 :%s/^\ \ \ \ //g
 
 
-# [[[ LINUX, CONFIGURE CLOUD NETWORKING ]]]
-# USER MACHINE
-$ scp /etc/hosts SUBDOMAIN.SOMEDOMAIN.COM:/tmp/hosts
-# CLOUD MACHINE
-$ mv /tmp/hosts /etc/hosts
-$ vi /etc/hosts  # modify localhost entry, public entry if present
-    127.0.1.1       SUBDOMAIN_OR_SOMEDOMAIN  # === EDIT THIS LINE TO BE YOUR LOCAL HOSTNAME ===
-    # === REMOVE LOCAL HOSTNAME IF APPEARING BELOW ===
-    XXX.YYY.ZZZ.YYY                  SUBDOMAIN.SOMEDOMAIN.COM  # godaddy DNS A record
-$ vi /etc/hostname  # enter real dot-separated FQDN registered w/ godaddy etc, or single word if no real FQDN
-$ vi /etc/network/interfaces  # append following
-    dns-nameservers 8.8.8.8 8.8.4.4
-$ reboot
-$ cat /etc/resolv.conf  # confirm following
-    nameserver 8.8.8.8
-    nameserver 8.8.4.4
-# CHEAT!!!
-    mv /tmp/hosts /etc/hosts; vi /etc/hosts; vi /etc/hostname; vi /etc/network/interfaces; reboot
-$ cat /etc/resolv.conf  # confirm following
-    nameserver 8.8.8.8
-    nameserver 8.8.4.4
-
-
 # [[[ UBUNTU LINUX, FIX BROKEN SWAP DEVICE ]]]
 # when installed from USB drive, update UUID in /etc/fstab and /etc/crypttab to reflect new /dev/sd* drive letters
+$ ls -l /dev/sd*
+# determine device
+$ blkid /dev/sdXX
+# copy UUID
+$ vi /etc/fstab
+$ vi /etc/crypttab
 
 
 # [[[ UBUNTU LINUX, FIX BROKEN LOCALE ]]]
