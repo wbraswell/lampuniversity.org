@@ -1,4 +1,4 @@
-LAMP Install Notes 20161007 2016.281
+LAMP Install Notes 20161016 2016.290
 Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 
 Tested Using:
@@ -9,17 +9,6 @@ Fresh Xubuntu v16.04.1 (Xenial Xerus)
 
 # [[[ UNINDENT ]]]
 :%s/^\ \ \ \ //g
-
-
-# [[[ UBUNTU LINUX, FIX BROKEN SWAP DEVICE ]]]
-# when installed from USB drive, update UUID in /etc/fstab and /etc/crypttab to reflect new /dev/sd* drive letters
-$ ls -l /dev/sd*
-# determine device
-$ blkid /dev/sdXX
-# copy UUID
-$ vi /etc/fstab
-$ vi /etc/crypttab
-
 
 # [[[ UBUNTU LINUX, FIX BROKEN LOCALE ]]]
 $ locale-gen en_US.UTF-8; dpkg-reconfigure locales  # fix "perl: warning: Setting locale failed."

@@ -1,10 +1,30 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-
-# LAMP Installer Script v0.006_000
+# LAMP Installer Script v0.007_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
+
+# global variables
+USER_INPUT=''
+CURRENT_SECTION=0
+
+CURRENT_SECTION_COMPLETE () {
+    echo
+    echo '[[[ SECTION' $CURRENT_SECTION 'COMPLETE ]]]'
+    echo
+    CURRENT_SECTION=$((CURRENT_SECTION+1))
+    while true; do
+        read -p "Continue to section $CURRENT_SECTION, yes or no?  [yes] " -n 1 PROMPT_INPUT
+        case $PROMPT_INPUT in
+            n|N ) echo; echo; exit;;
+            y|Y ) echo; echo; break;;
+#            ' ' ) echo;;  # NEED FIX: space ' ' should not trigger empty ''
+            ''  ) echo; break;;
+            *   ) echo;;
+        esac
+    done
+}
 
 C () {  # _C_onfirm user action
     echo $1
@@ -101,7 +121,6 @@ B () {  # _B_ash command
     fi
     echo
 }
-#B echo DUMMY COMMAND $MENU_CHOICE 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49
 
 echo  '    [[[<<< LAMP Installer Script >>>]]]'
 echo  '          [[[<<< Main Menu >>>]]]'
@@ -158,8 +177,7 @@ while true; do
     esac
 done
 
-CURRENT_SECTION=0
-
+CURRENT_SECTION=$MENU_CHOICE
 
 echo  '          [[[<<< Machine Menu >>>]]]'
 echo
@@ -234,9 +252,8 @@ if [ $MENU_CHOICE -le 0 ]; then
         echo '[ Copy Run Commands & Config Files To New Machine: bash, vi, git ]'
         B scp ~/.bashrc ~/.vimrc ~/.gitconfig $DOMAIN_NAME:~/
     fi
+    CURRENT_SECTION_COMPLETE
 fi
-
-CURRENT_SECTION=$((CURRENT_SECTION+1))
 
 if [ $MENU_CHOICE -le 1 ]; then
     echo '1. [[[ LINUX, CONFIGURE CLOUD NETWORKING ]]]'
@@ -274,9 +291,8 @@ if [ $MENU_CHOICE -le 1 ]; then
         B scp /etc/hosts $DOMAIN_NAME:/tmp/hosts
         C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
+    CURRENT_SECTION_COMPLETE
 fi
-
-CURRENT_SECTION=$((CURRENT_SECTION+1))
 
 # SECTION 2 VARIABLES
 SWAP_DEVICE='__EMPTY__'
@@ -306,9 +322,8 @@ if [ $MENU_CHOICE -le 2 ]; then
          echo "Nothing To Do On Existing Machine!"
          echo
     fi
+    CURRENT_SECTION_COMPLETE
 fi
-
-CURRENT_SECTION=$((CURRENT_SECTION+1))
 
 if [ $MENU_CHOICE -le 3 ]; then
     echo '3. [[[ UBUNTU LINUX, FIX BROKEN LOCALE ]]]'
@@ -318,9 +333,8 @@ if [ $MENU_CHOICE -le 3 ]; then
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
     fi
+    CURRENT_SECTION_COMPLETE
 fi
-
-CURRENT_SECTION=$((CURRENT_SECTION+1))
 
 if [ $MENU_CHOICE -le 4 ]; then
     echo '4. [[[ UBUNTU LINUX, INSTALL EXPERIMENTAL UBUNTU SDK BEFORE OTHER PACKAGES ]]]'
@@ -330,6 +344,5 @@ if [ $MENU_CHOICE -le 4 ]; then
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
     fi
+    CURRENT_SECTION_COMPLETE
 fi
-
-CURRENT_SECTION=$((CURRENT_SECTION+1))
