@@ -176,7 +176,7 @@ while true; do
     esac
 done
 
-# ALL VARIABLES
+# SECTION 0 VARIABLES
 EDITOR='__EMPTY__'
 USERNAME='__EMPTY__'
 IP_ADDRESS='__EMPTY__'
@@ -278,24 +278,33 @@ fi
 
 CURRENT_SECTION=$((CURRENT_SECTION+1))
 
+# SECTION 2 VARIABLES
+SWAP_DEVICE='__EMPTY__'
+
 if [ $MENU_CHOICE -le 2 ]; then
     echo '2. [[[ UBUNTU LINUX, USB INSTALL, FIX BROKEN SWAP DEVICE ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo '[ WARNING: This section only applies to Ubuntu installed from a USB drive! ]'
-        echo '[ Manually Update UUID Entries In /etc/fstab & /etc/crypttab Files To Reflect New /dev/sd* Drive Letters ]'
+        echo '[ During Installation, Swap May Be Created On /dev/sda5 Device, Determine Device ]'
         B ls -l /dev/sd*
- 
-
-# determine device
-$ blkid /dev/sdXX
-# copy UUID
-$ vi /etc/fstab
-$ vi /etc/crypttab
-
-
+        D $SWAP_DEVICE "new machine's USB installation swap device file" '/dev/sda5'
+        SWAP_DEVICE=$USER_INPUT
+        echo '[ Copy UUID ]'
+        B blkid $SWAP_DEVICE
+        echo '[ Manually Update UUID Entries In /etc/fstab And/Or /etc/crypttab Files To Reflect New /dev/sd* Drive Letters ]'
+        D $EDITOR 'preferred text editor' 'vi'
+        EDITOR=$USER_INPUT
+        S $EDITOR /etc/fstab
+        S $EDITOR /etc/crypttab
+        echo '[ View Current Swap Summary, Turn Current Swap Devices Off, Turn Updated Swap Devices On, View Updated Swap Summary ]'
+        S swapon -s
+        S swapoff -a
+        S swapon -a
+        S swapon -s
     elif [ $MACHINE_CHOICE -eq 1 ]; then
          echo "Nothing To Do On Existing Machine!"
+         echo
     fi
 fi
 
