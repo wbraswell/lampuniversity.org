@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.007_000
+# LAMP Installer Script v0.008_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -319,8 +319,8 @@ if [ $MENU_CHOICE -le 2 ]; then
         S swapon -a
         S swapon -s
     elif [ $MACHINE_CHOICE -eq 1 ]; then
-         echo "Nothing To Do On Existing Machine!"
-         echo
+        echo "Nothing To Do On Existing Machine!"
+        echo
     fi
     CURRENT_SECTION_COMPLETE
 fi
@@ -329,9 +329,11 @@ if [ $MENU_CHOICE -le 3 ]; then
     echo '3. [[[ UBUNTU LINUX, FIX BROKEN LOCALE ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        echo '[ Generate & Reconfigure Locales To Fix "perl: warning: Setting locale failed." ]'
+        S locale-gen en_US.UTF-8
+        S dpkg-reconfigure locales
     elif [ $MACHINE_CHOICE -eq 1 ]; then
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
 fi
