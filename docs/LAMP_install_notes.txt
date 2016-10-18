@@ -10,14 +10,6 @@ Fresh Xubuntu v16.04.1 (Xenial Xerus)
 # [[[ UNINDENT ]]]
 :%s/^\ \ \ \ //g
 
-# [[[ UBUNTU LINUX, FIX BROKEN LOCALE ]]]
-$ locale-gen en_US.UTF-8; dpkg-reconfigure locales  # fix "perl: warning: Setting locale failed."
-
-
-# [[[ UBUNTU LINUX, INSTALL EXPERIMENTAL UBUNTU SDK BEFORE OTHER PACKAGES ]]]
-$ apt-get install ubuntu-sdk
-
-
 # NEED FIX: bad to do APT upgrade below?  breaks ability to install ubuntu-sdk & gvim etc???
 # NEED FIX: bad to do APT upgrade below?  breaks ability to install ubuntu-sdk & gvim etc???
 # NEED FIX: bad to do APT upgrade below?  breaks ability to install ubuntu-sdk & gvim etc???

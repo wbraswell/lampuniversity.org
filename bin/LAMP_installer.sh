@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.008_000
+# LAMP Installer Script v0.009_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -342,9 +342,9 @@ if [ $MENU_CHOICE -le 4 ]; then
     echo '4. [[[ UBUNTU LINUX, INSTALL EXPERIMENTAL UBUNTU SDK BEFORE OTHER PACKAGES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        S apt-get install ubuntu-sdk
     elif [ $MACHINE_CHOICE -eq 1 ]; then
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
 fi
