@@ -1,4 +1,4 @@
-LAMP Install Notes 20161016 2016.290
+LAMP Install Notes 20161019 2016.293
 Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 
 Tested Using:
@@ -9,28 +9,6 @@ Fresh Xubuntu v16.04.1 (Xenial Xerus)
 
 # [[[ UNINDENT ]]]
 :%s/^\ \ \ \ //g
-
-# NEED FIX: bad to do APT upgrade below?  breaks ability to install ubuntu-sdk & gvim etc???
-# NEED FIX: bad to do APT upgrade below?  breaks ability to install ubuntu-sdk & gvim etc???
-# NEED FIX: bad to do APT upgrade below?  breaks ability to install ubuntu-sdk & gvim etc???
-
-# vim-gtk3 Has Unmet Dependencies After `apt-get upgrade` In Ubuntu 16.04.1 Xenial
-# https://bugs.launchpad.net/ubuntu/+source/vim/+bug/1613949
-
-
-# [[[ UBUNTU LINUX, UPGRADE ALL OPERATING SYSTEM PACKAGES ]]]
-$ apt-get update
-$ apt-get upgrade
-$ apt-get -f install  # confirm no errors, only non-upgraded packages allowable
-$ apt-get upgrade  # review non-upgraded (kept back) packages, confirm suitability for safe-upgrade
-$ apt-get install aptitude
-$ aptitude safe-upgrade
-$ apt-get -f install  # confirm nothing to upgrade
-$ apt-get upgrade  # confirm nothing to upgrade
-$ apt-get autoremove
-$ reboot
-# CHEAT!!!
-    apt-get update; apt-get -y upgrade; apt-get -y install aptitude; aptitude -y safe-upgrade; apt-get -f install; apt-get -y autoremove; reboot
 
 
 # [[[ UBUNTU LINUX, INSTALL BASE CLI OPERATING SYSTEM PACKAGES ]]]

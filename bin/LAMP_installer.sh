@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.009_000
+# LAMP Installer Script v0.011_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -302,6 +302,7 @@ if [ $MENU_CHOICE -le 2 ]; then
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo '[ WARNING: This section only applies to Ubuntu installed from a USB drive! ]'
+        C 'Please read the warning above.  Seriously.'
         echo '[ During Installation, Swap May Be Created On /dev/sda5 Device, Determine Device ]'
         B ls -l /dev/sd*
         D $SWAP_DEVICE "new machine's USB installation swap device file" '/dev/sda5'
@@ -342,9 +343,115 @@ if [ $MENU_CHOICE -le 4 ]; then
     echo '4. [[[ UBUNTU LINUX, INSTALL EXPERIMENTAL UBUNTU SDK BEFORE OTHER PACKAGES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo '[ WARNING: THIS SECTION IS EXPERIMENTAL!  This should NOT be done if you are not sure about what you are doing!!! ]'
+        C 'Please read the warning above.  Seriously.'
         S apt-get install ubuntu-sdk
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 5 ]; then
+    echo '5. [[[ UBUNTU LINUX, UPGRADE ALL OPERATING SYSTEM PACKAGES ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo '[ WARNING: THIS SECTION IS EXPERIMENTAL!  This should NOT be done if you are not sure about what you are doing!!! ]'
+        C 'Please read the warning above.  Seriously.'
+        # NEED FIX: gvim AKA vim-gtk3 Has Unmet Dependencies After `apt-get upgrade` In Ubuntu 16.04.1 Xenial
+        # https://bugs.launchpad.net/ubuntu/+source/vim/+bug/1613949
+        echo '[ Update Package List & Upgrade All Packages ]'
+        S apt-get update
+        S apt-get upgrade
+        echo '[ Check Install, Confirm No Errors, Only Non-Upgraded Packages Allowable ]'
+        S apt-get -f install
+        echo '[ Review Non-Upgraded (Kept Back) Packages, Confirm Suitability For Safe-Upgrade ]'
+        S apt-get upgrade 
+        S apt-get install aptitude
+        S aptitude safe-upgrade
+        echo '[ Check Install, Confirm No Errors & Nothing Remaining To Upgrade ]'
+        S apt-get -f install
+        S apt-get upgrade
+        echo '[ Clean Unneeded Files & Reboot ]'
+        S apt-get autoremove
+        S reboot
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 6 ]; then
+    echo '6. [[[ UBUNTU LINUX, INSTALL BASE CLI OPERATING SYSTEM PACKAGES ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 7 ]; then
+    echo '7. [[[ UBUNTU LINUX, INSTALL & TEST CLAMAV ANTI-VIRUS ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 8 ]; then
+    echo '8. [[[        LINUX, INSTALL LAMP UNIVERSITY TOOLS ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 9 ]; then
+    echo '9. [[[ UBUNTU LINUX, INSTALL HEIRLOOM TOOLS (including bdiff) ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 10 ]; then
+    echo '10. [[[ UBUNTU LINUX, INSTALL BROADCOM B43 WIFI ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi
