@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.011_000
+# LAMP Installer Script v0.012_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -385,13 +385,17 @@ if [ $MENU_CHOICE -le 6 ]; then
     echo '6. [[[ UBUNTU LINUX, INSTALL BASE CLI OPERATING SYSTEM PACKAGES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        echo '[ Check Install, Confirm No Errors ]'
+        S apt-get update
+        S apt-get -f install
+        echo '[ General Tools: g++ ssh perl-doc vim linuxlogo lynx screen ]'
+        echo '[ LAMP University Tools Requirements: zip unzip ]'
+        echo '[ RPerl Requirements: git curl astyle ]'
+        S apt-get install g++ ssh zip unzip perl-doc vim linuxlogo git curl astyle lynx screen
+        echo '[ Check Install, Confirm No Errors ]'
+        S apt-get -f install
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi
