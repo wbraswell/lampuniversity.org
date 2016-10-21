@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.012_000
+# LAMP Installer Script v0.013_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -146,32 +146,34 @@ echo  '12. [[[ UBUNTU LINUX, INSTALL BASE GUI OPERATING SYSTEM PACKAGES ]]]'
 echo  '13. [[[ UBUNTU LINUX, INSTALL EXTRA GUI OPERATING SYSTEM PACKAGES ]]]'
 echo  '14. [[[ UBUNTU LINUX, INSTALL XPRA ]]]'
 echo  '15. [[[ UBUNTU LINUX, INSTALL VIRTUALBOX GUEST ADDITIONS ]]]'
-echo  '16. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER ]]]'
-echo  '17. [[[ UBUNTU LINUX, CONFIGURE XFCE WINDOW MANAGER ]]]'
+echo  '16. [[[ UBUNTU LINUX, UNINSTALL OR RECONFIGURE GVFS ]]]'
+echo  '17. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER ]]]'
+echo  '18. [[[ UBUNTU LINUX, CONFIGURE XFCE WINDOW MANAGER ]]]'
+echo  '19. [[[ UBUNTU LINUX, ENABLE AUTOMATIC SECURITY UPDATES ]]]'
 echo
 
 echo  '         <<< SERVICE SECTIONS >>>'
-echo  '18. [[[ UBUNTU LINUX,   INSTALL NFS ]]]'
-echo  '19. [[[ UBUNTU LINUX,   INSTALL APACHE & MOD_PERL ]]]'
-echo  '20. [[[ APACHE,         CONFIGURE DOMAIN(S) ]]]'
-echo  '21. [[[ UBUNTU LINUX,   INSTALL MYSQL & PHPMYADMIN ]]]'
-echo  '22. [[[ APACHE & MYSQL, CONFIGURE PHPMYADMIN ]]]'
-echo  '23. [[[ UBUNTU LINUX,   INSTALL WEBMIN ]]]'
-echo  '24. [[[ UBUNTU LINUX,   INSTALL POSTFIX ]]]'
-echo  '25. [[[ UBUNTU LINUX,   INSTALL NON-LATEST PERL CATALYST ]]]'
-echo  '26. [[[ UBUNTU LINUX,   INSTALL PERL CPANM & LOCAL::LIB ]]]'
-echo  '27. [[[ UBUNTU LINUX,   INSTALL HAND-COMPILED PERL, OR PERLBREW & CPANMINUS ]]]'
-echo  '28. [[[ PERL CATALYST,  INSTALL TUTORIAL FROM CPAN ]]]'
-echo  '29. [[[ UBUNTU LINUX,   INSTALL PERL CATALYST SHINYCMS PREREQUISITES ]]]'
-echo  '30. [[[ PERL CATALYST,  INSTALL SHINYCMS FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
-echo  '31. [[[ PERL CATALYST,  INSTALL RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
-echo  '32. [[[ PERL CATALYST,  CHECK VERSIONS ]]]'
+echo  '20. [[[ UBUNTU LINUX,   INSTALL NFS ]]]'
+echo  '21. [[[ UBUNTU LINUX,   INSTALL APACHE & MOD_PERL ]]]'
+echo  '22. [[[ APACHE,         CONFIGURE DOMAIN(S) ]]]'
+echo  '23. [[[ UBUNTU LINUX,   INSTALL MYSQL & PHPMYADMIN ]]]'
+echo  '24. [[[ APACHE & MYSQL, CONFIGURE PHPMYADMIN ]]]'
+echo  '25. [[[ UBUNTU LINUX,   INSTALL WEBMIN ]]]'
+echo  '26. [[[ UBUNTU LINUX,   INSTALL POSTFIX ]]]'
+echo  '27. [[[ UBUNTU LINUX,   INSTALL NON-LATEST PERL CATALYST ]]]'
+echo  '28. [[[ UBUNTU LINUX,   INSTALL PERL CPANM & LOCAL::LIB ]]]'
+echo  '29. [[[ UBUNTU LINUX,   INSTALL HAND-COMPILED PERL, OR PERLBREW & CPANMINUS ]]]'
+echo  '30. [[[ PERL CATALYST,  INSTALL TUTORIAL FROM CPAN ]]]'
+echo  '31. [[[ UBUNTU LINUX,   INSTALL PERL CATALYST SHINYCMS PREREQUISITES ]]]'
+echo  '32. [[[ PERL CATALYST,  INSTALL SHINYCMS FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
+echo  '33. [[[ PERL CATALYST,  INSTALL RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
+echo  '34. [[[ PERL CATALYST,  CHECK VERSIONS ]]]'
 echo
 
 while true; do
     read -p 'Please type your chosen main menu section number, or press <ENTER> for 0... ' MENU_CHOICE
     case $MENU_CHOICE in
-        [0123456789]|[12][0123456789]|3[012] ) echo; break;;
+        [0123456789]|[12][0123456789]|3[01234] ) echo; break;;
         '' ) echo; MENU_CHOICE=0; break;;
         * ) echo 'Please choose a section number from the menu!'; echo;;
     esac
@@ -229,7 +231,7 @@ if [ $MENU_CHOICE -le 0 ]; then
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo '1. [[[ EXISTING MACHINE; CLIENT; LOCAL USER SYSTEM ]]]'
         C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        P $USERNAME "new machine's user name"
+        P $USERNAME "new machine's username"
         USERNAME=$USER_INPUT
         N $IP_ADDRESS "new machine's IP address (ex: 123.145.167.189)"
         IP_ADDRESS=$USER_INPUT
@@ -404,13 +406,24 @@ if [ $MENU_CHOICE -le 7 ]; then
     echo '7. [[[ UBUNTU LINUX, INSTALL & TEST CLAMAV ANTI-VIRUS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        echo '[ WARNING: ClamAV should be skipped on low-memory systems. ]'
+        C 'Please read the warning above.  Seriously.'
+        S apt-get install clamav clamav-daemon 
+        S freshclam
+        S clamscan -r /home
+        P $USERNAME "new machine's username"
+        USERNAME=$USER_INPUT
+        S "cd /home/$USERNAME; wget http://www.eicar.org/download/eicar.com"
+        S clamscan -r /home
+        S clamscan --infected --remove --recursive /home
+        S clamscan -r /home
+        S /etc/init.d/clamav-daemon start
+        S /etc/init.d/clamav-daemon status
+        S /etc/init.d/clamav-freshclam start
+        S /etc/init.d/clamav-freshclam status
+        S clamdscan -V
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi

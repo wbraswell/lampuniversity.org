@@ -11,25 +11,6 @@ Fresh Xubuntu v16.04.1 (Xenial Xerus)
 :%s/^\ \ \ \ //g
 
 
-# [[[ UBUNTU LINUX, INSTALL BASE CLI OPERATING SYSTEM PACKAGES ]]]
-$ apt-get update
-$ apt-get -f install  # confirm no errors
-$ apt-get install g++
-$ apt-get install ssh
-$ apt-get install zip unzip  # LAMP University
-$ apt-get install perl-doc 
-$ apt-get install vim
-$ apt-get install linuxlogo
-$ apt-get install git  # RPerl
-$ apt-get install curl  # RPerl
-$ apt-get install astyle  # RPerl
-$ apt-get install lynx
-$ apt-get install screen
-$ apt-get -f install  # confirm no errors
-# CHEAT!!!
-    apt-get -y install g++ ssh zip unzip perl-doc vim linuxlogo git curl astyle lynx screen
-
-
 # [[[ UBUNTU LINUX, INSTALL BASE GUI OPERATING SYSTEM PACKAGES ]]]
 $ apt-get update
 $ apt-get -f install  # confirm no errors
@@ -42,38 +23,9 @@ $ apt-get install chromium-browser
 $ apt-get install update-manager
 $ apt-get install indicator-multiload
 $ apt-get install unetbootin
-$ apt-get remove gvfs-daemons  # OPTIONAL, GVSF: uninstall gvfs to speed up thunar file explorer
 $ apt-get -f install  # confirm no errors
 # CHEAT!!!
-    apt-get -y install xterm xfce4-terminal x11-apps gkrellm hexchat firefox chromium-browser update-manager indicator-multiload unetbootin; apt-get remove gvfs-daemons
-
-
-# [[[ UBUNTU LINUX, INSTALL & TEST CLAMAV ANTI-VIRUS ]]]
-$ apt-get install clamav clamav-daemon  # SKIP ON LOW-MEMORY SYSTEMS
-# CLAMAV ANTI-VIRUS
-$ freshclam
-$ clamscan -r /home
-$ cd /home/SOMEBODY; wget http://www.eicar.org/download/eicar.com
-$ clamscan -r /home
-$ clamscan --infected --remove --recursive /home
-$ clamscan -r /home
-$ /etc/init.d/clamav-daemon start
-$ /etc/init.d/clamav-daemon status
-$ /etc/init.d/clamav-freshclam start
-$ /etc/init.d/clamav-freshclam status
-$ clamdscan -V
-# CHEAT!!!
-    freshclam; clamscan -r /home; cd /home/wbraswell; wget http://www.eicar.org/download/eicar.com; clamscan -r /home; clamscan --infected --remove --recursive /home; clamscan -r /home; /etc/init.d/clamav-daemon start; /etc/init.d/clamav-daemon status; /etc/init.d/clamav-freshclam start; /etc/init.d/clamav-freshclam status; clamdscan -V
-# ENABLE X WINDOWS PER INSTRUCTIONS BELOW
-$ update-manager  # DON'T FORGET THIS CRITICAL SECURITY STEP!
-    # enable security & recommended updates only
-    # check for updates daily
-    # install security updates only
-    # never remind of dist upgrade
-    # enable Ubuntu repositories only, disable restricted & multiverse  # NEED ANSWER: why disable security updates from restricted & multiverse repos?
-# OPTIONAL, GVFS: if gvfs not uninstalled, at least disable network mounting
-$ vi /usr/share/gvfs/mounts/network.mount
-    AutoMount=false
+    apt-get -y install xterm xfce4-terminal x11-apps gkrellm hexchat firefox chromium-browser update-manager indicator-multiload unetbootin
 
 
 # [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER ]]]
@@ -103,6 +55,22 @@ $ apt-get install eclipse-cdt
     $ wget http://www.viplugin.com/files/viPlugin_1.20.3.zip; unzip viPlugin_1.20.3.zip; mv features/* ~/.eclipse/org.eclipse.FOO/features/; mv plugins/* ~/.eclipse/org.eclipse.FOO/plugins; rm -Rf features plugins
 # CHEAT!!!
 	wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -; sh -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'; apt-get update; apt-get -y install google-chrome-stable libreoffice pithos gimp eclipse-cdt
+
+
+# [[[ UBUNTU LINUX, ENABLE AUTOMATIC SECURITY UPDATES ]]]
+$ update-manager  # DON'T FORGET THIS CRITICAL SECURITY STEP!
+    # enable security & recommended updates only
+    # check for updates daily
+    # install security updates only
+    # never remind of dist upgrade
+    # enable Ubuntu repositories only, disable restricted & multiverse  # NEED ANSWER: why disable security updates from restricted & multiverse repos?
+
+
+# [[[ UBUNTU LINUX, UNINSTALL OR RECONFIGURE GVFS ]]]
+$ apt-get remove gvfs-daemons  # OPTIONAL, GVSF: uninstall gvfs to speed up thunar file explorer
+# if gvfs not uninstalled, at least disable network mounting
+$ vi /usr/share/gvfs/mounts/network.mount
+    AutoMount=false
 
 
 # [[[ LINUX, INSTALL LAMP UNIVERSITY TOOLS ]]]
