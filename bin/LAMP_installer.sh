@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.018_000
+# LAMP Installer Script v0.019_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -499,11 +499,11 @@ if [ $MENU_CHOICE -le 11 ]; then
         S apt-get install libcurl4-openssl-dev libncurses5-dev pkg-config automake yasm
         B git clone https://github.com/pooler/cpuminer.git
         B 'cd cpuminer; ./autogen.sh; ./configure CFLAGS="-O3"; make'
-        P $CPUMINER_SERVER "CPU Miner server hostname"
+        P $CPUMINER_SERVER "CPU Miner Server Hostname"
         CPUMINER_SERVER=$USER_INPUT
-        P $CPUMINER_USERNAME "CPU Miner username"
+        P $CPUMINER_USERNAME "CPU Miner Username"
         CPUMINER_USERNAME=$USER_INPUT
-        P $CPUMINER_PASSWORD "CPU Miner password"
+        P $CPUMINER_PASSWORD "CPU Miner Password"
         CPUMINER_PASSWORD=$USER_INPUT
         B "cd cpuminer; ./minerd --url=http://$CPUMINER_SERVER --userpass=$CPUMINER_USERNAME:$CPUMINER_PASSWORD"
     elif [ $MACHINE_CHOICE -eq 1 ]; then
@@ -560,17 +560,81 @@ if [ $MENU_CHOICE -le 13 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
+# SECTION 14 VARIABLES
+LOCAL_HOSTNAME='__EMPTY__'
+
 if [ $MENU_CHOICE -le 14 ]; then
     echo '14. [[[ UBUNTU LINUX, INSTALL XPRA ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
         C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        echo '[ Test X-Windows Single-Session Connection ]'
+        P $LOCAL_HOSTNAME "Existing Machine's Local Hostname"
+        LOCAL_HOSTNAME=$USER_INPUT
+        B "export DISPLAY=$LOCAL_HOSTNAME:0.0; xeyes"
+        echo '[ Install & Start xpra Multi-Session Server ]'
+        S apt-get install xpra
+        B 'xpra start :100 --start-child=xfce4-terminal; xeyes'
+        echo '[ Default Enable xpra Multi-Session Connection ]'
+        B 'echo "export DISPLAY=:100.0" >> ~/.bashrc'
+        echo '[ Test xpra Multi-Session Connection ]'
+        B '. ~/.bashrc; xeyes'
+        echo '[ Optionally Stop xpra Server ]'
+        B xpra stop
     elif [ $MACHINE_CHOICE -eq 1 ]; then
-        echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+        C "Please configure your local firewall to open TCP port 6000..."
+        echo '[ Determine Display Manager, Either gdm OR lightdm ]'
+        B 'ps aux | grep gdm'
+        B 'ps aux | grep lightdm'
+        D $EDITOR 'preferred text editor' 'vi'
+        EDITOR=$USER_INPUT
+        echo '[ WARNING: This sub-section is only for machines running the gdm display manager, NOT for those running lightdm! ]'
+        C 'Please read the warning above.  Seriously.'
+        echo '[ gdm Only: Manually Edit gdm Config File To Match Following Lines ]'
+        echo '...'
+        echo '[security]'
+        echo 'DisallowTCP=false'
+        echo '...'
+        echo
+        S $EDITOR /etc/gdm/custom.conf
+        echo '[ gdm Only: Restart gdm Service ]'
+        echo '[ WARNING: The following command will restart your X-Windows GUI system software! Save your work and close all GUI programs! ]'
+        C 'Please read the warning above.  Seriously.'
+        S /etc/init.d/gdm restart
+        echo
+
+        echo '[ WARNING: This sub-section is only for machines running the lightdm display manager, NOT for those running gdm! ]'
+        C 'Please read the warning above.  Seriously.'
+        echo '[ lightdm Only: Manually Edit lightdm Config File To Match Following Lines ]'
+        echo '...'
+        echo '[SeatDefaults]'
+#        echo '#greeter-session=unity-greeter'  # NEED ANSWER: is this necessary?
+#        echo '#user-session=ubuntu'  # NEED ANSWER: is this necessary?
+        echo 'xserver-allow-tcp=true'
+        echo '...'
+        echo
+        S $EDITOR /etc/lightdm/lightdm.conf
+        echo '[ lightdm Only: Restart lightdm Service ]'
+        echo '[ WARNING: The following command will restart your X-Windows GUI system software! Save your work and close all GUI programs! ]'
+        C 'Please read the warning above.  Seriously.'
+        S /etc/init.d/lightdm restart
+        echo
+
+        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        DOMAIN_NAME=$USER_INPUT
+
+        echo '[ Enable X-Windows Single-Session Connection ]'
+        B "xhost +$DOMAIN_NAME"
+        echo '[ Install xpra Multi-Session Server ]'
+        S apt-get install xpra
+        echo '[ NOTE: If you experienced issues installing xpra via apt-get above, then you may have an old machine. ]'
+        echo '[ If this is the case, then complete the URL below, download the proper .deb file, and run the gdebi-gtk command to install the .deb file. ]'
+        echo 'http://xpra.org/dists/USERDIST/main/USERARCH'
+        echo '$ gdebi-gtk ./xpra_SOMEVERSION_USERARCH.deb'
+        echo
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now... then come back to this point."
+        echo '[ Test xpra Multi-Session Connection ]'
+        B "xpra attach ssh:$DOMAIN_NAME:100"
     fi
     CURRENT_SECTION_COMPLETE
 fi

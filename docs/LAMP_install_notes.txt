@@ -55,36 +55,6 @@ $ indicator-multiload --trayicon &
 $ rm -Rf ~/Videos/ ~/Templates/ ~/Public/ ~/Pictures/ ~/Music/ ~/Documents/
 
 
-# [[[ UBUNTU LINUX, INSTALL XPRA ]]]
-# USER MACHINE
-    # MUST OPEN FIREWALL tcp port 6000 
-$ vi /etc/gdm/custom.conf  # GDM ONLY
-    [security]
-    DisallowTCP=false
-$ /etc/init.d/gdm restart  # GDM ONLY, WARNING SYSTEM RESTART!
-$ vi /etc/lightdm/lightdm.conf # LIGHTDM ONLY
-    [SeatDefaults]
-    #greeter-session=unity-greeter  # DELETE???
-    #user-session=ubuntu  # DELETE???
-    xserver-allow-tcp=true
-$ /etc/init.d/lightdm restart # LIGHTDM ONLY, WARNING SYSTEM RESTART!
-$ xhost +SUBDOMAIN.SOMEDOMAIN.COM # single-session connection
-# http://xpra.org/dists/USERDIST/main/USERARCH
-$ gdebi-gtk ./xpra_SOMEVERSION_USERARCH.deb  # old user machines only
-$ apt-get install xpra  # new user machines only
-$ xpra attach ssh:SUBDOMAIN.SOMEDOMAIN.COM:100  # multi-session connection
-# CLOUD MACHINE
-$ apt-get install xpra
-$ export DISPLAY=USERHOST:0.0
-$ xeyes  # single-session connection
-$ xpra start :100 --start-child=xfce4-terminal  # multi-session connection
-$ echo "export DISPLAY=:100.0" >> ~/.bashrc; . ~/.bashrc  # default to multi-session connection
-$ xeyes  # multi-session connection
-$ xpra stop  # probably skip this command, leave xpra running
-#CHEAT!!!
-    apt-get install xpra; export DISPLAY=scouthouse:0.0; xeyes; xpra start :100 --start-child=xfce4-terminal; echo "export DISPLAY=:100.0" >> ~/.bashrc; . ~/.bashrc; xeyes
-
-
 # [[[ UBUNTU LINUX, INSTALL NFS ]]]
 # SERVER MACHINE
 $ apt-get install nfs-kernel-server nfs-common
