@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.022_000
+# LAMP Installer Script v0.023_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -694,10 +694,11 @@ if [ $MENU_CHOICE -le 17 ]; then
         B 'mkdir ~/.xscreensaver_glslideshow; mv top100/ ~/.xscreensaver_glslideshow/'
         S apt-get install xscreensaver xscreensaver-data-extra xscreensaver-gl
         echo '[ Configure Screensaver ]'
-        echo "Click main Xubuntu app menu -> Settings -> Screensaver -> The XScreenSaver daemon doesn't seem to be running on display \":0.0\". ->"
-        echo 'Launch it now?  OK -> Blank & Lock After 10 Mins ->'
-        echo 'Mode, Only One Screensaver -> GLSlideshow -> Settings -> Advanced -> glslideshow -root -delay 46565 -duration 10 -zoom 85 -> Close GLSlideshow Settings ->'
-        echo 'Advanced Tab -> Image Manipulation -> Choose Random Image -> Browse -> Select Image Folder ~/.xscreensaver_glslideshow/top100'
+        echo "Click main Xubuntu app menu -> Settings -> Screensaver -> The XScreenSaver daemon doesn't seem to be running on display \":0.0\"."
+        echo '-> Launch it now?  OK -> Blank & Lock After 10 Mins'
+        echo '-> Mode, Only One Screensaver -> GLSlideshow -> Settings -> Advanced -> glslideshow -root -delay 46565 -duration 10 -zoom 85 -> Close GLSlideshow Settings'
+        echo '-> Advanced Tab -> Image Manipulation -> Choose Random Image -> Browse -> Select Image Folder ~/.xscreensaver_glslideshow/top100'
+        echo
         C 'Follow the directions above.'
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
@@ -709,13 +710,27 @@ if [ $MENU_CHOICE -le 18 ]; then
     echo '18. [[[ UBUNTU LINUX, CONFIGURE XFCE WINDOW MANAGER ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        echo '[ Configure Window Manager Layout ]'
+        echo 'Right-click on top panel -> Panel -> Panel Preferences -> Green Plus Sign -> Select New Panel -> Items Tab -> Add Windows Buttons & Separator & Workspace Switcher'
+        echo '-> Windows Buttons Settings -> Sorting Order: None, Allow Drag-and-Drop -> Separator Settings -> Expand -> Workspace Settings -> 4 Workspaces: Browsers, E-Mail, Files & Office, Terminals'
+        echo '-> Drag Second Panel Down To Bottom Of Screen'
+        echo '-> Display Tab -> Lock Panel & Row Size 20 Pixels & Length 100%'
+        echo '-> Select First Panel -> Items -> Remove Workspace Switcher & Window Buttons -> Add Action Buttons'
+        echo '-> Close Panel Preferences'
+        echo
+        C 'Follow the directions above.'
+        echo '[ Run & Configure Indicator Multiload & Clock Applets ]'
+        B 'indicator-multiload --trayicon &'
+        echo 'Left-click on indicator-multiload applet -> Preferences -> Select Processor, Memory, Network, Harddisk, Autostart -> Colors Built-In Schemes Traditional, Cached Color Black'
+        echo 'Right-click on indicator-multiload applet -> Move -> Drag to left of indicator plugin icons'
+        echo 'Right-click on clock applet -> Properties -> Format -> Custom Format'
+        echo '%a %b%d %Y%m%d %Y.%j %H%M.%S'
+        echo
+        C 'Follow the directions above.'
+        echo '[ Remove Unused Directories ]'
+        B rm -Rf ~/Videos/ ~/Templates/ ~/Public/ ~/Pictures/ ~/Music/ ~/Documents/
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi
