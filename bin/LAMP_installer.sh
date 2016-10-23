@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.020_000
+# LAMP Installer Script v0.021_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -663,13 +663,18 @@ if [ $MENU_CHOICE -le 16 ]; then
     echo '16. [[[ UBUNTU LINUX, UNINSTALL OR RECONFIGURE GVFS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        echo '[ Uninstall Or Disable GVFS To Speed Up Thunar File Explorer ]'
+        echo '[ OPTION 1: Uninstall GVFS Completely ]'
+        S apt-get remove gvfs-daemons
+        echo '[ OPTION 2: Disable GVFS Network Mounting ]'
+        D $EDITOR 'preferred text editor' 'vi'
+        EDITOR=$USER_INPUT
+        echo '[ Manually Edit GVFS Config File, Copy Config Entry From The Following Line ]'
+        echo 'AutoMount=false'
+        echo
+        S $EDITOR /usr/share/gvfs/mounts/network.mount
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi

@@ -32,13 +32,6 @@ $ update-manager  # DON'T FORGET THIS CRITICAL SECURITY STEP!
     # enable Ubuntu repositories only, disable restricted & multiverse  # NEED ANSWER: why disable security updates from restricted & multiverse repos?
 
 
-# [[[ UBUNTU LINUX, UNINSTALL OR RECONFIGURE GVFS ]]]
-$ apt-get remove gvfs-daemons  # OPTIONAL, GVSF: uninstall gvfs to speed up thunar file explorer
-# if gvfs not uninstalled, at least disable network mounting
-$ vi /usr/share/gvfs/mounts/network.mount
-    AutoMount=false
-
-
 # [[[ UBUNTU LINUX, CONFIGURE XFCE WINDOW MANAGER ]]]
 # NOT ROOT
 # Right-click on top panel -> Panel -> Panel Preferences -> Green Plus Sign -> Select New Panel -> Items Tab -> Add Windows Buttons & Separator & Workspace Switcher
