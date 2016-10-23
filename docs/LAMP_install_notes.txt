@@ -89,14 +89,6 @@ $ indicator-multiload --trayicon &
 $ rm -Rf ~/Videos/ ~/Templates/ ~/Public/ ~/Pictures/ ~/Music/ ~/Documents/
 
 
-# [[[ UBUNTU LINUX, INSTALL BROADCOM B43 WIFI ]]]
-# DELL LATITUDE D430 & D630
-# SYMPTOMS: NO WIFI, CAN NOT SHUTDOWN OR REBOOT OR SUSPEND
-$ apt-get remove bcmwl-kernel-source dkms
-$ apt-get install firmware-b43-installer
-$ reboot
-
-
 # [[[ UBUNTU LINUX, INSTALL XPRA ]]]
 # USER MACHINE
     # MUST OPEN FIREWALL tcp port 6000 

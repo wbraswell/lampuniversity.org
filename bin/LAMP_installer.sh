@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.014_000
+# LAMP Installer Script v0.015_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -469,6 +469,157 @@ fi
 
 if [ $MENU_CHOICE -le 10 ]; then
     echo '10. [[[ UBUNTU LINUX, INSTALL BROADCOM B43 WIFI ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo '[ WARNING: This section is only for affected machines such as Dell Latitude D430 & D630 ]'
+        echo '[ Symptoms include no working wireless support, and the inability to shut down or reboot or suspend. ]'
+        C 'Please read the warning above.  Seriously.'
+        S apt-get remove bcmwl-kernel-source dkms
+        S apt-get install firmware-b43-installer
+        S reboot
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 11 ]; then
+    echo '11. [[[ UBUNTU LINUX, PERFORMANCE BENCHMARKING ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 12 ]; then
+    echo '12. [[[ UBUNTU LINUX, INSTALL BASE GUI OPERATING SYSTEM PACKAGES ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 13 ]; then
+    echo '13. [[[ UBUNTU LINUX, INSTALL EXTRA GUI OPERATING SYSTEM PACKAGES ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 14 ]; then
+    echo '14. [[[ UBUNTU LINUX, INSTALL XPRA ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 15 ]; then
+    echo '15. [[[ UBUNTU LINUX, INSTALL VIRTUALBOX GUEST ADDITIONS ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 16 ]; then
+    echo '16. [[[ UBUNTU LINUX, UNINSTALL OR RECONFIGURE GVFS ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 17 ]; then
+    echo '17. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 18 ]; then
+    echo '18. [[[ UBUNTU LINUX, CONFIGURE XFCE WINDOW MANAGER ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 19 ]; then
+    echo '19. [[[ UBUNTU LINUX, ENABLE AUTOMATIC SECURITY UPDATES ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 20 ]; then
+    echo '20. [[[ UBUNTU LINUX, INSTALL NFS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo "Nothing To Do On Current Machine!"
