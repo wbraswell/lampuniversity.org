@@ -23,23 +23,6 @@ $ apt-get install xscreensaver xscreensaver-data-extra xscreensaver-gl
 	# -> Advanced Tab -> Image Manipulation -> Choose Random Image -> Browse -> Select Image Folder ~/.xscreensaver_glslideshow/top100
 
 
-# [[[ UBUNTU LINUX, INSTALL EXTRA GUI OPERATING SYSTEM PACKAGES ]]]
-$ wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - 
-$ sh -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
-$ apt-get update 
-$ apt-get install google-chrome-stable
-$ apt-get install libreoffice
-$ apt-get install pithos
-$ apt-get install gimp
-$ apt-get install tesseract-ocr gimagereader
-$ apt-get install fuse go-mtpfs
-$ apt-get install eclipse-cdt
-	# Help -> Install New Software -> Add -> http://www.epic-ide.org/updates -> Install
-    $ wget http://www.viplugin.com/files/viPlugin_1.20.3.zip; unzip viPlugin_1.20.3.zip; mv features/* ~/.eclipse/org.eclipse.FOO/features/; mv plugins/* ~/.eclipse/org.eclipse.FOO/plugins; rm -Rf features plugins
-# CHEAT!!!
-	wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -; sh -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'; apt-get update; apt-get -y install google-chrome-stable libreoffice pithos gimp eclipse-cdt
-
-
 # [[[ UBUNTU LINUX, ENABLE AUTOMATIC SECURITY UPDATES ]]]
 $ update-manager  # DON'T FORGET THIS CRITICAL SECURITY STEP!
     # enable security & recommended updates only

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.017_000
+# LAMP Installer Script v0.018_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -535,13 +535,27 @@ if [ $MENU_CHOICE -le 13 ]; then
     echo '13. [[[ UBUNTU LINUX, INSTALL EXTRA GUI OPERATING SYSTEM PACKAGES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        echo '[ Google Chrome, Add Package Repository ]'
+        S 'wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -'
+        S 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+        echo '[ Check Install, Confirm No Errors ]'
+        S apt-get update
+        S apt-get -f install
+        echo '[ Select Individual Packages To Install ]'
+        S apt-get install google-chrome-stable
+        S apt-get install libreoffice
+        S apt-get install pithos
+        S apt-get install gimp
+        S apt-get install tesseract-ocr gimagereader
+        S apt-get install fuse go-mtpfs
+        S apt-get install eclipse-cdt
+        echo '[ Eclipse EPIC Perl Plugin ]'
+        echo '[ DIRECTIONS: Run Eclipse -> Help -> Install New Software -> Add -> http://www.epic-ide.org/updates -> Install ]'
+        echo
+        echo '[ Eclipse vi Plugin ]'
+        S 'wget http://www.viplugin.com/files/viPlugin_1.20.3.zip; unzip viPlugin_1.20.3.zip; mv features/* ~/.eclipse/org.eclipse.*/features/; mv plugins/* ~/.eclipse/org.eclipse.*/plugins; rm -Rf features plugins'
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi
