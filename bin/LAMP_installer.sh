@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.019_000
+# LAMP Installer Script v0.020_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -48,7 +48,7 @@ P () {  # _P_rompt user for input
     while true; do
             read -p "Please type the $2... " USER_INPUT
         case $USER_INPUT in
-            [abcdefghijklmnopqrstuvwxyz]+([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.]) ) echo; break;;
+            [abcdefghijklmnopqrstuvwxyz/]+([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_./]) ) echo; break;;
             * ) echo "Please type the $2! "; echo;;
         esac
     done
@@ -76,7 +76,7 @@ D () {  # prompt user for input w/ _D_efault value
     while true; do
             read -p "Please type the $2, or press <ENTER> for $3... " USER_INPUT
         case $USER_INPUT in
-            [abcdefghijklmnopqrstuvwxyz]+([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.]) ) echo; break;;
+            [abcdefghijklmnopqrstuvwxyz/]+([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_./]) ) echo; break;;
             '' ) echo; USER_INPUT=$3; break;;
             * ) echo "Please type the $2, or press <ENTER> for $3! "; echo;;
         esac
@@ -639,17 +639,22 @@ if [ $MENU_CHOICE -le 14 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
+# SECTION 15 VARIABLES
+ISO_MOUNT_POINT='__EMPTY__'
+
 if [ $MENU_CHOICE -le 15 ]; then
     echo '15. [[[ UBUNTU LINUX, INSTALL VIRTUALBOX GUEST ADDITIONS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        echo '[ WARNING: This sections is only for use with Ubuntu Linux installed inside a VirtualBox VM! ]'
+        C 'Please read the warning above.  Seriously.'
+        S apt-get install dkms
+        C 'Now Download VBoxGuestAdditions.iso From http://download.virtualbox.org/virtualbox/ And Mount ISO'
+        P $ISO_MOUNT_POINT "ISO Mount Point, Directory's Full Path"
+        ISO_MOUNT_POINT=$USER_INPUT
+        S "cd $ISO_MOUNT_POINT; sh ./VBoxLinuxAdditions.run"
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi

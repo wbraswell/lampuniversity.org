@@ -75,13 +75,6 @@ $ echo "howdy y'all" > /nfs_imported/SUBDOMAIN/howdy.txt
 $ cat /nfs_imported/SUBDOMAIN/hello.txt; rm /nfs_imported/SUBDOMAIN/hello.txt
 
 
-# [[[ UBUNTU LINUX, INSTALL VIRTUALBOX GUEST ADDITIONS ]]]
-# [[ ONLY USE FOR UBUNTU LINUX INSTALLED INSIDE VIRTUALBOX VM ]]
-$ apt-get install dkms
-# download VBoxGuestAdditions.iso from http://download.virtualbox.org/virtualbox/
-$ cd MOUNTED_DIR; sh ./VBoxLinuxAdditions.run
-
-
 # [[[ UBUNTU LINUX, INSTALL APACHE & MOD_PERL ]]]
 # for subdomains, ensure CNAME alias set in hosting provider DNS zone file: * @
 $ apt-get install apache2
