@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.013_000
+# LAMP Installer Script v0.014_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -432,13 +432,17 @@ if [ $MENU_CHOICE -le 8 ]; then
     echo '8. [[[        LINUX, INSTALL LAMP UNIVERSITY TOOLS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        B wget https://github.com/wbraswell/lampuniversity.org/archive/master.zip
+        B mv master.zip lampuniversity.org-master.zip
+        B unzip lampuniversity.org-master.zip
+        B mkdir ~/bin
+        B cp lampuniversity.org-master/bin/* ~/bin
+        B rm -Rf lampuniversity.org*
+        C 'Please log out and log back in, to reset the $PATH environmental variable to include the newly-created /home/bin directory, then come back to this point.'
+        echo '[ Test LAMP University Tools, Top Memory Script ]'
+        B topmem.sh
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi

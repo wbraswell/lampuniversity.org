@@ -73,15 +73,6 @@ $ vi /usr/share/gvfs/mounts/network.mount
     AutoMount=false
 
 
-# [[[ LINUX, INSTALL LAMP UNIVERSITY TOOLS ]]]
-# as user, not root
-$ wget https://github.com/wbraswell/lampuniversity.org/archive/master.zip; mv master.zip lampuniversity.org-master.zip; unzip lampuniversity.org-master.zip
-$ mkdir ~/bin; cp lampuniversity.org-master/bin/* ~/bin
-# LOGOUT & LOGIN to reset PATH to include ~/bin
-$ topmem.sh
-$ rm -Rf lampuniversity.org*
-
-
 # [[[ UBUNTU LINUX, INSTALL HEIRLOOM TOOLS (including bdiff) ]]]
 $ apt-get install zlib1g-dev libncurses5-dev libssl-dev
 $ wget https://github.com/halcyon/ubuntu-heirloom/archive/master.zip; mv master.zip ubuntu-heirloom-master.zip; unzip ubuntu-heirloom-master.zip
