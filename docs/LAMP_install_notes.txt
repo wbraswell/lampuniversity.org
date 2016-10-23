@@ -11,12 +11,6 @@ Fresh Xubuntu v16.04.1 (Xenial Xerus)
 :%s/^\ \ \ \ //g
 
 
-# [[[ UBUNTU LINUX, INSTALL APACHE & MOD_PERL ]]]
-# for subdomains, ensure CNAME alias set in hosting provider DNS zone file: * @
-$ apt-get install apache2
-$ apt-get install libapache2-mod-perl2
-
-
 # [[[ APACHE, CONFIGURE DOMAIN(S) ]]]
 $ vi /etc/apache2/apache2.conf
     # WBRASWELL XYZZY: fix "Could not reliably determine the server's fully qualified domain name"
