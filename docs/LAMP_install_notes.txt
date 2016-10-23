@@ -11,23 +11,6 @@ Fresh Xubuntu v16.04.1 (Xenial Xerus)
 :%s/^\ \ \ \ //g
 
 
-# [[[ UBUNTU LINUX, INSTALL BASE GUI OPERATING SYSTEM PACKAGES ]]]
-$ apt-get update
-$ apt-get -f install  # confirm no errors
-$ apt-get install xterm xfce4-terminal  # trigger installation of X windows
-$ apt-get install x11-apps  # contains xeyes for basic X testing
-$ apt-get install gkrellm
-$ apt-get install hexchat
-$ apt-get install firefox
-$ apt-get install chromium-browser
-$ apt-get install update-manager
-$ apt-get install indicator-multiload
-$ apt-get install unetbootin
-$ apt-get -f install  # confirm no errors
-# CHEAT!!!
-    apt-get -y install xterm xfce4-terminal x11-apps gkrellm hexchat firefox chromium-browser update-manager indicator-multiload unetbootin
-
-
 # [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER ]]]
 # SYMPTOMS: MOUSE CURSOR DISAPPEARS AFTER SCREENSAVER (CTRL-ALT-F1 FOR TEMPORARY FIX)
 $ wget https://www.spacetelescope.org/static/images/zip/top100/top100-large.zip; unzip top100-large.zip
