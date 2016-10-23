@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.021_000
+# LAMP Installer Script v0.022_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -471,7 +471,7 @@ if [ $MENU_CHOICE -le 10 ]; then
     echo '10. [[[ UBUNTU LINUX, INSTALL BROADCOM B43 WIFI ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo '[ WARNING: This section is only for affected machines such as Dell Latitude D430 & D630 ]'
+        echo '[ WARNING: This section is only for affected machines such as Dell Latitude D430 & D630. ]'
         echo '[ Symptoms include no working wireless support, and the inability to shut down or reboot or suspend. ]'
         C 'Please read the warning above.  Seriously.'
         S apt-get remove bcmwl-kernel-source dkms
@@ -680,16 +680,27 @@ if [ $MENU_CHOICE -le 16 ]; then
 fi
 
 if [ $MENU_CHOICE -le 17 ]; then
-    echo '17. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER ]]]'
+    echo '17. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER & CONFIGURE SPACE TELESCOPE IMAGES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        echo '[ WARNING: The following command is only for affected machines. ]'
+        echo '[ Symptoms include the mouse cursor disappears after screensaver. (CTRL-ALT-F1 for temporary fix.) ]'
+        C 'Please read the warning above.  Seriously.'
+        S apt-get remove light-locker
+        echo '[ Download & Install Space Telescope Images ]'
+#        B 'wget https://www.spacetelescope.org/static/images/zip/top100/top100-large.zip; unzip top100-large.zip'  # disabled due to bad files
+        # alternative manual download source:  http://www.jpl.nasa.gov/spaceimages/searchwp.php?category=featured
+        B 'wget https://raw.githubusercontent.com/wbraswell/spacetelescope.org-mirror/master/top100_cleaned_scaled.zip; unzip top100_cleaned_scaled.zip'
+        B 'mkdir ~/.xscreensaver_glslideshow; mv top100/ ~/.xscreensaver_glslideshow/'
+        S apt-get install xscreensaver xscreensaver-data-extra xscreensaver-gl
+        echo '[ Configure Screensaver ]'
+        echo "Click main Xubuntu app menu -> Settings -> Screensaver -> The XScreenSaver daemon doesn't seem to be running on display \":0.0\". ->"
+        echo 'Launch it now?  OK -> Blank & Lock After 10 Mins ->'
+        echo 'Mode, Only One Screensaver -> GLSlideshow -> Settings -> Advanced -> glslideshow -root -delay 46565 -duration 10 -zoom 85 -> Close GLSlideshow Settings ->'
+        echo 'Advanced Tab -> Image Manipulation -> Choose Random Image -> Browse -> Select Image Folder ~/.xscreensaver_glslideshow/top100'
+        C 'Follow the directions above.'
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi
