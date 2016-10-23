@@ -406,8 +406,8 @@ if [ $MENU_CHOICE -le 7 ]; then
     echo '7. [[[ UBUNTU LINUX, INSTALL & TEST CLAMAV ANTI-VIRUS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo '[ WARNING: ClamAV should be skipped on low-memory systems. ]'
-        C 'Please read the warning above.  Seriously.'
+        echo '[ NOTE: ClamAV should be skipped on low-memory systems. ]'
+        C 'Please read the note above.'
         S apt-get install clamav clamav-daemon 
         S freshclam
         S clamscan -r /home
@@ -448,16 +448,21 @@ if [ $MENU_CHOICE -le 8 ]; then
 fi
 
 if [ $MENU_CHOICE -le 9 ]; then
-    echo '9. [[[ UBUNTU LINUX, INSTALL HEIRLOOM TOOLS (including bdiff) ]]]'
+    echo '9. [[[ UBUNTU LINUX, INSTALL HEIRLOOM TOOLS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        echo '[ NOTE: Only install the Heirloom Tools if you specifically need bdiff or one of the other tools. ]'
+        C 'Please read the note above.'
+        S apt-get install zlib1g-dev libncurses5-dev libssl-dev
+        S wget https://github.com/halcyon/ubuntu-heirloom/archive/master.zip
+        S mv master.zip ubuntu-heirloom-master.zip
+        S unzip ubuntu-heirloom-master.zip
+        S 'cd ubuntu-heirloom-master; ./build.sh'
+        S rm -Rf ubuntu-heirloom-master*
+        echo '[ Test Heirloom Tools, bdiff Script ]'
+        B /usr/5bin/bdiff
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi

@@ -73,13 +73,6 @@ $ vi /usr/share/gvfs/mounts/network.mount
     AutoMount=false
 
 
-# [[[ UBUNTU LINUX, INSTALL HEIRLOOM TOOLS (including bdiff) ]]]
-$ apt-get install zlib1g-dev libncurses5-dev libssl-dev
-$ wget https://github.com/halcyon/ubuntu-heirloom/archive/master.zip; mv master.zip ubuntu-heirloom-master.zip; unzip ubuntu-heirloom-master.zip
-$ cd ubuntu-heirloom-master; ./build.sh
-$ /usr/5bin/bdiff
-
-
 # [[[ UBUNTU LINUX, CONFIGURE XFCE WINDOW MANAGER ]]]
 # NOT ROOT
 # Right-click on top panel -> Panel -> Panel Preferences -> Green Plus Sign -> Select New Panel -> Items Tab -> Add Windows Buttons & Separator & Workspace Switcher
