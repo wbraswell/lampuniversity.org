@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.015_000
+# LAMP Installer Script v0.016_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -41,7 +41,7 @@ C () {  # _C_onfirm user action
 }
 
 P () {  # _P_rompt user for input
-    if [ $1 != '__EMPTY__' ]; then
+    if [[ $1 != '__EMPTY__' ]]; then
         USER_INPUT=$1
         return
     fi
@@ -55,7 +55,7 @@ P () {  # _P_rompt user for input
 }
 
 N () {  # prompt user for _N_umeric input
-    if [ $1 != '__EMPTY__' ]; then
+    if [[ $1 != '__EMPTY__' ]]; then
         USER_INPUT=$1
         return
     fi
@@ -69,7 +69,7 @@ N () {  # prompt user for _N_umeric input
 }
 
 D () {  # prompt user for input w/ _D_efault value
-    if [ $1 != '__EMPTY__' ]; then
+    if [[ $1 != '__EMPTY__' ]]; then
         USER_INPUT=$1
         return
     fi
@@ -93,7 +93,7 @@ B () {  # _B_ash command
         ${40} ${41} ${42} ${43} ${44} ${45} ${46} ${47} ${48} ${49} ${50} ${51} ${52} ${53} ${54} ${55} ${56} ${57} ${58} ${59} \
         ${60} ${61} ${62} ${63} ${64} ${65} ${66} ${67} ${68} ${69} ${70} ${71} ${72} ${73} ${74} ${75} ${76} ${77} ${78} ${79} \
         ${80} ${81} ${82} ${83} ${84} ${85} ${86} ${87} ${88} ${89} ${90} ${91} ${92} ${93} ${94} ${95} ${96} ${97} ${98} ${99} "
-    if [ $1 = 'sudo' ]; then
+    if [[ $1 = 'sudo' ]]; then
         COMMAND_FULL="sudo bash -c ' $COMMAND '"
         PROMPT='Run above command AS ROOT, yes or no?  [yes] '
     else
@@ -114,7 +114,7 @@ B () {  # _B_ash command
     done
 
 #    $COMMAND_FULL  # ERROR: -c: line 0: unexpected EOF while looking for matching `''
-    if [ $1 = 'sudo' ]; then
+    if [[ $1 = 'sudo' ]]; then
         sudo bash -c " $COMMAND "
     else
         bash -c " $COMMAND "
@@ -483,17 +483,31 @@ if [ $MENU_CHOICE -le 10 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
+# SECTION 11 VARIABLES
+CPUMINER_SERVER='__EMPTY__'
+CPUMINER_USERNAME='__EMPTY__'
+CPUMINER_PASSWORD='__EMPTY__'
+
 if [ $MENU_CHOICE -le 11 ]; then
     echo '11. [[[ UBUNTU LINUX, PERFORMANCE BENCHMARKING ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        echo '[ Linux Logo Basic Performance Data ]'
+        B linuxlogo
+        echo '[ CPU Miner Advanced Performance Benchmark ]'
+        # NEED UPDATE: does cpuminer still have the same syntax used below?
+        S apt-get install libcurl4-openssl-dev libncurses5-dev pkg-config automake yasm
+        B git clone https://github.com/pooler/cpuminer.git
+        B 'cd cpuminer; ./autogen.sh; ./configure CFLAGS="-O3"; make'
+        P $CPUMINER_SERVER "CPU Miner server hostname"
+        CPUMINER_SERVER=$USER_INPUT
+        P $CPUMINER_USERNAME "CPU Miner username"
+        CPUMINER_USERNAME=$USER_INPUT
+        P $CPUMINER_PASSWORD "CPU Miner password"
+        CPUMINER_PASSWORD=$USER_INPUT
+        B "cd cpuminer; ./minerd --url=http://$CPUMINER_SERVER --userpass=$CPUMINER_USERNAME:$CPUMINER_PASSWORD"
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi

@@ -139,15 +139,6 @@ $ echo "howdy y'all" > /nfs_imported/SUBDOMAIN/howdy.txt
 $ cat /nfs_imported/SUBDOMAIN/hello.txt; rm /nfs_imported/SUBDOMAIN/hello.txt
 
 
-# [[[ UBUNTU LINUX, PERFORMANCE BENCHMARKING ]]]  # MAY NEED TO UPDATE THIS SECTION
-$ linuxlogo
-# CPUMINER
-$ apt-get install libcurl4-openssl-dev libncurses5-dev pkg-config automake yasm
-$ git clone https://github.com/pooler/cpuminer.git
-$ cd cpuminer; ./autogen.sh; ./configure CFLAGS="-O3"; make
-$ ./minerd --url=http://GETWORK.POOL.COM --userpass=SOMEBODY:SOMEPASS
-
-
 # [[[ UBUNTU LINUX, INSTALL VIRTUALBOX GUEST ADDITIONS ]]]
 # [[ ONLY USE FOR UBUNTU LINUX INSTALLED INSIDE VIRTUALBOX VM ]]
 $ apt-get install dkms
