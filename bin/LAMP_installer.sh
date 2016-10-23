@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.023_000
+# LAMP Installer Script v0.025_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -438,7 +438,7 @@ if [ $MENU_CHOICE -le 8 ]; then
         B mkdir ~/bin
         B cp lampuniversity.org-master/bin/* ~/bin
         B rm -Rf lampuniversity.org*
-        C 'Please log out and log back in, to reset the $PATH environmental variable to include the newly-created /home/bin directory, then come back to this point.'
+        C 'Please Log Out And Log Back In, To Reset The $PATH Environmental Variable To Include The Newly-Created /home/bin Directory, Then Come Back To This Point.'
         echo '[ Test LAMP University Tools, Top Memory Script ]'
         B topmem.sh
     elif [ $MACHINE_CHOICE -eq 1 ]; then
@@ -632,7 +632,7 @@ if [ $MENU_CHOICE -le 14 ]; then
         echo 'http://xpra.org/dists/USERDIST/main/USERARCH'
         echo '$ gdebi-gtk ./xpra_SOMEVERSION_USERARCH.deb'
         echo
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now... then come back to this point."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now... Then Come Back To This Point."
         echo '[ Test xpra Multi-Session Connection ]'
         B "xpra attach ssh:$DOMAIN_NAME:100"
     fi
@@ -739,6 +739,75 @@ if [ $MENU_CHOICE -le 19 ]; then
     echo '19. [[[ UBUNTU LINUX, ENABLE AUTOMATIC SECURITY UPDATES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo 'Follow the directions below.'
+        echo
+        echo 'enable security & recommended updates only'
+        echo 'check for updates daily'
+        echo 'install security updates only'
+        echo 'never remind of dist upgrade'
+        echo 'enable Ubuntu repositories only, disable restricted & multiverse'  # NEED ANSWER: why disable security updates from restricted & multiverse repos?
+        echo
+        B update-manager
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 20 ]; then
+    echo '20. [[[ UBUNTU LINUX, INSTALL NFS ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo '[ Install NFS Server ]'
+        S apt-get install nfs-kernel-server nfs-common
+        S mkdir /nfs_exported
+        S chmod a+rwX /nfs_exported
+        echo '[ Manually Edit NFS Server Export Config File /etc/exports ]'
+        D $EDITOR 'preferred text editor' 'vi'
+        EDITOR=$USER_INPUT
+        echo '[ Copy NFS Export Entries From The Following Lines ]'
+        echo '/nfs_exported *(rw,sync,no_root_squash,no_subtree_check)'
+        echo '/home         *(rw,sync,no_root_squash,no_subtree_check)'
+        echo
+        S $EDITOR /etc/exports
+        echo '[ Start NFS Server ]'
+        S service nfs-kernel-server start
+        echo '[ Test NFS Server, Part 1, Start With "hello" ]'
+        S "echo 'hello world' > /nfs_exported/hello.txt"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now... Then Come Back To This Point."
+        echo '[ Test NFS Server, Part 2, Check For "howdy" ]'
+        S cat /nfs_exported/howdy.txt
+        S rm /nfs_exported/howdy.txt
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        echo '[ Install NFS Client (Via Server Package) ]'
+        S apt-get install nfs-kernel-server nfs-common
+        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        DOMAIN_NAME=$USER_INPUT
+        echo '[ Create NFS Import Directory & Mount NFS Share ]'
+        S mkdir -p /nfs_imported/$DOMAIN_NAME
+        S chmod a+rwX /nfs_imported/$DOMAIN_NAME
+        S mount $DOMAIN_NAME:/nfs_exported /nfs_imported/$DOMAIN_NAME  # manual test
+        echo '[ Manually Edit NFS Server Import Config File /etc/fstab ]'
+        D $EDITOR 'preferred text editor' 'vi'
+        EDITOR=$USER_INPUT
+        echo '[ Copy NFS Import Entry From The Following Line ]'
+        echo "$DOMAIN_NAME:/nfs_exported /nfs_imported/$DOMAIN_NAME nfs rsize=8192,wsize=8192,timeo=14,intr"
+        echo
+        S $EDITOR /etc/fstab
+        echo '[ Test NFS Server, Part 1, Update "howdy" ]'
+        S "echo \"howdy y'all\" > /nfs_imported/$DOMAIN_NAME/howdy.txt"
+        echo '[ Test NFS Server, Part 2, Check "hello" ]'
+        S cat /nfs_imported/$DOMAIN_NAME/hello.txt
+        S rm /nfs_imported/$DOMAIN_NAME/hello.txt
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 21 ]; then
+    echo '21. [[[ UBUNTU LINUX, INSTALL APACHE & MOD_PERL ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
         echo "Nothing To Do On Current Machine!"
         C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
         C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
@@ -750,8 +819,188 @@ if [ $MENU_CHOICE -le 19 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 20 ]; then
-    echo '20. [[[ UBUNTU LINUX, INSTALL NFS ]]]'
+if [ $MENU_CHOICE -le 22 ]; then
+    echo '22. [[[ APACHE, CONFIGURE DOMAIN(S) ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 23 ]; then
+    echo '23. [[[ UBUNTU LINUX, INSTALL MYSQL & PHPMYADMIN ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 24 ]; then
+    echo '24. [[[ APACHE & MYSQL, CONFIGURE PHPMYADMIN ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 25 ]; then
+    echo '25. [[[ UBUNTU LINUX, INSTALL WEBMIN ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 26 ]; then
+    echo '26. [[[ UBUNTU LINUX, INSTALL POSTFIX ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 27 ]; then
+    echo '27. [[[ UBUNTU LINUX, INSTALL NON-LATEST PERL CATALYST ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 28 ]; then
+    echo '28. [[[ UBUNTU LINUX, INSTALL PERL CPANM & LOCAL::LIB ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 29 ]; then
+    echo '29. [[[ UBUNTU LINUX, INSTALL HAND-COMPILED PERL, OR PERLBREW & CPANMINUS ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 30 ]; then
+    echo '30. [[[ PERL CATALYST, INSTALL TUTORIAL FROM CPAN ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 31 ]; then
+    echo '31. [[[ UBUNTU LINUX, INSTALL PERL CATALYST SHINYCMS PREREQUISITES ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 32 ]; then
+    echo '32. [[[ PERL CATALYST, INSTALL SHINYCMS FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 33 ]; then
+    echo '33. [[[ PERL CATALYST, INSTALL RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 34 ]; then
+    echo '34. [[[ PERL CATALYST, CHECK VERSIONS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo "Nothing To Do On Current Machine!"

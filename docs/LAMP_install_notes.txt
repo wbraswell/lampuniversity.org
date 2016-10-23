@@ -11,35 +11,6 @@ Fresh Xubuntu v16.04.1 (Xenial Xerus)
 :%s/^\ \ \ \ //g
 
 
-# [[[ UBUNTU LINUX, ENABLE AUTOMATIC SECURITY UPDATES ]]]
-$ update-manager  # DON'T FORGET THIS CRITICAL SECURITY STEP!
-    # enable security & recommended updates only
-    # check for updates daily
-    # install security updates only
-    # never remind of dist upgrade
-    # enable Ubuntu repositories only, disable restricted & multiverse  # NEED ANSWER: why disable security updates from restricted & multiverse repos?
-
-
-# [[[ UBUNTU LINUX, INSTALL NFS ]]]
-# SERVER MACHINE
-$ apt-get install nfs-kernel-server nfs-common
-$ mkdir /nfs_exported; chmod a+rwX /nfs_exported
-$ vi /etc/exports
-    /nfs_exported *(rw,sync,no_root_squash,no_subtree_check)
-    /home         *(rw,sync,no_root_squash,no_subtree_check)
-$ service nfs-kernel-server start
-$ echo 'hello world' > /nfs_exported/hello.txt
-$ cat /nfs_exported/howdy.txt; rm /nfs_exported/howdy.txt
-# CLIENT MACHINE
-$ apt-get install nfs-kernel-server nfs-common
-$ mkdir -p /nfs_imported/SUBDOMAIN; chmod a+rwX /nfs_imported/SUBDOMAIN
-$ mount SUBDOMAIN.SOMEDOMAIN.COM:/nfs_exported /nfs_imported/SUBDOMAIN  # manual test
-$ vi /etc/fstab
-    SUBDOMAIN.SOMEDOMAIN.COM:/nfs_exported /nfs_imported/SUBDOMAIN nfs rsize=8192,wsize=8192,timeo=14,intr
-$ echo "howdy y'all" > /nfs_imported/SUBDOMAIN/howdy.txt
-$ cat /nfs_imported/SUBDOMAIN/hello.txt; rm /nfs_imported/SUBDOMAIN/hello.txt
-
-
 # [[[ UBUNTU LINUX, INSTALL APACHE & MOD_PERL ]]]
 # for subdomains, ensure CNAME alias set in hosting provider DNS zone file: * @
 $ apt-get install apache2
