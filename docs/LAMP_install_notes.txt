@@ -11,15 +11,6 @@ Fresh Xubuntu v16.04.1 (Xenial Xerus)
 :%s/^\ \ \ \ //g
 
 
-# [[[ UBUNTU LINUX, INSTALL NON-LATEST PERL CATALYST ]]]
-# [[ DO NOT MIX WITH LATEST CATALYST FROM CPAN BELOW ]]
-$ apt-get install libmodule-install-perl
-$ apt-get install libcatalyst-engine-apache-perl
-$ service apache2 restart
-$ apt-get install libcatalyst-devel-perl
-$ apt-get install libcatalyst-modules-perl
-
-
 # [[[ UBUNTU LINUX, INSTALL PERL CPANM & LOCAL::LIB ]]]
 # [[ YOU SHOULD USE THIS UNLESS YOU HAVE NO CHOICE ]]
 # [[ DO NOT MIX WITH PERLBREW, BELOW ]]
