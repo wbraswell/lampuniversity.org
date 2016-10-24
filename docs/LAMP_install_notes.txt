@@ -34,16 +34,6 @@ $ apt-get install mailutils
 $ mail
 
 
-# [[[ UBUNTU LINUX, INSTALL WEBMIN ]]]
-$ vi /etc/apt/sources.list
-    # WBRASWELL 201XYZZY 201X.YYZ: enable Webmin repo
-    deb http://download.webmin.com/download/repository sarge contrib
-$ wget -q http://www.webmin.com/jcameron-key.asc -O- | sudo apt-key add -  # NOTE HYPHEN AT END OF LINE
-$ apt-get update
-$ apt-get install webmin
-# https://SOMEDOMAIN.COM:10000  # NOTE THE 's' IN 'https'
-
-
 # [[[ UBUNTU LINUX, INSTALL NON-LATEST PERL CATALYST ]]]
 # [[ DO NOT MIX WITH LATEST CATALYST FROM CPAN BELOW ]]
 $ apt-get install libmodule-install-perl

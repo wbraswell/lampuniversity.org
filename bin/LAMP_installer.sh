@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.030_000
+# LAMP Installer Script v0.031_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -989,7 +989,7 @@ if [ $MENU_CHOICE -le 24 ]; then
         S locate mcrypt.so
         P $MCRYPT_SO "full path to the mcrypt.so file as returned by the locate command above"
         MCRYPT_SO=$USER_INPUT
-        echo "[ Copy Data From The Following Line, Then Paste Into $MCRYPT_INI Config File ]"
+        echo "[ Copy Data From The Following Line, Then Paste Into mcrypt Config File $MCRYPT_INI ]"
         echo "extension=$MCRYPT_SO"
         echo
         S $EDITOR $MCRYPT_INI
@@ -1005,13 +1005,20 @@ if [ $MENU_CHOICE -le 25 ]; then
     echo '25. [[[ UBUNTU LINUX, INSTALL WEBMIN ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        D $EDITOR 'preferred text editor' 'vi'
+        EDITOR=$USER_INPUT
+        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        DOMAIN_NAME=$USER_INPUT
+        echo "[ Copy Data From The Following Line, Then Paste Into Apt Config File /etc/apt/sources.list ]"
+        echo 'deb http://download.webmin.com/download/repository sarge contrib'
+        echo
+        S $EDITOR /etc/apt/sources.list
+        S 'wget -q http://www.webmin.com/jcameron-key.asc -O- | sudo apt-key add -'
+        S apt-get update
+        S apt-get install webmin
+        C "Please Visit https://$DOMAIN_NAME:10000 To Ensure Webmin Is Enabled."
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi
