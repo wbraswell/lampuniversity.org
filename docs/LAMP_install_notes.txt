@@ -11,29 +11,6 @@ Fresh Xubuntu v16.04.1 (Xenial Xerus)
 :%s/^\ \ \ \ //g
 
 
-# [[[ UBUNTU LINUX, INSTALL POSTFIX ]]]
-# Outgoing E-Mail
-$ apt-get install postfix
-    # Internet Site config option
-    # FQDN: MYSUBDOMAIN.SOMEDOMAIN.COM
-$ vi /etc/postfix/main.cf
-    myhostname = MYSUBDOMAIN.SOMEDOMAIN.COM
-$ service postfix restart
-$ telnet localhost 25
-    HELO username
-    MAIL FROM:somebody@mysubdomain.somedomain.com
-    RCPT TO:real@external.email.com
-    DATA
-    Subject:Postfix Mail Server Test
-    howdy howdy howdy
-    .
-    QUIT
-# NEED FIX: Incoming E-Mail Not Yet Verified
-# SET DNS MX RECORD
-$ apt-get install mailutils
-$ mail
-
-
 # [[[ UBUNTU LINUX, INSTALL NON-LATEST PERL CATALYST ]]]
 # [[ DO NOT MIX WITH LATEST CATALYST FROM CPAN BELOW ]]
 $ apt-get install libmodule-install-perl

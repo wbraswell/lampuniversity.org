@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.031_000
+# LAMP Installer Script v0.032_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -1027,13 +1027,48 @@ if [ $MENU_CHOICE -le 26 ]; then
     echo '26. [[[ UBUNTU LINUX, INSTALL POSTFIX ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        D $EDITOR 'preferred text editor' 'vi'
+        EDITOR=$USER_INPUT
+        P $USERNAME "new machine's username"
+        USERNAME=$USER_INPUT
+        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        DOMAIN_NAME=$USER_INPUT
+
+        echo '[ Enable Outgoing E-Mail ]'
+        echo "[ For Internet Site Config Option, Use Fully-Qualified Domain Name $DOMAIN_NAME ]"
+        S apt-get install postfix
+
+        echo '[ Copy Data From The Following Line, Then Paste Into Postfix Config File /etc/postfix/main.cf ]'
+        echo "myhostname = $DOMAIN_NAME"
+        echo
+        S $EDITOR /etc/postfix/main.cf
+
+        echo '[ Start Postfix Service ]'
+        S service postfix restart
+
+        echo '[ Test Postfix Service, Outgoing Mail ]'
+        echo '[ Copy SMTP Mail Commands One-By-One From The Following Lines, Then Paste Into telnet; Use Real E-Mail Address In RCPT Mail Command ]'
+        echo "HELO $USERNAME"
+        echo "MAIL FROM:$USERNAME@$DOMAIN_NAME"
+        echo "RCPT TO:real@external.email.com"
+        echo "DATA"
+        echo "Subject:Postfix Mail Server Test"
+        echo "howdy howdy howdy"
+        echo "."
+        echo "QUIT"
+        echo
+        B telnet localhost 25
+
+        echo '[ Test Postfix Service, Incoming Mail ]'
+        # NEED FIX: Incoming E-Mail Not Yet Verified
+        echo "If you plan to receive incoming e-mail, then please ensure the MX mail exchange record is set in your hosting provider's DNS coniguration."
+        echo "Then, send a test message from your external e-mail account to the new $USERNAME@$DOMAIN_NAME e-mail account, which should show up via mail below."
+        echo
+        C 'Follow the directions above.'
+        S apt-get install mailutils
+        B mail
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi
