@@ -11,21 +11,6 @@ Fresh Xubuntu v16.04.1 (Xenial Xerus)
 :%s/^\ \ \ \ //g
 
 
-# [[[ UBUNTU LINUX, INSTALL PERL CPANM & LOCAL::LIB ]]]
-# [[ YOU SHOULD USE THIS UNLESS YOU HAVE NO CHOICE ]]
-# [[ DO NOT MIX WITH PERLBREW, BELOW ]]
-# [[ COPIED FROM RPERL INSTALL DOC ]]
-# ROOT
-$ apt-get install curl
-# NOT ROOT
-$ curl -L cpanmin.us | perl - -l $HOME/perl5 App::cpanminus local::lib
-$ echo 'eval $(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)' >> ~/.bashrc
-$ source ~/.bashrc  # optionally logout & login
-$ set | grep perl5
-    # ensure the following 4 environmental variables are updated to include ~/perl5: 
-    # PERL_MM_OPT, PERL_MB_OPT, PERL5LIB, PATH
-
-
 # [[[ UBUNTU LINUX, INSTALL HAND-COMPILED PERL, OR PERLBREW & CPANMINUS ]]]
 # [[ DO NOT USE THIS UNLESS YOU HAVE NO CHOICE!!! ]]
 # [[ DO NOT MIX WITH LOCAL::LIB, ABOVE ]]

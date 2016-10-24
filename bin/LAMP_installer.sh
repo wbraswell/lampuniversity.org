@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.033_000
+# LAMP Installer Script v0.034_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -1092,13 +1092,19 @@ if [ $MENU_CHOICE -le 28 ]; then
     echo '28. [[[ UBUNTU LINUX, INSTALL PERL CPANM & LOCAL::LIB ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        echo '[ You SHOULD Use This Instead Of Perlbrew In Section 29, Unless You Have No Choice ]'
+        echo '[ WARNING: Do NOT Mix With Perlbrew In Section 29! ]'
+        C 'Please read the warning above.  Seriously.'
+        echo '[ Copied From RPerl Installer ]'
+        S apt-get install curl
+        B 'curl -L cpanmin.us | perl - -l $HOME/perl5 App::cpanminus local::lib'
+        # echo 'eval $(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)' >> ~/.bashrc  # DEV NOTE: pre-munged command for comparison
+        B echo "'" eval '$(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)' "'" '>> ~/.bashrc'
+        B source ~/.bashrc
+        echo '[ Ensure The Following 4 Environmental Variables Now Include ~/perl5: PERL_MM_OPT, PERL_MB_OPT, PERL5LIB, PATH ]'
+        B set | grep perl5
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi
