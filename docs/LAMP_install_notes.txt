@@ -11,38 +11,6 @@ Fresh Xubuntu v16.04.1 (Xenial Xerus)
 :%s/^\ \ \ \ //g
 
 
-# [[[ APACHE & MYSQL, CONFIGURE PHPMYADMIN ]]]
-$ mysql --user=root --password
-    mysql> SHOW VARIABLES LIKE 'have_innodb';
-    +---------------+-------+
-    | Variable_name | Value |
-    +---------------+-------+
-    | have_innodb   | YES   |
-    +---------------+-------+
-$ vi /etc/apache2/sites-available/phpmyadmin.SOMEDOMAIN.COM.conf
-    # SUBDOMAIN
-    <VirtualHost *:80>
-         ServerName phpmyadmin.SOMEDOMAIN.COM
-         ServerAdmin webmaster@SOMEDOMAIN.COM
-         DocumentRoot /srv/www/phpmyadmin.SOMEDOMAIN.COM/public_html/
-         <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre
-            Require all granted
-         </Directory>
-         ErrorLog /srv/www/phpmyadmin.SOMEDOMAIN.COM/logs/error.log
-         CustomLog /srv/www/phpmyadmin.SOMEDOMAIN.COM/logs/access.log combined
-    </VirtualHost>
-$ mkdir -p /srv/www/phpmyadmin.SOMEDOMAIN.COM/logs;  ln -s /usr/share/phpmyadmin/ /srv/www/phpmyadmin.SOMEDOMAIN.COM/public_html
-$ a2ensite phpmyadmin.SOMEDOMAIN.COM;  service apache2 reload
-# FIX MISSING MCRYPT ERROR
-$ updatedb
-$ locate mcrypt.ini
-$ locate mcrypt.so
-$ vi /PATH_FROM_LOCATE_COMMAND/mcrypt.ini
-    extension=/PATH_FROM_LOCATE_COMMAND/mcrypt.so
-$ php5enmod mcrypt
-$ service apache2 reload
-
-
 # [[[ UBUNTU LINUX, INSTALL POSTFIX ]]]
 # Outgoing E-Mail
 $ apt-get install postfix

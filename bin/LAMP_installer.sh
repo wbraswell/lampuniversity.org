@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.029_000
+# LAMP Installer Script v0.030_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -572,14 +572,14 @@ if [ $MENU_CHOICE -le 14 ]; then
         P $LOCAL_HOSTNAME "Existing Machine's Local Hostname"
         LOCAL_HOSTNAME=$USER_INPUT
         B "export DISPLAY=$LOCAL_HOSTNAME:0.0; xeyes"
-        echo '[ Install & Start xpra Multi-Session Server ]'
+        echo '[ Install & Start xpra Multi-Session Service ]'
         S apt-get install xpra
         B 'xpra start :100 --start-child=xfce4-terminal; xeyes'
         echo '[ Default Enable xpra Multi-Session Connection ]'
         B 'echo "export DISPLAY=:100.0" >> ~/.bashrc'
         echo '[ Test xpra Multi-Session Connection ]'
         B '. ~/.bashrc; xeyes'
-        echo '[ Optionally Stop xpra Server ]'
+        echo '[ Optionally Stop xpra Service ]'
         B xpra stop
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         C "Please configure your local firewall to open TCP port 6000..."
@@ -625,7 +625,7 @@ if [ $MENU_CHOICE -le 14 ]; then
 
         echo '[ Enable X-Windows Single-Session Connection ]'
         B "xhost +$DOMAIN_NAME"
-        echo '[ Install xpra Multi-Session Server ]'
+        echo '[ Install xpra Multi-Session Service ]'
         S apt-get install xpra
         echo '[ NOTE: If you experienced issues installing xpra via apt-get above, then you may have an old machine. ]'
         echo '[ If this is the case, then complete the URL below, download the proper .deb file, and run the gdebi-gtk command to install the .deb file. ]'
@@ -758,11 +758,11 @@ if [ $MENU_CHOICE -le 20 ]; then
     echo '20. [[[ UBUNTU LINUX, INSTALL NFS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo '[ Install NFS Server ]'
+        echo '[ Install NFS Service ]'
         S apt-get install nfs-kernel-server nfs-common
         S mkdir /nfs_exported
         S chmod a+rwX /nfs_exported
-        echo '[ Manually Edit NFS Server Export Config File /etc/exports ]'
+        echo '[ Manually Edit NFS Service Export Config File /etc/exports ]'
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
         echo '[ Copy NFS Export Entries From The Following Lines ]'
@@ -770,17 +770,17 @@ if [ $MENU_CHOICE -le 20 ]; then
         echo '/home         *(rw,sync,no_root_squash,no_subtree_check)'
         echo
         S $EDITOR /etc/exports
-        echo '[ Start NFS Server ]'
+        echo '[ Start NFS Service ]'
         S service nfs-kernel-server start
-        echo '[ Test NFS Server, Part 1, Start With "hello" ]'
+        echo '[ Test NFS Service, Part 1, Start With "hello" ]'
         S "echo 'hello world' > /nfs_exported/hello.txt"
         C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now... Then Come Back To This Point."
-        echo '[ Test NFS Server, Part 2, Check For "howdy" ]'
+        echo '[ Test NFS Service, Part 2, Check For "howdy" ]'
         S cat /nfs_exported/howdy.txt
         S rm /nfs_exported/howdy.txt
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        echo '[ Install NFS Client (Via Server Package) ]'
+        echo '[ Install NFS Client (Via Service Package) ]'
         S apt-get install nfs-kernel-server nfs-common
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
         DOMAIN_NAME=$USER_INPUT
@@ -788,16 +788,16 @@ if [ $MENU_CHOICE -le 20 ]; then
         S mkdir -p /nfs_imported/$DOMAIN_NAME
         S chmod a+rwX /nfs_imported/$DOMAIN_NAME
         S mount $DOMAIN_NAME:/nfs_exported /nfs_imported/$DOMAIN_NAME  # manual test
-        echo '[ Manually Edit NFS Server Import Config File /etc/fstab ]'
+        echo '[ Manually Edit NFS Service Import Config File /etc/fstab ]'
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
         echo '[ Copy NFS Import Entry From The Following Line ]'
         echo "$DOMAIN_NAME:/nfs_exported /nfs_imported/$DOMAIN_NAME nfs rsize=8192,wsize=8192,timeo=14,intr"
         echo
         S $EDITOR /etc/fstab
-        echo '[ Test NFS Server, Part 1, Update "howdy" ]'
+        echo '[ Test NFS Service, Part 1, Update "howdy" ]'
         S "echo \"howdy y'all\" > /nfs_imported/$DOMAIN_NAME/howdy.txt"
-        echo '[ Test NFS Server, Part 2, Check "hello" ]'
+        echo '[ Test NFS Service, Part 2, Check "hello" ]'
         S cat /nfs_imported/$DOMAIN_NAME/hello.txt
         S rm /nfs_imported/$DOMAIN_NAME/hello.txt
     fi
@@ -933,17 +933,70 @@ if [ $MENU_CHOICE -le 23 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
+# SECTION 24 VARIABLES
+MCRYPT_INI='__EMPTY__'
+MCRYPT_SO='__EMPTY__'
+
 if [ $MENU_CHOICE -le 24 ]; then
     echo '24. [[[ APACHE & MYSQL, CONFIGURE PHPMYADMIN ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        D $EDITOR 'preferred text editor' 'vi'
+        EDITOR=$USER_INPUT
+        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        DOMAIN_NAME=$USER_INPUT
+
+        echo '[ Ensure MySQL Setting have_innodb Is Set To YES ]'
+        echo '[ Copy Command From The Following Line, Check Return Value As Shown Below ]'
+        echo
+        echo "mysql> SHOW VARIABLES LIKE 'have_innodb';"
+        echo "+---------------+-------+"
+        echo "| Variable_name | Value |"
+        echo "+---------------+-------+"
+        echo "| have_innodb   | YES   |"
+        echo "+---------------+-------+"
+        echo
+        S mysql --user=root --password
+
+        echo "[ Manually Edit Apache Domain Config File /etc/apache2/sites-available/phpmyadmin.$DOMAIN_NAME.conf ]"
+        echo '[ Automatically Using Subdomain Configuration ]'
+        echo '[ Copy Data From The Following Lines, Then Paste Into Apache Domain Config File ]'
+        echo
+        echo "<VirtualHost *:80>"
+        echo "     ServerName phpmyadmin.$DOMAIN_NAME"
+        echo "     ServerAdmin webmaster@$DOMAIN_NAME"
+        echo "     DocumentRoot /srv/www/phpmyadmin.$DOMAIN_NAME/public_html/"
+        echo "     <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre"
+        echo "        Require all granted"
+        echo "     </Directory>"
+        echo "     ErrorLog /srv/www/phpmyadmin.$DOMAIN_NAME/logs/error.log"
+        echo "     CustomLog /srv/www/phpmyadmin.$DOMAIN_NAME/logs/access.log combined"
+        echo "</VirtualHost>"
+        echo
+        S $EDITOR /etc/apache2/sites-available/phpmyadmin.$DOMAIN_NAME.conf
+
+        echo '[ Create phpMyAdmin Directories, Start phpMyAdmin Service ]'
+        S mkdir -p /srv/www/phpmyadmin.$DOMAIN_NAME/logs
+        S ln -s /usr/share/phpmyadmin/ /srv/www/phpmyadmin.$DOMAIN_NAME/public_html
+        S a2ensite phpmyadmin.$DOMAIN_NAME
+        S service apache2 reload
+
+        echo '[ Fix "missing mcrypt" Error ]'
+        S updatedb
+        S locate mcrypt.ini
+        P $MCRYPT_INI "full path to the mcrypt.ini file as returned by the locate command above"
+        MCRYPT_INI=$USER_INPUT
+        S locate mcrypt.so
+        P $MCRYPT_SO "full path to the mcrypt.so file as returned by the locate command above"
+        MCRYPT_SO=$USER_INPUT
+        echo "[ Copy Data From The Following Line, Then Paste Into $MCRYPT_INI Config File ]"
+        echo "extension=$MCRYPT_SO"
+        echo
+        S $EDITOR $MCRYPT_INI
+        S php5enmod mcrypt
+        S service apache2 reload
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi
