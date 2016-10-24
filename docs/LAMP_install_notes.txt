@@ -11,29 +11,6 @@ Fresh Xubuntu v16.04.1 (Xenial Xerus)
 :%s/^\ \ \ \ //g
 
 
-# [[[ PERL CATALYST, CHECK VERSIONS ]]]
-$ dpkg -p libcatalyst-perl
-    # v5.90002 tutorial; v5.80022 Ubuntu v10.04.4; v5.90007 Ubuntu v12.04.3; v5.90007 Ubuntu v12.04.4; v5.90053 Ubuntu v14.04.1
-$ perl -V
-    # read list of @INC dirs
-$ mkdir -p ANY_INC_DIRS_THAT_DO_NOT_YET_EXIST
-$ perl -MCatalyst::Runtime\ 999
-$ perl -MCatalyst::Devel\ 999
-    # v1.34 tutorial; v1.36 Ubuntu v12.04.4; v1.39 Ubuntu v14.04.1
-$ perl -MDBIx::Class\ 999
-    # v0.08195 tutorial; v0.08196 Ubuntu v12.04.4; v0.08250 Ubuntu v14.04.1
-$ perl -MCatalyst::Model::DBIC::Schema\ 999
-    # v0.54 tutorial; v0.49 Ubuntu v12.04.4; v0.61 Ubuntu v14.04.1
-$ perl -MHTML::FormFu\ 999
-    # >= v0.09004; v0.09004 Ubuntu v12.04.4; v1.0 Ubuntu v14.04.1
-$ perl -MTemplate\ 999
-    # v2.22 Tutorial; v2.25 Ubuntu v12.04.4; v2.24 Ubuntu v14.04.1
-$ perl -MDBD::mysql\ 999
-    # >= v4.020; v4.020 Ubuntu v12.04.4; v4.025 ubuntu v14.04.1
-$ perl -MTask::Catalyst::Tutorial\ 999
-    # >= v0.06; v0.06 Ubuntu v12.04.4
-
-
 # [[[ PERL CATALYST, INSTALL SHINYCMS FROM GITHUB & LATEST CATALYST FROM CPAN ]]]
 $ mysql --user=root --password  # required for DBD::mysql `make test`
     mysql> GRANT ALL PRIVILEGES ON test.* TO 'SOMEBODY'@'localhost' IDENTIFIED BY 'MYSQL_TEMP_PASSWORD';  # WRONGLY CREATES PASSWORD

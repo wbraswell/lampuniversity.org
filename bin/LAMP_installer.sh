@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.036_000
+# LAMP Installer Script v0.037_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -1229,13 +1229,29 @@ if [ $MENU_CHOICE -le 34 ]; then
     echo '34. [[[ PERL CATALYST, CHECK VERSIONS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        B dpkg -p libcatalyst-perl
+        echo
+        echo '[ Please Look For All Directories In @INC, In The Output Of The perl -V Command Below ]'
+        echo '[ Then, For Each Directory In @INC, Perform The Following ]'
+        echo '$ ls -l /PATH/TO/DIRECTORY'
+        echo
+        echo '[ Finally, For Each Directory In @INC Which Does Not Already Exist, Perform The Following ]'
+        echo '$ sudo mkdir -p /PATH/TO/DIRECTORY'
+        B perl -V
+
+        echo '[ View Versions Of Catalyst & Related Perl Modules ]'
+        B 'perl -MCatalyst::Runtime\ 999'
+        B 'perl -MCatalyst::Devel\ 999'
+        B 'perl -MDBIx::Class\ 999'
+        B 'perl -MCatalyst::Model::DBIC::Schema\ 999'
+        B 'perl -MHTML::FormFu\ 999'
+        B 'perl -MTemplate\ 999'
+        B 'perl -MDBD::mysql\ 999'
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
-    CURRENT_SECTION_COMPLETE
 fi
+
+echo
+echo '[[[ ALL DONE!!! ]]]'
+echo
