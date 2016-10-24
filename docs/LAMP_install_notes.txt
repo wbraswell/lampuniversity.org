@@ -11,27 +11,6 @@ Fresh Xubuntu v16.04.1 (Xenial Xerus)
 :%s/^\ \ \ \ //g
 
 
-# [[[ UBUNTU LINUX, INSTALL HAND-COMPILED PERL, OR PERLBREW & CPANMINUS ]]]
-# [[ DO NOT USE THIS UNLESS YOU HAVE NO CHOICE!!! ]]
-# [[ DO NOT MIX WITH LOCAL::LIB, ABOVE ]]
-# [[ COPIED FROM RPERL INSTALL DOC ]]
-$ wget http://www.cpan.org/src/5.0/perl-5.20.1.tar.bz2; bunzip2 perl-5.20.1.tar.bz2; cd perl-5.20.1; perl Makefile.PL; make; make test; make install
-    # OR
-$ sudo apt-get install perlbrew
-    # OR
-$ curl -L http://install.perlbrew.pl | bash
-$ perlbrew init
-$ perlbrew mirror  # Arlington, TX #222 http://mirror.uta.edu/CPAN/
-$ echo 'source ~/perl5/perlbrew/etc/bashrc' >> ~/.bashrc
-$ source ~/.bashrc; set | grep perl5
-    # ensure the following 3 environmental variables are updated to include ~/perl5: 
-    # PERLBREW_MANPATH, PERLBREW_PATH, PERLBREW_ROOT
-$ perlbrew install perl-5.20.1
-$ perlbrew use perl-5.20.1  # TEMPORARY
-$ perlbrew switch perl-5.20.1  # PERMANENT
-$ perlbrew install-cpanm
-
-
 # [[[ PERL CATALYST, INSTALL TUTORIAL FROM CPAN ]]]
 $ cpanm Template
 $ cpanm Task::Catalyst::Tutorial

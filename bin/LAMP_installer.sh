@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.034_000
+# LAMP Installer Script v0.035_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -161,19 +161,20 @@ echo  '24. [[[ APACHE & MYSQL, CONFIGURE PHPMYADMIN ]]]'
 echo  '25. [[[ UBUNTU LINUX,   INSTALL WEBMIN ]]]'
 echo  '26. [[[ UBUNTU LINUX,   INSTALL POSTFIX ]]]'
 echo  '27. [[[ UBUNTU LINUX,   INSTALL NON-LATEST PERL CATALYST ]]]'
-echo  '28. [[[ UBUNTU LINUX,   INSTALL PERL CPANM & LOCAL::LIB ]]]'
-echo  '29. [[[ UBUNTU LINUX,   INSTALL HAND-COMPILED PERL, OR PERLBREW & CPANMINUS ]]]'
-echo  '30. [[[ PERL CATALYST,  INSTALL TUTORIAL FROM CPAN ]]]'
-echo  '31. [[[ UBUNTU LINUX,   INSTALL PERL CATALYST SHINYCMS PREREQUISITES ]]]'
-echo  '32. [[[ PERL CATALYST,  INSTALL SHINYCMS FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
-echo  '33. [[[ PERL CATALYST,  INSTALL RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
-echo  '34. [[[ PERL CATALYST,  CHECK VERSIONS ]]]'
+echo  '28. [[[ UBUNTU LINUX,   INSTALL PERL LOCAL::LIB & CPANM ]]]'
+echo  '29. [[[ UBUNTU LINUX,   INSTALL PERLBREW & CPANM ]]]'
+echo  '30. [[[ UBUNTU LINUX,   INSTALL PERL FROM SOURCE ]]]'
+echo  '31. [[[ PERL CATALYST,  INSTALL TUTORIAL FROM CPAN ]]]'
+echo  '32. [[[ UBUNTU LINUX,   INSTALL PERL CATALYST SHINYCMS PREREQUISITES ]]]'
+echo  '33. [[[ PERL CATALYST,  INSTALL SHINYCMS FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
+echo  '34. [[[ PERL CATALYST,  INSTALL RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
+echo  '35. [[[ PERL CATALYST,  CHECK VERSIONS ]]]'
 echo
 
 while true; do
     read -p 'Please type your chosen main menu section number, or press <ENTER> for 0... ' MENU_CHOICE
     case $MENU_CHOICE in
-        [0123456789]|[12][0123456789]|3[01234] ) echo; break;;
+        [0123456789]|[12][0123456789]|3[012345] ) echo; break;;
         '' ) echo; MENU_CHOICE=0; break;;
         * ) echo 'Please choose a section number from the menu!'; echo;;
     esac
@@ -438,7 +439,7 @@ if [ $MENU_CHOICE -le 8 ]; then
         B mkdir ~/bin
         B cp lampuniversity.org-master/bin/* ~/bin
         B rm -Rf lampuniversity.org*
-        C 'Please Log Out And Log Back In, To Reset The $PATH Environmental Variable To Include The Newly-Created /home/bin Directory, Then Come Back To This Point.'
+        C 'Please Log Out And Log Back In, Which Should Reset The $PATH Environmental Variable To Include The Newly-Created /home/bin Directory, Then Come Back To This Point.'
         echo '[ Test LAMP University Tools, Top Memory Script ]'
         B topmem.sh
     elif [ $MACHINE_CHOICE -eq 1 ]; then
@@ -1089,20 +1090,22 @@ if [ $MENU_CHOICE -le 27 ]; then
 fi
 
 if [ $MENU_CHOICE -le 28 ]; then
-    echo '28. [[[ UBUNTU LINUX, INSTALL PERL CPANM & LOCAL::LIB ]]]'
+    echo '28. [[[ UBUNTU LINUX, INSTALL PERL LOCAL::LIB & CPANM ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo '[ You SHOULD Use This Instead Of Perlbrew In Section 29, Unless You Have No Choice ]'
+        echo '[ You SHOULD Use This Instead Of Perlbrew Or Perl From Source In Sections 29 & 30, Unless You Have No Choice ]'
         echo '[ WARNING: Do NOT Mix With Perlbrew In Section 29! ]'
-        C 'Please read the warning above.  Seriously.'
+        echo '[ WARNING: Do NOT Mix With Perl From Source In Section 30! ]'
+        C 'Please read the warnings above.  Seriously.'
         echo '[ Copied From RPerl Installer ]'
         S apt-get install curl
         B 'curl -L cpanmin.us | perl - -l $HOME/perl5 App::cpanminus local::lib'
         # echo 'eval $(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)' >> ~/.bashrc  # DEV NOTE: pre-munged command for comparison
         B echo "'" eval '$(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)' "'" '>> ~/.bashrc'
-        B source ~/.bashrc
+        C 'Please Log Out And Log Back In, Which Should Reset The $PERL Environmental Variables, Then Come Back To This Point.'
         echo '[ Ensure The Following 4 Environmental Variables Now Include ~/perl5: PERL_MM_OPT, PERL_MB_OPT, PERL5LIB, PATH ]'
-        B set | grep perl5
+        #B source ~/.bashrc  # DEV NOTE: force logout and log back in
+        B 'set | grep perl5'
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
@@ -1110,22 +1113,67 @@ if [ $MENU_CHOICE -le 28 ]; then
 fi
 
 if [ $MENU_CHOICE -le 29 ]; then
-    echo '29. [[[ UBUNTU LINUX, INSTALL HAND-COMPILED PERL, OR PERLBREW & CPANMINUS ]]]'
+    echo '29. [[[ UBUNTU LINUX, INSTALL PERLBREW & CPANM ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        echo '[ You SHOULD NOT Use This Instead Of local::lib In Section 28, Unless You Have No Choice ]'
+        echo '[ WARNING: Do NOT Mix With local::lib In Section 28! ]'
+        echo '[ WARNING: Do NOT Mix With Perl From Source In Section 30! ]'
+        C 'Please read the warnings above.  Seriously.'
+        echo '[ Copied From RPerl Installer ]'
+
+        echo '[ You Should Use apt-get Instead Of curl Below, Unless You Are Not In Ubuntu Or Have No Choice ]'
+        echo '[ WARNING: Use Only One Of The Following Two Commands, Either apt-get Or curl, But Not Both! ]'
+        C 'Please read the warning above.  Seriously.'
+        S sudo apt-get install perlbrew
+        # OR
+        S 'curl -L http://install.perlbrew.pl | bash'
+
+        echo '[ Configure Perlbrew ]'
+        B perlbrew init
+        echo '[ In Texas, The Following Perlbrew Mirror Is Recommended: Arlington, TX #222 http://mirror.uta.edu/CPAN/ ]'
+        B perlbrew mirror
+        B 'echo "source ~/perl5/perlbrew/etc/bashrc" >> ~/.bashrc'
+        C 'Please Log Out And Log Back In, Which Should Reset The $PERL Environmental Variables, Then Come Back To This Point.'
+        #B source ~/.bashrc  # DEV NOTE: force logout and log back in
+        echo '[ Ensure The Following 3 Environmental Variables Now Include ~/perl5: PERLBREW_MANPATH, PERLBREW_PATH, PERLBREW_ROOT ]'
+        B 'set | grep perl5'
+        
+        echo '[ Build Perlbrew Perl v5.24.0 ]'
+        B perlbrew install perl-5.24.0
+        echo '[ Temporaily Enable Perlbrew Perl v5.24.0 ]'
+        B perlbrew use perl-5.24.0
+        echo '[ Permanently Enable Perlbrew Perl v5.24.0 ]'
+        B perlbrew switch perl-5.24.0
+        echo '[ Install Perlbrew CPANM ]'
+        B perlbrew install-cpanm
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi
 
 if [ $MENU_CHOICE -le 30 ]; then
-    echo '30. [[[ PERL CATALYST, INSTALL TUTORIAL FROM CPAN ]]]'
+    echo '30. [[[ UBUNTU LINUX, INSTALL PERL FROM SOURCE ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo '[ You SHOULD NOT Use This Instead Of local::lib In Section 28, Unless You Have No Choice ]'
+        echo '[ WARNING: Do NOT Mix With local::lib In Section 28! ]'
+        echo '[ WARNING: Do NOT Mix With Perlbrew In Section 29! ]'
+        C 'Please read the warnings above.  Seriously.'
+        echo '[ Copied From RPerl Installer ]'
+        B wget http://www.cpan.org/src/5.0/perl-5.24.0.tar.bz2
+        B bunzip2 perl-5.24.0.tar.bz2
+        B 'cd perl-5.24.0; perl Makefile.PL; make; make test'
+        S 'cd perl-5.24.0; make install'
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 30 ]; then
+    echo '31. [[[ PERL CATALYST, INSTALL TUTORIAL FROM CPAN ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo "Nothing To Do On Current Machine!"
@@ -1140,7 +1188,7 @@ if [ $MENU_CHOICE -le 30 ]; then
 fi
 
 if [ $MENU_CHOICE -le 31 ]; then
-    echo '31. [[[ UBUNTU LINUX, INSTALL PERL CATALYST SHINYCMS PREREQUISITES ]]]'
+    echo '32. [[[ UBUNTU LINUX, INSTALL PERL CATALYST SHINYCMS PREREQUISITES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo "Nothing To Do On Current Machine!"
@@ -1155,7 +1203,7 @@ if [ $MENU_CHOICE -le 31 ]; then
 fi
 
 if [ $MENU_CHOICE -le 32 ]; then
-    echo '32. [[[ PERL CATALYST, INSTALL SHINYCMS FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
+    echo '33. [[[ PERL CATALYST, INSTALL SHINYCMS FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo "Nothing To Do On Current Machine!"
@@ -1170,7 +1218,7 @@ if [ $MENU_CHOICE -le 32 ]; then
 fi
 
 if [ $MENU_CHOICE -le 33 ]; then
-    echo '33. [[[ PERL CATALYST, INSTALL RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
+    echo '34. [[[ PERL CATALYST, INSTALL RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo "Nothing To Do On Current Machine!"
@@ -1185,7 +1233,7 @@ if [ $MENU_CHOICE -le 33 ]; then
 fi
 
 if [ $MENU_CHOICE -le 34 ]; then
-    echo '34. [[[ PERL CATALYST, CHECK VERSIONS ]]]'
+    echo '35. [[[ PERL CATALYST, CHECK VERSIONS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo "Nothing To Do On Current Machine!"
