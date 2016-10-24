@@ -11,63 +11,6 @@ Fresh Xubuntu v16.04.1 (Xenial Xerus)
 :%s/^\ \ \ \ //g
 
 
-# [[[ APACHE, CONFIGURE DOMAIN(S) ]]]
-$ vi /etc/apache2/apache2.conf
-    # WBRASWELL XYZZY: fix "Could not reliably determine the server's fully qualified domain name"
-    ServerName localhost
-
-    <IfModule mpm_prefork_module>  #IGNORE THIS SECTION??? not present in Ubuntu v14.04.pre
-        StartServers          2  # 5 in Ubuntu v12.04.4
-        MinSpareServers       5
-        MaxSpareServers      10
-        MaxClients          150
-        MaxRequestsPerChild   3000  # 0 in Ubuntu v12.04.4
-    </IfModule>
-$ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf  # repeat for each enabled domain & subdomain
-    # DOMAIN
-    <VirtualHost *:80>
-        ServerName SOMEDOMAIN.COM
-        ServerAlias www.SOMEDOMAIN.COM
-        ServerAdmin webmaster@SOMEDOMAIN.COM
-        DocumentRoot /srv/www/SOMEDOMAIN.COM/public_html/
-        <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre
-            Require all granted
-        </Directory>
-        # Google Webmaster Tools, Robots Testing Tool 
-        Alias    /googleSOMELONGNUMBER.html    /home/SOMEBODY/public_html/SOMEDOMAIN.COM-latest/root/googleSOMELONGNUMBER.html
-        ErrorLog /srv/www/SOMEDOMAIN.COM/logs/error.log
-        CustomLog /srv/www/SOMEDOMAIN.COM/logs/access.log combined
-    </VirtualHost>
-        # OR
-    # SUBDOMAIN
-    <VirtualHost *:80>
-        ServerName SUBDOMAIN.SOMEDOMAIN.COM
-        ServerAlias SUBDOMAIN.SOMEDOMAIN.COM *.SOMEDOMAIN.COM  # DISABLE IF ALSO USING PHPMYADMIN.SUBDOMAIN.SOMEDOMAIN.COM
-        ServerAdmin webmaster@SUBDOMAIN.SOMEDOMAIN.COM
-        DocumentRoot /srv/www/SUBDOMAIN.SOMEDOMAIN.COM/public_html/
-        <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre
-            Require all granted
-        </Directory>
-        # Google Webmaster Tools, Robots Testing Tool 
-        Alias    /googleSOMELONGNUMBER.html    /home/SOMEBODY/public_html/SUBDOMAIN.SOMEDOMAIN.COM-latest/root/googleSOMELONGNUMBER.html
-        ErrorLog /srv/www/SUBDOMAIN.SOMEDOMAIN.COM/logs/error.log
-        CustomLog /srv/www/SUBDOMAIN.SOMEDOMAIN.COM/logs/access.log combined
-    </VirtualHost>
-# if using subdomain, then replace SOMEDOMAIN.COM with SUBDOMAIN.SOMEDOMAIN.COM in remaining Apache commands below
-$ mkdir -p /srv/www/SOMEDOMAIN.COM/public_html
-$ mkdir /srv/www/SOMEDOMAIN.COM/logs
-$ vi /srv/www/SOMEDOMAIN.COM/public_html/index.html  # create test page
-    SOMEDOMAIN.COM lives!
-$ a2dissite 000-default # skip to allow default placeholder "It Works" page, required in Ubuntu v14.04.pre?  
-$ a2ensite SOMEDOMAIN.COM
-$ service apache2 reload
-$ chown -R www-data.www-data /srv/www
-$ chmod -R g+rwX /srv/www
-$ chmod -R o-w /srv/www
-$ vi /etc/group
-    # add user to www-data group
-
-
 # [[[ UBUNTU LINUX, INSTALL MYSQL & PHPMYADMIN ]]]
 $ apt-get install mysql-server mysql-client libmysqlclient-dev phpmyadmin
     # DO NOT CONFIGURE APACHE AUTOMATICALLY

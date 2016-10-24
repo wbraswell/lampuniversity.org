@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.026_000
+# LAMP Installer Script v0.028_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -809,11 +809,38 @@ if [ $MENU_CHOICE -le 21 ]; then
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         S apt-get install apache2 libapache2-mod-perl2
+
+        echo '[ Manually Edit Operating System User Group Config File /etc/group, Add New Username To www-data Group ]'
+        D $EDITOR 'preferred text editor' 'vi'
+        EDITOR=$USER_INPUT
+        P $USERNAME "new machine's username"
+        USERNAME=$USER_INPUT
+        echo '[ Example Data Format On The Following Line, Group Number 33 May Differ In Your /etc/group, Use Your Group Number Instead Of 33 ]'
+        echo "www-data:x:33:$USERNAME"
+        echo
+        S $EDITOR /etc/group
+
         echo '[ Subdomain Support ]'
         echo "If you plan to serve a subdomain (ex: foo.bar.com), then please ensure the following CNAME alias entry is set in your hosting provider's DNS zone file:"
         echo ' * @ '
         echo
         C 'Follow the directions above.'
+
+        echo "[ Fix Error \"Could not reliably determine the server's fully qualified domain name\" ]"
+        echo '[ Copy Data From The Following Line, Then Paste Into Apache Config File apache2.conf ]'
+        echo 'ServerName localhost'
+        echo
+        
+        # NEED ANSWER: IGNORE THIS SECTION??? not present in Ubuntu v14.04.pre, what about v16.xx???
+        #<IfModule mpm_prefork_module>
+        #    StartServers          2  # 5 in Ubuntu v12.04.4
+        #    MinSpareServers       5
+        #    MaxSpareServers      10
+        #    MaxClients          150
+        #    MaxRequestsPerChild   3000  # 0 in Ubuntu v12.04.4
+        #</IfModule>
+        
+        S $EDITOR /etc/apache2/apache2.conf
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
@@ -824,13 +851,70 @@ if [ $MENU_CHOICE -le 22 ]; then
     echo '22. [[[ APACHE, CONFIGURE DOMAIN(S) ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        D $EDITOR 'preferred text editor' 'vi'
+        EDITOR=$USER_INPUT
+        P $USERNAME "new machine's username"
+        USERNAME=$USER_INPUT
+        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        DOMAIN_NAME=$USER_INPUT
+        echo "[ REPEAT THIS ENTIRE SECTION ONCE PER DOMAIN OR SUBDOMAIN ]"
+        echo
+        echo "[ Manually Edit Apache Domain Config File /etc/apache2/sites-available/$DOMAIN_NAME.conf ]"
+        echo '[ Select Domain Or Subdomain Config Below, Copy Data From The Following Lines, Then Paste Into Apache Domain Config File ]'
+        echo
+        echo '[ DOMAIN USE ONLY (Not Subdomain) ]'
+        echo
+        echo "<VirtualHost *:80>"
+        echo "    ServerName $DOMAIN_NAME"
+        echo "    ServerAlias www.$DOMAIN_NAME"
+        echo "    ServerAdmin webmaster@$DOMAIN_NAME"
+        echo "    DocumentRoot /srv/www/$DOMAIN_NAME/public_html/"
+        echo "    <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre"
+        echo "        Require all granted"
+        echo "    </Directory>"
+        echo "    # ENABLE FOLLOWING LINE If Using Google Webmaster Tools, Robots Testing Tool; Assumes Github Repo In /home/$USERNAME/public_html/$DOMAIN_NAME-latest"
+        echo "#    Alias    /googleSOMELONGNUMBER.html    /home/$USERNAME/public_html/$DOMAIN_NAME-latest/root/googleSOMELONGNUMBER.html"
+        echo "    ErrorLog /srv/www/$DOMAIN_NAME/logs/error.log"
+        echo "    CustomLog /srv/www/$DOMAIN_NAME/logs/access.log combined"
+        echo "</VirtualHost>"
+        echo
+        echo '...OR...'
+        echo
+        echo '[ SUBDOMAIN USE ONLY (Not Domain) ]'
+        echo '[ Change DOMAIN_NAME_ONLY To bar.com Portion Of foo.bar.com Subdomain ]'
+        echo
+        echo "<VirtualHost *:80>"
+        echo "    ServerName $DOMAIN_NAME"
+        echo "    # DISABLE FOLLOWING LINE If Also Enabling phpmyadmin.$DOMAIN_NAME"
+        echo "    ServerAlias $DOMAIN_NAME *.DOMAIN_NAME_ONLY"
+        echo "    ServerAdmin webmaster@$DOMAIN_NAME"
+        echo "    DocumentRoot /srv/www/$DOMAIN_NAME/public_html/"
+        echo "    <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre"
+        echo "        Require all granted"
+        echo "    </Directory>"
+        echo "    # ENABLE FOLLOWING LINE If Using Google Webmaster Tools, Robots Testing Tool; Assumes Github Repo In /home/$USERNAME/public_html/$DOMAIN_NAME-latest"
+        echo "#    Alias    /googleSOMELONGNUMBER.html    /home/$USERNAME/public_html/$DOMAIN_NAME-latest/root/googleSOMELONGNUMBER.html"
+        echo "    ErrorLog /srv/www/$DOMAIN_NAME/logs/error.log"
+        echo "    CustomLog /srv/www/$DOMAIN_NAME/logs/access.log combined"
+        echo "</VirtualHost>"
+        echo
+        S "$EDITOR /etc/apache2/sites-available/$DOMAIN_NAME.conf"
+ 
+        echo '[ Create Test HTML Page ]'
+        S mkdir -p /srv/www/$DOMAIN_NAME/public_html
+        S mkdir /srv/www/$DOMAIN_NAME/logs
+        S "echo '$DOMAIN_NAME lives!' > /srv/www/$DOMAIN_NAME/public_html/index.html"  # DEV NOTE: must wrap redirects in quotes
+        echo '[ Disable Default Placeholder "It Works" Page, May Be Required For Other Domains To Work Properly ]'
+        S a2dissite 000-default
+        echo '[ Enable Domain ]'
+        S a2ensite $DOMAIN_NAME
+        S service apache2 reload
+        echo '[ Ensure Correct User & Group & Permissions ]'
+        S chown -R www-data.www-data /srv/www
+        S chmod -R g+rwX /srv/www
+        S chmod -R o-w /srv/www
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi
