@@ -11,14 +11,6 @@ Fresh Xubuntu v16.04.1 (Xenial Xerus)
 :%s/^\ \ \ \ //g
 
 
-# [[[ PERL CATALYST, INSTALL TUTORIAL FROM CPAN ]]]
-$ cpanm Template
-$ cpanm Task::Catalyst::Tutorial
-    # OR FOR FIREWALLED NETWORKS
-$ cpanm --mirror http://cpan.msi.umn.edu/ Template
-$ cpanm --mirror http://cpan.msi.umn.edu/ Task::Catalyst::Tutorial
-
-
 # [[[ PERL CATALYST, CHECK VERSIONS ]]]
 $ dpkg -p libcatalyst-perl
     # v5.90002 tutorial; v5.80022 Ubuntu v10.04.4; v5.90007 Ubuntu v12.04.3; v5.90007 Ubuntu v12.04.4; v5.90053 Ubuntu v14.04.1
@@ -40,18 +32,6 @@ $ perl -MDBD::mysql\ 999
     # >= v4.020; v4.020 Ubuntu v12.04.4; v4.025 ubuntu v14.04.1
 $ perl -MTask::Catalyst::Tutorial\ 999
     # >= v0.06; v0.06 Ubuntu v12.04.4
-
-
-# [[[ UBUNTU LINUX, INSTALL PERL CATALYST SHINYCMS PREREQUISITES ]]]
-# [ Prerequisites: LAMP, mod_fastcgi OR mod_perl, Postfix ]
-$ sudo apt-get install expat libexpat1-dev libxml2-dev zlib1g-dev
-$ vi /etc/apt/sources.list
-    # WBRASWELL 201XYZZY 201X.YYZ: enable FastCGI repo
-    deb http://us.archive.ubuntu.com/ubuntu/ trusty multiverse
-    deb-src http://us.archive.ubuntu.com/ubuntu/ trusty multiverse
-$ apt-get update
-$ apt-get -f install
-$ apt-get install libapache2-mod-fastcgi
 
 
 # [[[ PERL CATALYST, INSTALL SHINYCMS FROM GITHUB & LATEST CATALYST FROM CPAN ]]]

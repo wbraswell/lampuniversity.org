@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.035_000
+# LAMP Installer Script v0.036_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -164,11 +164,10 @@ echo  '27. [[[ UBUNTU LINUX,   INSTALL NON-LATEST PERL CATALYST ]]]'
 echo  '28. [[[ UBUNTU LINUX,   INSTALL PERL LOCAL::LIB & CPANM ]]]'
 echo  '29. [[[ UBUNTU LINUX,   INSTALL PERLBREW & CPANM ]]]'
 echo  '30. [[[ UBUNTU LINUX,   INSTALL PERL FROM SOURCE ]]]'
-echo  '31. [[[ PERL CATALYST,  INSTALL TUTORIAL FROM CPAN ]]]'
-echo  '32. [[[ UBUNTU LINUX,   INSTALL PERL CATALYST SHINYCMS PREREQUISITES ]]]'
-echo  '33. [[[ PERL CATALYST,  INSTALL SHINYCMS FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
-echo  '34. [[[ PERL CATALYST,  INSTALL RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
-echo  '35. [[[ PERL CATALYST,  CHECK VERSIONS ]]]'
+echo  '31. [[[ UBUNTU LINUX,   INSTALL PERL CATALYST SHINYCMS DEPENDENCIES ]]]'
+echo  '32. [[[ PERL CATALYST,  INSTALL SHINYCMS FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
+echo  '33. [[[ PERL CATALYST,  INSTALL RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
+echo  '34. [[[ PERL CATALYST,  CHECK VERSIONS ]]]'
 echo
 
 while true; do
@@ -1172,38 +1171,32 @@ if [ $MENU_CHOICE -le 30 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 30 ]; then
-    echo '31. [[[ PERL CATALYST, INSTALL TUTORIAL FROM CPAN ]]]'
-    echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
-        echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
-    fi
-    CURRENT_SECTION_COMPLETE
-fi
-
 if [ $MENU_CHOICE -le 31 ]; then
-    echo '32. [[[ UBUNTU LINUX, INSTALL PERL CATALYST SHINYCMS PREREQUISITES ]]]'
+    echo '31. [[[ UBUNTU LINUX, INSTALL PERL CATALYST SHINYCMS DEPENDENCIES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        D $EDITOR 'preferred text editor' 'vi'
+        EDITOR=$USER_INPUT
+        echo '[ WARNING: Prerequisite Dependencies Include Full LAMP Stack (Sections 0 - 11, 20 - 23); mod_perl (Section 21) OR mod_fastcgi (This Section); Postfix (Section 26); And Expat, etc (This Section). ]'
+        C 'Please read the warning above.  Seriously.'
+        echo '[ Install Expat, etc ]'
+        S sudo apt-get install expat libexpat1-dev libxml2-dev zlib1g-dev
+        echo '[ Install FastCGI ]'
+        echo '[ Copy Data From The Following Lines, Then Paste Into The Apt Config File /etc/apt/sources.list ]'
+        echo 'deb http://us.archive.ubuntu.com/ubuntu/ trusty multiverse      # needed for FastCGI'
+        echo 'deb-src http://us.archive.ubuntu.com/ubuntu/ trusty multiverse  # needed for FastCGI'
+        S $EDITOR /etc/apt/sources.list
+        S apt-get update
+        S apt-get -f install
+        S apt-get install libapache2-mod-fastcgi
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi
 
 if [ $MENU_CHOICE -le 32 ]; then
-    echo '33. [[[ PERL CATALYST, INSTALL SHINYCMS FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
+    echo '32. [[[ PERL CATALYST, INSTALL SHINYCMS FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo "Nothing To Do On Current Machine!"
@@ -1218,7 +1211,7 @@ if [ $MENU_CHOICE -le 32 ]; then
 fi
 
 if [ $MENU_CHOICE -le 33 ]; then
-    echo '34. [[[ PERL CATALYST, INSTALL RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
+    echo '33. [[[ PERL CATALYST, INSTALL RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo "Nothing To Do On Current Machine!"
@@ -1233,7 +1226,7 @@ if [ $MENU_CHOICE -le 33 ]; then
 fi
 
 if [ $MENU_CHOICE -le 34 ]; then
-    echo '35. [[[ PERL CATALYST, CHECK VERSIONS ]]]'
+    echo '34. [[[ PERL CATALYST, CHECK VERSIONS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo "Nothing To Do On Current Machine!"
