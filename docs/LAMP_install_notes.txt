@@ -1,15 +1,8 @@
 LAMP Install Notes 20161019 2016.293
 Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 
-Tested Using:
-Fresh Xubuntu v14.04.2 (Trusty Tahr)
-Fresh  Ubuntu v14.04.1 (Trusty Tahr) from CloudAtCost.com or HostGator.com
-Fresh  Ubuntu v14.04   (Trusty Tahr) in Virtual Box
-Fresh Xubuntu v16.04.1 (Xenial Xerus)
-
 # [[[ UNINDENT ]]]
 :%s/^\ \ \ \ //g
-
 
 # [[[ PERL CATALYST, INSTALL SHINYCMS FROM GITHUB & LATEST CATALYST FROM CPAN ]]]
 $ mysql --user=root --password  # required for DBD::mysql `make test`
@@ -232,19 +225,3 @@ $ service apache2 reload
 # Admin area -> Pages -> List Form Handlers -> Edit Contact Form -> Update "E-mail To" Field
 # Admin area -> Pages -> List Pages -> Edit Home -> Add Image "/static/cms-uploads/images/homepage_added.png" & "Lorem Ipsum Dolor" Text
 # Admin area -> Pages -> List Templates -> Edit Homepage -> Delete "video_url" Element -> Update
-
-
-# [[[ PERL CATALYST, INSTALL RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]
-$ mkdir RapidApp-latest; git clone https://github.com/vanstyn/RapidApp.git RapidApp-latest  # NO MAKEFILE ON GITHUB, CAN'T MAKE OR INSTALL!
-    # OR
-$ mysql --user=root --password  # required for DBD::mysql `make test` 
-    mysql> GRANT ALL PRIVILEGES ON test.* TO 'SOMEBODY'@'localhost';
-$ cpanm DBD::mysql MooseX::NonMoose RapidApp
-$ mkdir ~/public_html; cd ~/public_html
-$ rapidapp.pl --helpers RapidDbic,Templates,TabGui,AuthCore,NavCore RapidApp_phpmyadmin_database -- --dsn dbi:mysql:database=phpmyadmin,root,'ROOTPASS'
-$ cd RapidApp_phpmyadmin_database; perl Makefile.PL; make; make test
-$ ~/public_html/RapidApp_phpmyadmin_database/script/rapidapp_phpmyadmin_database_server.pl  # admin, pass
-# BlueBox demo app
-$ cd; mkdir BlueBox-latest; git clone https://github.com/vanstyn/BlueBox.git BlueBox-latest
-$ cd BlueBox-latest; perl Makefile.PL; cpanm --installdeps .  # NO MAKE OR TEST
-$ script/bluebox_server.pl  # admin/pass

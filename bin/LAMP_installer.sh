@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.037_000
+# LAMP Installer Script v0.039_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -123,9 +123,16 @@ B () {  # _B_ash command
 }
 
 echo  '    [[[<<< LAMP Installer Script >>>]]]'
+echo
+echo '  [[[<<< Tested Using Fresh Installs >>>]]]'
+echo
+echo ' Ubuntu v14.04   (Trusty Tahr) in Virtual Box'
+echo ' Ubuntu v14.04.1 (Trusty Tahr) on CloudAtCost.com'
+echo 'Xubuntu v14.04.2 (Trusty Tahr)'
+echo 'Xubuntu v16.04.1 (Xenial Xerus)'
+
 echo  '          [[[<<< Main Menu >>>]]]'
 echo
-
 echo  '        <<< LOCAL CLI SECTIONS >>>'
 echo \ '0. [[[        LINUX, CONFIGURE OPERATING SYSTEM USERS ]]]'
 echo \ '1. [[[        LINUX, CONFIGURE CLOUD NETWORKING ]]]'
@@ -1122,7 +1129,7 @@ if [ $MENU_CHOICE -le 29 ]; then
         echo '[ Copied From RPerl Installer ]'
 
         echo '[ You Should Use apt-get Instead Of curl Below, Unless You Are Not In Ubuntu Or Have No Choice ]'
-        echo '[ WARNING: Use Only One Of The Following Two Commands, Either apt-get Or curl, But Not Both! ]'
+        echo '[ WARNING: Use Only ONE Of The Following Two Commands, EITHER apt-get OR curl, But NOT Both! ]'
         C 'Please read the warning above.  Seriously.'
         S sudo apt-get install perlbrew
         # OR
@@ -1210,17 +1217,40 @@ if [ $MENU_CHOICE -le 32 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
+# SECTION 33 VARIABLES
+MYSQL_ROOTPASS='__EMPTY__'
+
 if [ $MENU_CHOICE -le 33 ]; then
     echo '33. [[[ PERL CATALYST, INSTALL RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        P $USERNAME "new machine's username"
+        USERNAME=$USER_INPUT
+        echo '[ You Should Use mysql & cpanm Instead Of git clone Below, Unless You Want The Experimental Version Or Have No Choice ]'
+        echo '[ WARNING: Use Only ONE Of The Following Two Sets Of Commands, EITHER mysql & cpanm OR git clone, But NOT Both! ]'
+        C 'Please read the warning above.  Seriously.'
+        echo '[ ONLY IF USING mysql & cpanm COMMANDS: Ensure MySQL Configured To Support Perl Distribution DBD::mysql `make test` Command ]'
+        echo '[ ONLY IF USING mysql & cpanm COMMANDS: Copy Command From The Following Line ]'
+        echo "mysql> GRANT ALL PRIVILEGES ON test.* TO '$USERNAME'@'localhost';"
+        echo
+        S mysql --user=root --password
+        B cpanm DBD::mysql MooseX::NonMoose RapidApp
+        # OR
+        B git clone https://github.com/vanstyn/RapidApp.git ~/RapidApp-latest  # DEV NOTE: no makefile on github, can't make or install
+
+        P $MYSQL_ROOTPASS "MySQL root Password"
+        MYSQL_ROOTPASS=$USER_INPUT
+        echo "[ phpMyAdmin Demo App, Username 'admin', Password 'pass' ]"
+        B "mkdir -p ~/public_html; cd ~/public_html; rapidapp.pl --helpers RapidDbic,Templates,TabGui,AuthCore,NavCore RapidApp_phpmyadmin_database -- --dsn dbi:mysql:database=phpmyadmin,root,'$MYSQL_ROOTPASS'"
+        B 'cd ~/public_html/RapidApp_phpmyadmin_database; perl Makefile.PL; make; make test'
+        B ~/public_html/RapidApp_phpmyadmin_database/script/rapidapp_phpmyadmin_database_server.pl
+
+        echo "[ BlueBox Demo App, Username 'admin', Password 'pass' ]"
+        B git clone https://github.com/vanstyn/BlueBox.git ~/BlueBox-latest
+        B 'cd ~/BlueBox-latest; perl Makefile.PL; cpanm --installdeps .'  # DEV NOTE: no make or test here, either
+        B script/bluebox_server.pl
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi
