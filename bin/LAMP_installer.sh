@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.028_000
+# LAMP Installer Script v0.029_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -923,13 +923,12 @@ if [ $MENU_CHOICE -le 23 ]; then
     echo '23. [[[ UBUNTU LINUX, INSTALL MYSQL & PHPMYADMIN ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        echo '[ Do NOT configure Apache automatically ]'
+        echo '[ DO     configure database with dbconfig-common ]'
+        echo
+        S apt-get install mysql-server mysql-client libmysqlclient-dev phpmyadmin
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi

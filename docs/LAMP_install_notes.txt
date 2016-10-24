@@ -11,12 +11,6 @@ Fresh Xubuntu v16.04.1 (Xenial Xerus)
 :%s/^\ \ \ \ //g
 
 
-# [[[ UBUNTU LINUX, INSTALL MYSQL & PHPMYADMIN ]]]
-$ apt-get install mysql-server mysql-client libmysqlclient-dev phpmyadmin
-    # DO NOT CONFIGURE APACHE AUTOMATICALLY
-    # DO CONFIGURE DATABASE WITH DBCONFIG-COMMON
-
-
 # [[[ APACHE & MYSQL, CONFIGURE PHPMYADMIN ]]]
 $ mysql --user=root --password
     mysql> SHOW VARIABLES LIKE 'have_innodb';
