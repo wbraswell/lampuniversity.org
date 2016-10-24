@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.039_000
+# LAMP Installer Script v0.040_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -130,7 +130,7 @@ echo ' Ubuntu v14.04   (Trusty Tahr) in Virtual Box'
 echo ' Ubuntu v14.04.1 (Trusty Tahr) on CloudAtCost.com'
 echo 'Xubuntu v14.04.2 (Trusty Tahr)'
 echo 'Xubuntu v16.04.1 (Xenial Xerus)'
-
+echo
 echo  '          [[[<<< Main Menu >>>]]]'
 echo
 echo  '        <<< LOCAL CLI SECTIONS >>>'
@@ -147,7 +147,6 @@ echo \ '9. [[[ UBUNTU LINUX, INSTALL HEIRLOOM TOOLS (including bdiff) ]]]'
 echo  '10. [[[ UBUNTU LINUX, INSTALL BROADCOM B43 WIFI ]]]'
 echo  '11. [[[ UBUNTU LINUX, PERFORMANCE BENCHMARKING ]]]'
 echo
-
 echo  '        <<< LOCAL GUI SECTIONS >>>'
 echo  '12. [[[ UBUNTU LINUX, INSTALL BASE GUI OPERATING SYSTEM PACKAGES ]]]'
 echo  '13. [[[ UBUNTU LINUX, INSTALL EXTRA GUI OPERATING SYSTEM PACKAGES ]]]'
@@ -158,7 +157,6 @@ echo  '17. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER ]]]'
 echo  '18. [[[ UBUNTU LINUX, CONFIGURE XFCE WINDOW MANAGER ]]]'
 echo  '19. [[[ UBUNTU LINUX, ENABLE AUTOMATIC SECURITY UPDATES ]]]'
 echo
-
 echo  '         <<< SERVICE SECTIONS >>>'
 echo  '20. [[[ UBUNTU LINUX,   INSTALL NFS ]]]'
 echo  '21. [[[ UBUNTU LINUX,   INSTALL APACHE & MOD_PERL ]]]'
@@ -167,14 +165,18 @@ echo  '23. [[[ UBUNTU LINUX,   INSTALL MYSQL & PHPMYADMIN ]]]'
 echo  '24. [[[ APACHE & MYSQL, CONFIGURE PHPMYADMIN ]]]'
 echo  '25. [[[ UBUNTU LINUX,   INSTALL WEBMIN ]]]'
 echo  '26. [[[ UBUNTU LINUX,   INSTALL POSTFIX ]]]'
-echo  '27. [[[ UBUNTU LINUX,   INSTALL NON-LATEST PERL CATALYST ]]]'
-echo  '28. [[[ UBUNTU LINUX,   INSTALL PERL LOCAL::LIB & CPANM ]]]'
-echo  '29. [[[ UBUNTU LINUX,   INSTALL PERLBREW & CPANM ]]]'
-echo  '30. [[[ UBUNTU LINUX,   INSTALL PERL FROM SOURCE ]]]'
-echo  '31. [[[ UBUNTU LINUX,   INSTALL PERL CATALYST SHINYCMS DEPENDENCIES ]]]'
-echo  '32. [[[ PERL CATALYST,  INSTALL SHINYCMS FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
-echo  '33. [[[ PERL CATALYST,  INSTALL RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
-echo  '34. [[[ PERL CATALYST,  CHECK VERSIONS ]]]'
+echo  '27. [[[ UBUNTU LINUX,   INSTALL PERL LOCAL::LIB  & CPANM ]]]'
+echo  '28. [[[ UBUNTU LINUX,   INSTALL PERLBREW         & CPANM ]]]'
+echo  '29. [[[ UBUNTU LINUX,   INSTALL PERL FROM SOURCE & CPANM ]]]'
+echo  '30. [[[ PERL,           INSTALL     LATEST CATALYST ]]]'
+echo  '31. [[[ UBUNTU LINUX,   INSTALL NON-LATEST CATALYST ]]]'
+echo  '32. [[[ PERL,           CHECK CATALYST VERSIONS ]]]'
+echo  '33. [[[ PERL,           INSTALL RAPIDAPP ]]]'
+echo  '34. [[[ UBUNTU LINUX,   INSTALL SHINYCMS DEPENDENCIES ]]]'
+echo  '35. [[[ PERL SHINYCMS,  INSTALL SHINYCMS FROM GITHUB ]]]'
+echo  '3x. [[[ PERL SHINYCMS,  FOO ]]]'
+echo  '3x. [[[ PERL SHINYCMS,  FOO ]]]'
+echo  '3x. [[[ PERL SHINYCMS,  FOO ]]]'
 echo
 
 while true; do
@@ -1081,27 +1083,12 @@ if [ $MENU_CHOICE -le 26 ]; then
 fi
 
 if [ $MENU_CHOICE -le 27 ]; then
-    echo '27. [[[ UBUNTU LINUX, INSTALL NON-LATEST PERL CATALYST ]]]'
+    echo '27. [[[ UBUNTU LINUX, INSTALL PERL LOCAL::LIB  & CPANM ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo '[ WARNING: Do NOT Mix With Latest Catalyst From CPAN In Sections 32 & 33! ]'
-        C 'Please read the warning above.  Seriously.'
-        S apt-get install libmodule-install-perl libcatalyst-engine-apache-perl
-        S service apache2 restart
-        S apt-get install libcatalyst-devel-perl libcatalyst-modules-perl
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
-        echo "Nothing To Do On Existing Machine!"
-    fi
-    CURRENT_SECTION_COMPLETE
-fi
-
-if [ $MENU_CHOICE -le 28 ]; then
-    echo '28. [[[ UBUNTU LINUX, INSTALL PERL LOCAL::LIB & CPANM ]]]'
-    echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo '[ You SHOULD Use This Instead Of Perlbrew Or Perl From Source In Sections 29 & 30, Unless You Have No Choice ]'
-        echo '[ WARNING: Do NOT Mix With Perlbrew In Section 29! ]'
-        echo '[ WARNING: Do NOT Mix With Perl From Source In Section 30! ]'
+        echo '[ You SHOULD Use This Instead Of Perlbrew Or Perl From Source In Sections 28 & 29, Unless You Have No Choice ]'
+        echo '[ WARNING: Do NOT Mix With Perlbrew In Section 28! ]'
+        echo '[ WARNING: Do NOT Mix With Perl From Source In Section 29! ]'
         C 'Please read the warnings above.  Seriously.'
         echo '[ Copied From RPerl Installer ]'
         S apt-get install curl
@@ -1118,13 +1105,13 @@ if [ $MENU_CHOICE -le 28 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 29 ]; then
-    echo '29. [[[ UBUNTU LINUX, INSTALL PERLBREW & CPANM ]]]'
+if [ $MENU_CHOICE -le 28 ]; then
+    echo '28. [[[ UBUNTU LINUX, INSTALL PERLBREW & CPANM ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo '[ You SHOULD NOT Use This Instead Of local::lib In Section 28, Unless You Have No Choice ]'
-        echo '[ WARNING: Do NOT Mix With local::lib In Section 28! ]'
-        echo '[ WARNING: Do NOT Mix With Perl From Source In Section 30! ]'
+        echo '[ You SHOULD NOT Use This Instead Of local::lib In Section 27, Unless You Have No Choice ]'
+        echo '[ WARNING: Do NOT Mix With local::lib In Section 27! ]'
+        echo '[ WARNING: Do NOT Mix With Perl From Source In Section 29! ]'
         C 'Please read the warnings above.  Seriously.'
         echo '[ Copied From RPerl Installer ]'
 
@@ -1159,19 +1146,33 @@ if [ $MENU_CHOICE -le 29 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 30 ]; then
-    echo '30. [[[ UBUNTU LINUX, INSTALL PERL FROM SOURCE ]]]'
+if [ $MENU_CHOICE -le 29 ]; then
+    echo '29. [[[ UBUNTU LINUX, INSTALL PERL FROM SOURCE & CPANM ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo '[ You SHOULD NOT Use This Instead Of local::lib In Section 28, Unless You Have No Choice ]'
-        echo '[ WARNING: Do NOT Mix With local::lib In Section 28! ]'
-        echo '[ WARNING: Do NOT Mix With Perlbrew In Section 29! ]'
+        echo '[ You SHOULD NOT Use This Instead Of local::lib In Section 27, Unless You Have No Choice ]'
+        echo '[ WARNING: Do NOT Mix With local::lib In Section 27! ]'
+        echo '[ WARNING: Do NOT Mix With Perlbrew In Section 28! ]'
         C 'Please read the warnings above.  Seriously.'
         echo '[ Copied From RPerl Installer ]'
         B wget http://www.cpan.org/src/5.0/perl-5.24.0.tar.bz2
         B bunzip2 perl-5.24.0.tar.bz2
         B 'cd perl-5.24.0; perl Makefile.PL; make; make test'
         S 'cd perl-5.24.0; make install'
+        S perl -MCPAN -e 'install App::cpanminus'
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 30 ]; then
+    echo '30. [[[ PERL, INSTALL LATEST CATALYST ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo '[ WARNING: Do NOT Mix With Non-Latest Catalyst Via apt In Section 31! ]'
+        C 'Please read the warning above.  Seriously.'
+        B cpanm Task::Catalyst Catalyst::Devel
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
@@ -1179,23 +1180,14 @@ if [ $MENU_CHOICE -le 30 ]; then
 fi
 
 if [ $MENU_CHOICE -le 31 ]; then
-    echo '31. [[[ UBUNTU LINUX, INSTALL PERL CATALYST SHINYCMS DEPENDENCIES ]]]'
+    echo '31. [[[ UBUNTU LINUX, INSTALL NON-LATEST CATALYST ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        D $EDITOR 'preferred text editor' 'vi'
-        EDITOR=$USER_INPUT
-        echo '[ WARNING: Prerequisite Dependencies Include Full LAMP Stack (Sections 0 - 11, 20 - 23); mod_perl (Section 21) OR mod_fastcgi (This Section); Postfix (Section 26); And Expat, etc (This Section). ]'
+        echo '[ WARNING: Do NOT Mix With Latest Catalyst Via CPAN In Section 30! ]'
         C 'Please read the warning above.  Seriously.'
-        echo '[ Install Expat, etc ]'
-        S sudo apt-get install expat libexpat1-dev libxml2-dev zlib1g-dev
-        echo '[ Install FastCGI ]'
-        echo '[ Copy Data From The Following Lines, Then Paste Into The Apt Config File /etc/apt/sources.list ]'
-        echo 'deb http://us.archive.ubuntu.com/ubuntu/ trusty multiverse      # needed for FastCGI'
-        echo 'deb-src http://us.archive.ubuntu.com/ubuntu/ trusty multiverse  # needed for FastCGI'
-        S $EDITOR /etc/apt/sources.list
-        S apt-get update
-        S apt-get -f install
-        S apt-get install libapache2-mod-fastcgi
+        S apt-get install libmodule-install-perl libcatalyst-engine-apache-perl
+        S service apache2 restart
+        S apt-get install libcatalyst-devel-perl libcatalyst-modules-perl
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
@@ -1203,25 +1195,37 @@ if [ $MENU_CHOICE -le 31 ]; then
 fi
 
 if [ $MENU_CHOICE -le 32 ]; then
-    echo '32. [[[ PERL CATALYST, INSTALL SHINYCMS FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
+    echo '32. [[[ PERL, CHECK CATALYST VERSIONS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        B dpkg -p libcatalyst-perl
+        echo
+        echo '[ Please Look For All Directories In @INC, In The Output Of The perl -V Command Below ]'
+        echo '[ Then, For Each Directory In @INC, Perform The Following ]'
+        echo '$ ls -l /PATH/TO/DIRECTORY'
+        echo
+        echo '[ Finally, For Each Directory In @INC Which Does Not Already Exist, Perform The Following ]'
+        echo '$ sudo mkdir -p /PATH/TO/DIRECTORY'
+        B perl -V
+
+        echo '[ View Versions Of Catalyst & Related Perl Modules ]'
+        B 'perl -MCatalyst::Runtime\ 999'
+        B 'perl -MCatalyst::Devel\ 999'
+        B 'perl -MDBIx::Class\ 999'
+        B 'perl -MCatalyst::Model::DBIC::Schema\ 999'
+        B 'perl -MHTML::FormFu\ 999'
+        B 'perl -MTemplate\ 999'
+        B 'perl -MDBD::mysql\ 999'
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
-    CURRENT_SECTION_COMPLETE
 fi
 
 # SECTION 33 VARIABLES
 MYSQL_ROOTPASS='__EMPTY__'
 
 if [ $MENU_CHOICE -le 33 ]; then
-    echo '33. [[[ PERL CATALYST, INSTALL RAPIDAPP FROM GITHUB & LATEST CATALYST FROM CPAN ]]]'
+    echo '33. [[[ PERL, INSTALL RAPIDAPP ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         P $USERNAME "new machine's username"
@@ -1256,31 +1260,59 @@ if [ $MENU_CHOICE -le 33 ]; then
 fi
 
 if [ $MENU_CHOICE -le 34 ]; then
-    echo '34. [[[ PERL CATALYST, CHECK VERSIONS ]]]'
+    echo '34. [[[ UBUNTU LINUX, INSTALL SHINYCMS DEPENDENCIES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        B dpkg -p libcatalyst-perl
-        echo
-        echo '[ Please Look For All Directories In @INC, In The Output Of The perl -V Command Below ]'
-        echo '[ Then, For Each Directory In @INC, Perform The Following ]'
-        echo '$ ls -l /PATH/TO/DIRECTORY'
-        echo
-        echo '[ Finally, For Each Directory In @INC Which Does Not Already Exist, Perform The Following ]'
-        echo '$ sudo mkdir -p /PATH/TO/DIRECTORY'
-        B perl -V
-
-        echo '[ View Versions Of Catalyst & Related Perl Modules ]'
-        B 'perl -MCatalyst::Runtime\ 999'
-        B 'perl -MCatalyst::Devel\ 999'
-        B 'perl -MDBIx::Class\ 999'
-        B 'perl -MCatalyst::Model::DBIC::Schema\ 999'
-        B 'perl -MHTML::FormFu\ 999'
-        B 'perl -MTemplate\ 999'
-        B 'perl -MDBD::mysql\ 999'
+        D $EDITOR 'preferred text editor' 'vi'
+        EDITOR=$USER_INPUT
+        echo '[ WARNING: Prerequisite Dependencies Include Full LAMP Stack (Sections 0 - 11, 20 - 23); mod_perl (Section 21) OR mod_fastcgi (This Section); Postfix (Section 26); And Expat, etc (This Section). ]'
+        C 'Please read the warning above.  Seriously.'
+        echo '[ Install Expat, etc ]'
+        S sudo apt-get install expat libexpat1-dev libxml2-dev zlib1g-dev
+        echo '[ Install FastCGI ]'
+        echo '[ Copy Data From The Following Lines, Then Paste Into The Apt Config File /etc/apt/sources.list ]'
+        echo 'deb http://us.archive.ubuntu.com/ubuntu/ trusty multiverse      # needed for FastCGI'
+        echo 'deb-src http://us.archive.ubuntu.com/ubuntu/ trusty multiverse  # needed for FastCGI'
+        S $EDITOR /etc/apt/sources.list
+        S apt-get update
+        S apt-get -f install
+        S apt-get install libapache2-mod-fastcgi
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
+    CURRENT_SECTION_COMPLETE
 fi
+
+if [ $MENU_CHOICE -le 35 ]; then
+    echo '35. [[[ PERL SHINYCMS, INSTALL SHINYCMS FROM GITHUB ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le XX ]; then
+    echo 'XX. [[[ PERL SHINYCMS, FOO ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
 
 echo
 echo '[[[ ALL DONE!!! ]]]'
