@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.041_000
+# LAMP Installer Script v0.043_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -8,6 +8,11 @@ shopt -s extglob
 # global variables
 USER_INPUT=''
 CURRENT_SECTION=0
+
+# block comment template
+: <<'END_COMMENT'
+    foo bar bat
+END_COMMENT
 
 CURRENT_SECTION_COMPLETE () {
     echo
@@ -24,6 +29,15 @@ CURRENT_SECTION_COMPLETE () {
             *   ) echo;;
         esac
     done
+}
+
+CD () {  # _C_hange _D_irectory with error check
+    if [ -d "$1" ]; then
+        echo cd $1
+        cd $1
+    else
+        echo 'Cannot change directory to ' $1 ' because such directory does not exist'
+    fi
 }
 
 C () {  # _C_onfirm user action
@@ -48,7 +62,9 @@ P () {  # _P_rompt user for input
     while true; do
             read -p "Please type the $2... " USER_INPUT
         case $USER_INPUT in
-            [abcdefghijklmnopqrstuvwxyz/]+([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_./]) ) echo; break;;
+            # do not force input to start with lowercase letter or forward slash; do not limit any keyboard characters because of passwords
+#            [abcdefghijklmnopqrstuvwxyz/]+([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_./]) ) echo; break;;
+            +([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\~\!\@\#\$\%\^\&\*\(\)\-\_\=\+\[\]\{\}\\\|\/\?\,\.\<\>]) ) echo; break;;
             * ) echo "Please type the $2! "; echo;;
         esac
     done
@@ -187,7 +203,7 @@ echo
 while true; do
     read -p 'Please type your chosen main menu section number, or press <ENTER> for 0... ' MENU_CHOICE
     case $MENU_CHOICE in
-        [0123456789]|[12][0123456789]|3[012345] ) echo; break;;
+        [0123456789]|[123][0123456789]|4[0123] ) echo; break;;
         '' ) echo; MENU_CHOICE=0; break;;
         * ) echo 'Please choose a section number from the menu!'; echo;;
     esac
@@ -1316,17 +1332,92 @@ if [ $MENU_CHOICE -le 35 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
+# SECTION 36 VARIABLES
+DOMAIN_NAME_UNDERSCORES='__EMPTY__'
+DOMAIN_NAME_NO_USER='__EMPTY__'
+MYSQL_USERNAME='__EMPTY__'
+MYSQL_USERNAME_DEFAULT='__EMPTY__'
+MYSQL_PASSWORD='__EMPTY__'
+SITE_NAME='__EMPTY__'
+ADMIN_FIRST_NAME='__EMPTY__'
+ADMIN_LAST_NAME='__EMPTY__'
+ADMIN_EMAIL='__EMPTY__'
+
 if [ $MENU_CHOICE -le 36 ]; then
     echo  '36. [[[ PERL SHINYCMS, CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        P $USERNAME "new machine's username"
+        USERNAME=$USER_INPUT
+        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        DOMAIN_NAME=$USER_INPUT
+        DOMAIN_NAME_UNDERSCORES=${DOMAIN_NAME//./_}  # replace dots with underscores
+        DOMAIN_NAME_NO_USER=$DOMAIN_NAME
+        DOMAIN_NAME_NO_USER+='__no_user'
+        MYSQL_USERNAME_DEFAULT=`expr match "$DOMAIN_NAME" '\([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789]*\)'`  # extract lowest-level hostname
+        SITE_NAME=$MYSQL_USERNAME_DEFAULT
+        MYSQL_USERNAME_DEFAULT+='_user'
+        D $MYSQL_USERNAME "new mysql username to be created (different than new machine's OS username)" $MYSQL_USERNAME_DEFAULT
+        MYSQL_USERNAME=$USER_INPUT
+        P $MYSQL_PASSWORD "new mysql password"
+        MYSQL_PASSWORD=$USER_INPUT
+        P $ADMIN_FIRST_NAME "website administrator's first name"
+        ADMIN_FIRST_NAME=$USER_INPUT
+        P $ADMIN_LAST_NAME "website administrator's last name"
+        ADMIN_LAST_NAME=$USER_INPUT
+        P $ADMIN_EMAIL "website administrator's e-mail address"
+        ADMIN_EMAIL=$USER_INPUT
+
+        echo '[ Create ShinyCMS Database In MySQL ]'
+        echo '[ Copy Commands From The Following Lines ]'
+        echo "mysql> CREATE DATABASE $DOMAIN_NAME_UNDERSCORES;"
+        echo "mysql> GRANT ALL PRIVILEGES ON $DOMAIN_NAME_UNDERSCORES.* TO '$MYSQL_USERNAME'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';"
+        echo "mysql> QUIT"
+        echo
+        B mysql --user=root --password
+
+        echo '[ Create ShinyCMS Config File ]'
+        CD ~/public_html/$DOMAIN_NAME-latest
+        B 'rm modified/shinycms.conf; mv shinycms.conf.redacted modified/shinycms.conf; ln -s modified/shinycms.conf ./shinycms.conf'
+        B sed -ri -e "s/Will\ Braswell/$ADMIN_FIRST_NAME\ $ADMIN_LAST_NAME/g" shinycms.conf
+        B sed -ri -e "s/william\.braswell\@autoparallel\.com/$ADMIN_EMAIL/g" shinycms.conf
+        B sed -ri -e "s/MyShinyTemplate/$SITE_NAME/g" shinycms.conf
+        B sed -ri -e "s/myshinytemplate\.com/$DOMAIN_NAME/g" shinycms.conf
+        B sed -ri -e "s/wbraswell/$USERNAME/g" shinycms.conf
+        B sed -ri -e "s/myshinytemplate_com/$DOMAIN_NAME_UNDERSCORES/g" shinycms.conf
+        B sed -ri -e "s/template_user/$MYSQL_USERNAME/g" shinycms.conf
+        B sed -ri -e "s/REDACTED/$MYSQL_PASSWORD/g" shinycms.conf
+
+        echo '[ Create ShinyCMS Appendant Files ]'
+        B make clean
+        MYSHINY_FILES=$(grep -Elr --binary-files=without-match myshiny ./*)
+        B sed -ri -e "s/myshinytemplate\.com/$DOMAIN_NAME/g" $MYSHINY_FILES
+        B sed -ri -e "s/myshinytemplate_com/$DOMAIN_NAME_UNDERSCORES/g" $MYSHINY_FILES
+        B sed -ri -e "s/MyShinyTemplate\.com/$DOMAIN_NAME/g" $MYSHINY_FILES
+        B sed -ri -e "s/template_user/$MYSQL_USERNAME/g" $MYSHINY_FILES
+        B sed -ri -e "s/wbraswell/$USERNAME/g" $MYSHINY_FILES
+        CD modified
+        B mv fastcgi_start__myshinytemplate.com.sh fastcgi_start__$DOMAIN_NAME.sh
+        B mv fastcgi_myshinytemplate.com.conf fastcgi_$DOMAIN_NAME.conf
+        B mv fastcgi_myshinytemplate.com-init.d fastcgi_$DOMAIN_NAME-init.d
+        B mv git_backup__myshinytemplate.com.sh git_backup__$DOMAIN_NAME.sh
+        B mv git_merge_modified__myshinytemplate.com.sh git_merge_modified__$DOMAIN_NAME.sh
+        B "mv mysqldump__myshinytemplate.com__no_user.sh.redacted mysqldump__$DOMAIN_NAME_NO_USER.sh.redacted"  # DO NOT ADD PASSWORD HERE
+        B mkdir -p ~/bin
+        B cp mysqldump__$DOMAIN_NAME_NO_USER.sh.redacted ~/bin/mysqldump__$DOMAIN_NAME_NO_USER.sh
+        B sed -ri -e "s/REDACTED/'$MYSQL_PASSWORD'/g" ~/bin/mysqldump__$DOMAIN_NAME_NO_USER.sh  # ADD PASSWORD, USE SINGLE QUOTES IN CASE OF SPECIAL CHARACTERS
+        B ln -s ~/public_html/$DOMAIN_NAME-latest/modified/*.sh ~/bin
+
+        echo '[ Ensure No ShinyCMS Appendant File Templates Remain ]'
+        CD ..
+        B rm backup/*.bz2
+        B 'grep -nr myshiny ./*'
+        B 'grep -nr MyShiny ./*'
+        B 'find | grep myshiny'
+        B 'find | grep MyShiny'
+        B 'find | grep template_user'
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi
