@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.040_000
+# LAMP Installer Script v0.041_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -173,10 +173,15 @@ echo  '31. [[[ UBUNTU LINUX,   INSTALL NON-LATEST CATALYST ]]]'
 echo  '32. [[[ PERL,           CHECK CATALYST VERSIONS ]]]'
 echo  '33. [[[ PERL,           INSTALL RAPIDAPP ]]]'
 echo  '34. [[[ UBUNTU LINUX,   INSTALL SHINYCMS DEPENDENCIES ]]]'
-echo  '35. [[[ PERL SHINYCMS,  INSTALL SHINYCMS FROM GITHUB ]]]'
-echo  '3x. [[[ PERL SHINYCMS,  FOO ]]]'
-echo  '3x. [[[ PERL SHINYCMS,  FOO ]]]'
-echo  '3x. [[[ PERL SHINYCMS,  FOO ]]]'
+echo  '35. [[[ PERL SHINYCMS,  INSTALL SHINYCMS DEPENDENCIES & SHINYCMS ]]]'
+echo  '36. [[[ PERL SHINYCMS,  CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES ]]]'
+echo  '37. [[[ PERL SHINYCMS,  BUILD DEMO DATA & RUN TESTS ]]]'
+echo  '38. [[[ PERL SHINYCMS,  BACKUP & RESTORE DATABASE ]]]'
+echo  '39. [[[ PERL SHINYCMS,  CONFIGURE APACHE MOD_FASTCGI ]]]'
+echo  '40. [[[ PERL SHINYCMS,  CONFIGURE APACHE MOD_PERL ]]]'
+echo  '41. [[[ PERL SHINYCMS,  CREATE APACHE DIRECTORIES ]]]'
+echo  '42. [[[ PERL SHINYCMS,  CONFIGURE APACHE PERMISSIONS ]]]'
+echo  '43. [[[ PERL SHINYCMS,  CONFIGURE SHINY ]]]'
 echo
 
 while true; do
@@ -964,8 +969,9 @@ if [ $MENU_CHOICE -le 24 ]; then
         echo "+---------------+-------+"
         echo "| have_innodb   | YES   |"
         echo "+---------------+-------+"
+        echo "mysql> QUIT"
         echo
-        S mysql --user=root --password
+        B mysql --user=root --password
 
         echo "[ Manually Edit Apache Domain Config File /etc/apache2/sites-available/phpmyadmin.$DOMAIN_NAME.conf ]"
         echo '[ Automatically Using Subdomain Configuration ]'
@@ -1236,8 +1242,9 @@ if [ $MENU_CHOICE -le 33 ]; then
         echo '[ ONLY IF USING mysql & cpanm COMMANDS: Ensure MySQL Configured To Support Perl Distribution DBD::mysql `make test` Command ]'
         echo '[ ONLY IF USING mysql & cpanm COMMANDS: Copy Command From The Following Line ]'
         echo "mysql> GRANT ALL PRIVILEGES ON test.* TO '$USERNAME'@'localhost';"
+        echo "mysql> QUIT"
         echo
-        S mysql --user=root --password
+        B mysql --user=root --password
         B cpanm DBD::mysql MooseX::NonMoose RapidApp
         # OR
         B git clone https://github.com/vanstyn/RapidApp.git ~/RapidApp-latest  # DEV NOTE: no makefile on github, can't make or install
@@ -1284,7 +1291,33 @@ if [ $MENU_CHOICE -le 34 ]; then
 fi
 
 if [ $MENU_CHOICE -le 35 ]; then
-    echo '35. [[[ PERL SHINYCMS, INSTALL SHINYCMS FROM GITHUB ]]]'
+    echo  '35. [[[ PERL SHINYCMS, INSTALL SHINYCMS DEPENDENCIES & SHINYCMS ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        P $USERNAME "new machine's username"
+        USERNAME=$USER_INPUT
+        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        DOMAIN_NAME=$USER_INPUT
+        echo '[ Ensure MySQL Configured To Support Perl Distribution DBD::mysql `make test` Command ]'
+        echo '[ Copy Commands From The Following Lines ]'
+        echo "mysql> GRANT ALL PRIVILEGES ON test.* TO '$USERNAME'@'localhost';"
+        echo "mysql> QUIT"
+        echo
+        B mysql --user=root --password
+        echo '[ Install ShinyCMS Dependencies Via CPAN ]'
+        B cpanm DBD::mysql Devel::Declare::MethodInstaller::Simple Text::CSV_XS inc::Module::Install Module::Install::Catalyst Test::Pod Test::Pod::Coverage
+        B mkdir -p ~/public_html
+        echo '[ Install MyShinyTemplate (ShinyCMS Fork) Via Github ]'
+        B git clone git@github.com:wbraswell/myshinytemplate.com.git ~/public_html/$DOMAIN_NAME-latest
+        B "cd ~/public_html/$DOMAIN_NAME-latest; perl Makefile.PL; cpanm --installdeps .; cpanm --installdeps ."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 36 ]; then
+    echo  '36. [[[ PERL SHINYCMS, CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo "Nothing To Do On Current Machine!"
@@ -1298,8 +1331,98 @@ if [ $MENU_CHOICE -le 35 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le XX ]; then
-    echo 'XX. [[[ PERL SHINYCMS, FOO ]]]'
+if [ $MENU_CHOICE -le 37 ]; then
+    echo  '37. [[[ PERL SHINYCMS, BUILD DEMO DATA & RUN TESTS ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 38 ]; then
+    echo  '38. [[[ PERL SHINYCMS, BACKUP & RESTORE DATABASE ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 39 ]; then
+    echo  '39. [[[ PERL SHINYCMS, CONFIGURE APACHE MOD_FASTCGI ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 40 ]; then
+    echo  '40. [[[ PERL SHINYCMS, CONFIGURE APACHE MOD_PERL ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 41 ]; then
+    echo  '41. [[[ PERL SHINYCMS, CREATE APACHE DIRECTORIES ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 42 ]; then
+    echo  '42. [[[ PERL SHINYCMS, CONFIGURE APACHE PERMISSIONS ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 43 ]; then
+    echo  '43. [[[ PERL SHINYCMS, CONFIGURE SHINY ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo "Nothing To Do On Current Machine!"

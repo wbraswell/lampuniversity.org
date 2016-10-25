@@ -4,21 +4,8 @@ Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. Th
 # [[[ UNINDENT ]]]
 :%s/^\ \ \ \ //g
 
-# [[[ PERL SHINYCMS, INSTALL SHINYCMS FROM GITHUB ]]]
-$ mysql --user=root --password  # required for DBD::mysql `make test`
-    mysql> GRANT ALL PRIVILEGES ON test.* TO 'SOMEBODY'@'localhost' IDENTIFIED BY 'MYSQL_TEMP_PASSWORD';  # WRONGLY CREATES PASSWORD
-    mysql> GRANT ALL PRIVILEGES ON test.* TO 'SOMEBODY'@'localhost';
-    mysql> QUIT
-$ cpanm DBD::mysql Devel::Declare::MethodInstaller::Simple Text::CSV_XS inc::Module::Install Module::Install::Catalyst Test::Pod Test::Pod::Coverage
-$ mkdir ~/public_html; cd ~/public_html
-$ git clone git@github.com:wbraswell/myshinytemplate.com.git myshinytemplate.com-latest
-$ mv myshinytemplate.com-latest SOMEDOMAIN.COM-latest  # OR MANUALLY MERGE INTO EXISTING GIT REPO
-$ cd SOMEDOMAIN.COM-latest; perl Makefile.PL; make; make test; make install  # DO NOT USE: CPANPLUS ERROR, USE FOLLOWING COMMANDS INSTEAD
-$ cd SOMEDOMAIN.COM-latest; perl Makefile.PL
-$ cpanm --installdeps .  # NOTE THE DOT AT THE END OF THIS COMMAND; RUN TWICE TO MAKE SURE ALL DEPENDENCIES ARE MET
 
-
-# [ CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES ]
+# [[[ PERL SHINYCMS, CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES ]]]
 $ mysql --user=root --password
     mysql> CREATE DATABASE SOMEDOMAIN_COM;
     mysql> GRANT ALL PRIVILEGES ON SOMEDOMAIN_COM.* TO 'SOME_MYSQL_USER'@'localhost' IDENTIFIED BY 'SOME_MYSQL_PASS';
@@ -41,8 +28,6 @@ $ vi shinycms.conf
             </connect_info>
     </Model::DB>
 $ make clean
-
-
 $ grep -nr myshiny ./*
     # EDIT EVERY NON-SYMLINK FILE LISTED, SHOULD FOLLOW AS BELOW
     # replace both "myshinytemplate.com" & "myshinytemplate_com"; also "template_user" & "wbraswell"
@@ -80,7 +65,7 @@ $ find | grep template_user
     # ENSURE NO FILES REMAIN
 
 
-# [ BUILD DEMO DATA & RUN TESTS ]
+# [[[ PERL SHINYCMS, BUILD DEMO DATA & RUN TESTS ]]]
 $ ./bin/database/build-with-demo-data  # YES DEMO DATA, INCLUDING USER CREDENTIALS admin/changeme
 $ export TEST_POD=1
 $ perl Makefile.PL; make; make test
@@ -90,8 +75,7 @@ $ ./script/shinycms_server.pl
     # Admin area -> Users -> List users -> Change passwords for "admin" & "trevor" & "w1n5t0n"
 
 
-
-# [ BACKUP & RESTORE DATABASE ]
+# [[[ PERL SHINYCMS, BACKUP & RESTORE DATABASE ]]]
 $ mysqldump --user=SOME_MYSQL_USER --password='SOME_MYSQL_PASS' SOMEDOMAIN_COM --lock-all-tables --ignore-table=SOMEDOMAIN_COM.user > SOMEDOMAIN_COM__no_user.sql  # NO USER, BACKUP
 $ mysql --user=root --password
     mysql> CREATE DATABASE SOMEDOMAIN_COM;  # NO USER, CREATE EMPTY DB TO RECEIVE RESTORE
@@ -99,7 +83,7 @@ $ mysql --user=root --password
 $ mysql --user=SOME_MYSQL_USER --password='SOME_MYSQL_PASS' SOMEDOMAIN_COM < SOMEDOMAIN_COM__no_user.sql  # NO USER TABLE, YES MYSQL USER, RESTORE 
 
 
-# [ CONFIGURE APACHE MOD_FASTCGI ]
+# [[[ PERL SHINYCMS, CONFIGURE APACHE MOD_FASTCGI ]]]
 # [ YOU SHOULD USE THIS UNLESS YOU HAVE NO CHOICE ]
 # [ DO NOT MIX WITH APACHE MOD_PERL, BELOW ]
 $ cpanm FCGI FCGI::ProcManager  # NOT ROOT IF local::lib
@@ -153,8 +137,7 @@ $ ln -s /home/SOMEBODY/public_html/SOMEDOMAIN-latest/modified/fastcgi_SOMEDOMAIN
 $ reboot
 
 
-
-# [ CONFIGURE APACHE MOD_PERL ]
+# [[[ PERL SHINYCMS, CONFIGURE APACHE MOD_PERL ]]]
 # [ DO NOT USE THIS UNLESS YOU HAVE NO CHOICE ]
 # [ DO NOT MIX WITH APACHE MOD_FASTCGI, ABOVE ]
 $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
@@ -216,7 +199,7 @@ $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
     </VirtualHost>
 
 
-# [ CREATE APACHE DIRECTORIES ]
+# [[[ PERL SHINYCMS, CREATE APACHE DIRECTORIES ]]]
 $ mkdir -p /srv/www/SOMEDOMAIN.COM/public_html
 $ mkdir /srv/www/SOMEDOMAIN.COM/logs
 $ vi /srv/www/SOMEDOMAIN.COM/public_html/index.html  # create static test page
@@ -224,7 +207,7 @@ $ vi /srv/www/SOMEDOMAIN.COM/public_html/index.html  # create static test page
 $ a2ensite SOMEDOMAIN.COM
 
 
-# [ CONFIGURE APACHE PERMISSIONS ]
+# [[[ PERL SHINYCMS, CONFIGURE APACHE PERMISSIONS ]]]
 $ vi /etc/group  # allow SOMEBODY user to modify permissions
     www-data:x:33:SOMEBODY
 $ chown -R SOMEBODY:www-data /home/SOMEBODY/
@@ -234,7 +217,7 @@ $ chmod -R g+rX /home/SOMEBODY/
 $ service apache2 reload
 
 
-# [ CONFIGURE SHINY ]
+# [[[ PERL SHINYCMS, CONFIGURE SHINY ]]]
 # http://phpmyadmin.SOMEDOMAIN.COM
     database "SOMEDOMAIN_COM"
     table "user" 
