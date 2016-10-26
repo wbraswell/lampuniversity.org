@@ -5,16 +5,6 @@ Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. Th
 :%s/^\ \ \ \ //g
 
 
-# [[[ PERL SHINYCMS, BUILD DEMO DATA & RUN TESTS ]]]
-$ ./bin/database/build-with-demo-data  # YES DEMO DATA, INCLUDING USER CREDENTIALS admin/changeme
-$ export TEST_POD=1
-$ perl Makefile.PL; make; make test
-$ ./script/shinycms_server.pl
-    # LOG IN AS ADMIN, CREDENTIALS admin/changeme
-    # CHANGE ALL PASSWORDS NOW!!!
-    # Admin area -> Users -> List users -> Change passwords for "admin" & "trevor" & "w1n5t0n"
-
-
 # [[[ PERL SHINYCMS, BACKUP & RESTORE DATABASE ]]]
 $ mysqldump --user=SOME_MYSQL_USER --password='SOME_MYSQL_PASS' SOMEDOMAIN_COM --lock-all-tables --ignore-table=SOMEDOMAIN_COM.user > SOMEDOMAIN_COM__no_user.sql  # NO USER, BACKUP
 $ mysql --user=root --password

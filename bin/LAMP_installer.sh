@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.043_000
+# LAMP Installer Script v0.045_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -32,8 +32,18 @@ CURRENT_SECTION_COMPLETE () {
 }
 
 CD () {  # _C_hange _D_irectory with error check
+    echo '$ cd' $1
+    while true; do
+        read -p 'Run above command, yes or no?  [yes] ' -n 1 PROMPT_INPUT
+        case $PROMPT_INPUT in
+            n|N ) echo; echo; return;;
+            y|Y ) echo; break;;
+            '' ) break;;
+            * ) echo;;
+        esac
+    done
+
     if [ -d "$1" ]; then
-        echo cd $1
         cd $1
     else
         echo 'Cannot change directory to ' $1 ' because such directory does not exist'
@@ -118,7 +128,7 @@ B () {  # _B_ash command
         PROMPT='Run above command, yes or no?  [yes] '
     fi
     echo '$' $COMMAND
-    
+
     while true; do
         read -p "$PROMPT" -n 1 PROMPT_INPUT
         case $PROMPT_INPUT in
@@ -1396,7 +1406,8 @@ if [ $MENU_CHOICE -le 36 ]; then
         B sed -ri -e "s/MyShinyTemplate\.com/$DOMAIN_NAME/g" $MYSHINY_FILES
         B sed -ri -e "s/template_user/$MYSQL_USERNAME/g" $MYSHINY_FILES
         B sed -ri -e "s/wbraswell/$USERNAME/g" $MYSHINY_FILES
-        CD modified
+        
+        CD ~/public_html/$DOMAIN_NAME-latest/modified
         B mv fastcgi_start__myshinytemplate.com.sh fastcgi_start__$DOMAIN_NAME.sh
         B mv fastcgi_myshinytemplate.com.conf fastcgi_$DOMAIN_NAME.conf
         B mv fastcgi_myshinytemplate.com-init.d fastcgi_$DOMAIN_NAME-init.d
@@ -1409,7 +1420,7 @@ if [ $MENU_CHOICE -le 36 ]; then
         B ln -s ~/public_html/$DOMAIN_NAME-latest/modified/*.sh ~/bin
 
         echo '[ Ensure No ShinyCMS Appendant File Templates Remain ]'
-        CD ..
+        CD ~/public_html/$DOMAIN_NAME-latest
         B rm backup/*.bz2
         B 'grep -nr myshiny ./*'
         B 'grep -nr MyShiny ./*'
@@ -1423,16 +1434,28 @@ if [ $MENU_CHOICE -le 36 ]; then
 fi
 
 if [ $MENU_CHOICE -le 37 ]; then
-    echo  '37. [[[ PERL SHINYCMS, BUILD DEMO DATA & RUN TESTS ]]]'
+    echo  '37. [[[ PERL SHINYCMS, BUILD DEMO DATABASE & RUN TESTS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        DOMAIN_NAME=$USER_INPUT
+        CD ~/public_html/$DOMAIN_NAME-latest
+        echo '[ Build Database ]'
+        B ./bin/database/build-with-demo-data
+        TEST_POD=1
+        echo '[ Run Test Suite ]'
+        B 'perl Makefile.PL; make; make test'
+        echo '[ Run Stand-Alone (Non-Apache) Testing Web Server ]'
+        echo '[ WARNING: Log In To Testing Web Server, To Change All ShinyCMS User Passwords Now! ]'
+        C 'Please read the warning above.  Seriously.'
+        echo "[ Username 'admin', Password 'changeme' ]"
+        echo "[ Click Admin area -> Users -> List users -> Change passwords for 'admin' & 'trevor' & 'w1n5t0n' ]"
+        echo '[ Log Out Then Log Back In To Test New Passwords ]'
+        echo '[ End Testing Web Server When Passwords Have Been Successfully Changed ]'
+        echo
+        B ./script/shinycms_server.pl
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi
