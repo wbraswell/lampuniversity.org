@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.050_000
+# LAMP Installer Script v0.051_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -1544,6 +1544,8 @@ if [ $MENU_CHOICE -le 41 ]; then
     echo  '41. [[[ PERL SHINYCMS, CREATE APACHE DIRECTORIES & ENABLE STATIC PAGE ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
+        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        DOMAIN_NAME=$USER_INPUT
         S mkdir -p /srv/www/$DOMAIN_NAME/public_html
         S mkdir /srv/www/$DOMAIN_NAME/logs
         S "echo '$DOMAIN_NAME lives!' > /srv/www/$DOMAIN_NAME/public_html/index.html"
@@ -1558,13 +1560,27 @@ if [ $MENU_CHOICE -le 42 ]; then
     echo  '42. [[[ PERL SHINYCMS, CONFIGURE APACHE PERMISSIONS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        D $EDITOR 'preferred text editor' 'vi'
+        EDITOR=$USER_INPUT
+        P $USERNAME "new machine's username"
+        USERNAME=$USER_INPUT
+        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        DOMAIN_NAME=$USER_INPUT
+
+        echo '[ Add Username To Web Server User Group www-data, Allowing Username To Modify Appropriate Permissions ]'
+        echo '[ Copy Data From The Following Line, Then Paste Into Operating System User Group Config File /etc/group ]'
+        echo "www-data:x:33:$USERNAME"
+        echo
+        S $EDITOR /etc/group
+
+        echo '[ Configure Operating System User/Group/Other Permissions ]'
+        S chown -R $USERNAME:www-data /home/$USERNAME/
+        S chmod -R u+rwX,o+rX,o-w /home/$USERNAME/public_html/$DOMAIN_NAME-latest
+        S chmod -R g+rwX /home/$USERNAME/public_html/$DOMAIN_NAME-latest/root/static/cms-uploads/
+        S chmod -R g+rX /home/$USERNAME/
+        S service apache2 reload
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi

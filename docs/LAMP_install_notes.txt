@@ -121,16 +121,6 @@ $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
     </VirtualHost>
 
 
-# [[[ PERL SHINYCMS, CONFIGURE APACHE PERMISSIONS ]]]
-$ vi /etc/group  # allow SOMEBODY user to modify permissions
-    www-data:x:33:SOMEBODY
-$ chown -R SOMEBODY:www-data /home/SOMEBODY/
-$ chmod -R u+rwX,o+rX,o-w /home/SOMEBODY/public_html/SOMEDOMAIN-latest
-$ chmod -R g+rwX /home/SOMEBODY/public_html/SOMEDOMAIN-latest/root/static/cms-uploads/
-$ chmod -R g+rX /home/SOMEBODY/
-$ service apache2 reload
-
-
 # [[[ PERL SHINYCMS, CONFIGURE SHINY ]]]
 # http://phpmyadmin.SOMEDOMAIN.COM
     database "SOMEDOMAIN_COM"
