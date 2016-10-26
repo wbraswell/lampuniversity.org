@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.051_000
+# LAMP Installer Script v0.052_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -1589,15 +1589,30 @@ if [ $MENU_CHOICE -le 43 ]; then
     echo  '43. [[[ PERL SHINYCMS, CONFIGURE SHINY ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        DOMAIN_NAME=$USER_INPUT
+        DOMAIN_NAME_UNDERSCORES=${DOMAIN_NAME//./_}  # replace dots with underscores
+
+        echo '[ Change ShinyCMS Usernames In Database Via phpMyAdmin Web Interface ]'
+        echo "http://phpmyadmin.$DOMAIN_NAME"
+        echo "Database '$DOMAIN_NAME_UNDERSCORES' -> Table 'user' -> Change Usernames 'admin', 'trevor' & 'w1n5t0n'"
+        echo
+        C "Please follow the directions above..."
+
+        echo '[ Configure ShinyCMS Settings via ShinyCMS Web Interface ]'
+        echo "http://$DOMAIN_NAME"
+        echo 'Login To ShinyCMS Web Interface As New Admin User From Database Update In Previous Step'
+        echo 'Admin area -> Users -> List Users -> Change Passwords For All 3 Users (DOUBLE CHECK, SHOULD ALREADY BE DONE IN SECTION 37)'
+        echo 'Admin area -> Users -> List Users -> Edit All 3 Users -> Update E-Mail, etc.'
+        echo 'Admin area -> Pages -> List Form Handlers -> Edit Contact Form -> Update "E-mail To" Field'
+        echo 'Admin area -> Pages -> List Pages -> Edit Home -> Add Image "/static/cms-uploads/images/homepage_added.png" & "Lorem Ipsum Dolor" Text'
+        echo 'Admin area -> Pages -> List Templates -> Edit Homepage -> Delete "video_url" Element -> Update'
+        echo
+        C "Please follow the directions above..."
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
-    CURRENT_SECTION_COMPLETE
+#    CURRENT_SECTION_COMPLETE  # final section!
 fi
 
 

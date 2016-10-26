@@ -119,16 +119,3 @@ $ vi /etc/apache2/sites-available/SOMEDOMAIN.COM.conf
             SetHandler  default-handler
         </Location>
     </VirtualHost>
-
-
-# [[[ PERL SHINYCMS, CONFIGURE SHINY ]]]
-# http://phpmyadmin.SOMEDOMAIN.COM
-    database "SOMEDOMAIN_COM"
-    table "user" 
-    change usernames "admin", "trevor" & "w1n5t0n"
-# Shiny Login As New Admin User
-# Admin area -> Users -> List Users -> Change Passwords For All 3 Users DOUBLE CHECK, SHOULD ALREADY BE DONE ABOVE
-# Admin area -> Users -> List Users -> Edit All 3 Users -> Update E-Mail, etc.
-# Admin area -> Pages -> List Form Handlers -> Edit Contact Form -> Update "E-mail To" Field
-# Admin area -> Pages -> List Pages -> Edit Home -> Add Image "/static/cms-uploads/images/homepage_added.png" & "Lorem Ipsum Dolor" Text
-# Admin area -> Pages -> List Templates -> Edit Homepage -> Delete "video_url" Element -> Update
