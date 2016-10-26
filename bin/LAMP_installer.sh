@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.045_000
+# LAMP Installer Script v0.050_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -1460,17 +1460,52 @@ if [ $MENU_CHOICE -le 37 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
+# SECTION 38 VARIABLES
+DOMAIN_NAME_UNDERSCORES_NO_USER='__EMPTY__'
+
 if [ $MENU_CHOICE -le 38 ]; then
     echo  '38. [[[ PERL SHINYCMS, BACKUP & RESTORE DATABASE ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        DOMAIN_NAME=$USER_INPUT
+        DOMAIN_NAME_UNDERSCORES=${DOMAIN_NAME//./_}  # replace dots with underscores
+        DOMAIN_NAME_UNDERSCORES_NO_USER=$DOMAIN_NAME_UNDERSCORES
+        DOMAIN_NAME_UNDERSCORES_NO_USER+='__no_user'
+        MYSQL_USERNAME_DEFAULT=`expr match "$DOMAIN_NAME" '\([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789]*\)'`  # extract lowest-level hostname
+        SITE_NAME=$MYSQL_USERNAME_DEFAULT
+        MYSQL_USERNAME_DEFAULT+='_user'
+        D $MYSQL_USERNAME "mysql username (different than new machine's OS username)" $MYSQL_USERNAME_DEFAULT
+        MYSQL_USERNAME=$USER_INPUT
+        P $MYSQL_PASSWORD "mysql password"
+        MYSQL_PASSWORD=$USER_INPUT
+        echo '[ WARNING: Use Only One Of The Following Backup Commands, No Need To Use Both ]'
+        C 'Please read the warning above.  Seriously.'
+
+        echo '[ Backup Database, Do NOT Include ShinyCMS User & Password Data, Export Raw sql File ]'
+        B "mysqldump --user=$MYSQL_USERNAME --password='$MYSQL_PASSWORD' $DOMAIN_NAME_UNDERSCORES --lock-all-tables --ignore-table=$DOMAIN_NAME_UNDERSCORES.user > $DOMAIN_NAME_UNDERSCORES_NO_USER.sql"
+
+        echo '[ Backup Database, DO Include ShinyCMS User & Password Data, Export Raw sql File ]'
+        B "mysqldump --user=$MYSQL_USERNAME --password='$MYSQL_PASSWORD' $DOMAIN_NAME_UNDERSCORES --lock-all-tables > $DOMAIN_NAME_UNDERSCORES.sql"
+
+        echo '[ Restore Database, Create Empty Database To Receive Restoration ]'
+        echo '[ Copy Commands From The Following Lines ]'
+        echo "mysql> CREATE DATABASE $DOMAIN_NAME_UNDERSCORES;"
+        echo "mysql> GRANT ALL PRIVILEGES ON $DOMAIN_NAME_UNDERSCORES.* TO '$MYSQL_USERNAME'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';"
+        echo "mysql> QUIT"
+        echo
+        B mysql --user=root --password
+
+        echo '[ WARNING: Use Only One Of The Following Restore Commands, Do NOT Use Both ]'
+        C 'Please read the warning above.  Seriously.'
+
+        echo '[ Restore Database, Do NOT Include ShinyCMS User & Password Data, Import Raw sql File ]'
+        B "mysql --user=$MYSQL_USERNAME --password='$MYSQL_PASSWORD' $DOMAIN_NAME_UNDERSCORES < $DOMAIN_NAME_UNDERSCORES_NO_USER.sql"
+
+        echo '[ Restore Database, DO Include ShinyCMS User & Password Data, Import Raw sql File ]'
+        B "mysql --user=$MYSQL_USERNAME --password='$MYSQL_PASSWORD' $DOMAIN_NAME_UNDERSCORES < $DOMAIN_NAME_UNDERSCORES.sql"
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi
@@ -1506,16 +1541,15 @@ if [ $MENU_CHOICE -le 40 ]; then
 fi
 
 if [ $MENU_CHOICE -le 41 ]; then
-    echo  '41. [[[ PERL SHINYCMS, CREATE APACHE DIRECTORIES ]]]'
+    echo  '41. [[[ PERL SHINYCMS, CREATE APACHE DIRECTORIES & ENABLE STATIC PAGE ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        S mkdir -p /srv/www/$DOMAIN_NAME/public_html
+        S mkdir /srv/www/$DOMAIN_NAME/logs
+        S "echo '$DOMAIN_NAME lives!' > /srv/www/$DOMAIN_NAME/public_html/index.html"
+        S a2ensite $DOMAIN_NAME
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi
