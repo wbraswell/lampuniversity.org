@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.052_000
+# LAMP Installer Script v0.053_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -1514,13 +1514,98 @@ if [ $MENU_CHOICE -le 39 ]; then
     echo  '39. [[[ PERL SHINYCMS, CONFIGURE APACHE MOD_FASTCGI ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        echo '[ You SHOULD Use This Section Instead Of Apache mod_perl In Section 40, Unless You Have No Choice ]'
+        echo '[ WARNING: Do NOT Mix With Apache mod_perl In Section 40! ]'
+        C 'Please read the warning above.  Seriously.'
+        P $USERNAME "new machine's username"
+        USERNAME=$USER_INPUT
+        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        DOMAIN_NAME=$USER_INPUT
+        DOMAIN_NAME_UNDERSCORES=${DOMAIN_NAME//./_}  # replace dots with underscores
+        P $ADMIN_FIRST_NAME "website administrator's first name"
+        ADMIN_FIRST_NAME=$USER_INPUT
+        P $ADMIN_LAST_NAME "website administrator's last name"
+        ADMIN_LAST_NAME=$USER_INPUT
+        P $ADMIN_EMAIL "website administrator's e-mail address"
+        ADMIN_EMAIL=$USER_INPUT
+        echo '[ Install FastCGI Via CPAN, Enable FastCGI Module In Apache ]'
+        B cpanm FCGI FCGI::ProcManager
+        S a2enmod fastcgi
+
+
+
+# START HERE: fix variable read below
+# START HERE: fix variable read below
+# START HERE: fix variable read below
+
+        echo '[ Create Apache Config File ]'
+        # NEED UPDATE: add support for Google Webmaster Tools
+        read -d '' $APACHE_CONFIG_OUTPUT << EOF
+<VirtualHost *:80>
+    ServerName $DOMAIN_NAME
+    ServerAlias www.$DOMAIN_NAME
+    ServerAdmin webmaster@$DOMAIN_NAME
+#    DocumentRoot /srv/www/$DOMAIN_NAME/public_html/  # mod_fastcgi overrides below
+    <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre
+        Require all granted
+    </Directory>
+    ErrorLog /srv/www/$DOMAIN_NAME/logs/error.log
+    CustomLog /srv/www/$DOMAIN_NAME/logs/access.log combined
+# MOD_FASTCGI
+    DocumentRoot    /home/$USERNAME/public_html/$DOMAIN_NAME-latest/root
+    <Location />
+        Order allow,deny
+        Allow from all
+    </Location>
+    # Google Webmaster Tools, Robots Testing Tool 
+#    Alias    /googleSOMELONGNUMBER.html    /home/$USERNAME/public_html/$DOMAIN_NAME-latest/root/googleSOMELONGNUMBER.html
+    # Allow Apache to serve static content.
+    Alias       /static     /home/$USERNAME/public_html/$DOMAIN_NAME-latest/root/static
+    <Location /static>  # UNNECESSARY???
+        SetHandler          default-handler
+    </Location>
+    # Display friendly error page if the FastCGI process is not running.
+    ErrorDocument   502     /home/$USERNAME/public_html/$DOMAIN_NAME-latest/root/offline.html
+    # Connect to the external server.
+    FastCgiExternalServer   /tmp/$DOMAIN_NAME.fcgi -socket /tmp/$DOMAIN_NAME.socket -idle-timeout 900
+    Alias           /       /tmp/$DOMAIN_NAME.fcgi/
+</VirtualHost>
+EOF
+
+        S "echo '$APACHE_CONFIG_OUTPUT' > /etc/apache2/sites-available/$DOMAIN_NAME.conf"
+        S "echo \"<b>ERROR 502:</b> FastCGI Process Not Running, Please Inform Site Administrator <a href='mailto:$ADMIN_EMAIL'>$ADMIN_FIRST_NAME $ADMIN_LAST_NAME</a>\" > /home/$USERNAME/public_html/$DOMAIN_NAME-latest/modified/offline.html"
+
+        echo '[ WARNING: Choose ONLY ONE Of The Following Options To Start FastCGI Service! ]'
+        echo '[ 4 Options Include: Manual local::lib; Manual Perlbrew; Automatic Upstart; Automatic SysVinit ]'
+        C 'Please read the warning above.  Seriously.'
+        echo '[ Start FastCGI Service, Manual, local::lib ]'
+        echo "[ Run As Non-Root User $USERNAME By User $USERNAME, Must Have Created Symlinks In Section 36 (EDIT MYSHINYTEMPLATE-FILES) ]"
+        B ~/bin/fastcgi_start__$DOMAIN_NAME.sh
+
+        # OR
+
+        echo '[ Start FastCGI Service, Manual, Perlbrew ]'
+        echo "[ Run As Non-Root User $USERNAME By User root ]"
+        S -Eu $USERNAME /home/$USERNAME/public_html/$DOMAIN_NAME-latest/bin/external-fastcgi-server  
+        B cat /tmp/$DOMAIN_NAME.pid
+
+        # OR
+
+        echo '[ Start FastCGI Service, Automatic, Upstart (Most Modern Linux Distributions) ]'
+        S ln -s /home/$USERNAME/public_html/$DOMAIN_NAME-latest/modified/fastcgi_$DOMAIN_NAME.conf /etc/init
+        S initctl reload-configuration  # OR    $ reboot
+        S "initctl list | grep $DOMAIN_NAME"
+        S service fastcgi_$DOMAIN_NAME start
+        S service fastcgi_$DOMAIN_NAME status
+
+        # OR
+
+        echo '[ Start FastCGI Service, Automatic, SysVinit (Older Linux Distributions) ]'
+        S ln -s /home/$USERNAME/public_html/$DOMAIN_NAME-latest/modified/fastcgi_$DOMAIN_NAME-init.d /etc/init.d
+        S reboot
+
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi
