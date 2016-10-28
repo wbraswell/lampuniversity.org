@@ -887,6 +887,9 @@ if [ $MENU_CHOICE -le 21 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
+# SECTION 22 VARIABLES
+ADMIN_EMAIL='__EMPTY__'
+
 if [ $MENU_CHOICE -le 22 ]; then
     echo '22. [[[ APACHE, CONFIGURE DOMAIN(S) ]]]'
     echo
@@ -897,6 +900,8 @@ if [ $MENU_CHOICE -le 22 ]; then
         USERNAME=$USER_INPUT
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
         DOMAIN_NAME=$USER_INPUT
+        P $ADMIN_EMAIL "website administrator's PUBLIC e-mail address"
+        ADMIN_EMAIL=$USER_INPUT
         echo "[ REPEAT THIS ENTIRE SECTION ONCE PER DOMAIN OR SUBDOMAIN ]"
         echo
         echo "[ Manually Edit Apache Domain Config File /etc/apache2/sites-available/$DOMAIN_NAME.conf ]"
@@ -907,7 +912,7 @@ if [ $MENU_CHOICE -le 22 ]; then
         echo "<VirtualHost *:80>"
         echo "    ServerName $DOMAIN_NAME"
         echo "    ServerAlias www.$DOMAIN_NAME"
-        echo "    ServerAdmin webmaster@$DOMAIN_NAME"
+        echo "    ServerAdmin $ADMIN_EMAIL"
         echo "    DocumentRoot /srv/www/$DOMAIN_NAME/public_html/"
         echo "    <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre"
         echo "        Require all granted"
@@ -927,7 +932,7 @@ if [ $MENU_CHOICE -le 22 ]; then
         echo "    ServerName $DOMAIN_NAME"
         echo "    # DISABLE FOLLOWING LINE If Also Enabling phpmyadmin.$DOMAIN_NAME"
         echo "    ServerAlias $DOMAIN_NAME *.DOMAIN_NAME_ONLY"
-        echo "    ServerAdmin webmaster@$DOMAIN_NAME"
+        echo "    ServerAdmin $ADMIN_EMAIL"
         echo "    DocumentRoot /srv/www/$DOMAIN_NAME/public_html/"
         echo "    <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre"
         echo "        Require all granted"
@@ -1005,7 +1010,7 @@ if [ $MENU_CHOICE -le 24 ]; then
         echo
         echo "<VirtualHost *:80>"
         echo "     ServerName phpmyadmin.$DOMAIN_NAME"
-        echo "     ServerAdmin webmaster@$DOMAIN_NAME"
+        echo "     ServerAdmin $ADMIN_EMAIL"
         echo "     DocumentRoot /srv/www/phpmyadmin.$DOMAIN_NAME/public_html/"
         echo "     <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre"
         echo "        Require all granted"
@@ -1351,7 +1356,6 @@ MYSQL_PASSWORD='__EMPTY__'
 SITE_NAME='__EMPTY__'
 ADMIN_FIRST_NAME='__EMPTY__'
 ADMIN_LAST_NAME='__EMPTY__'
-ADMIN_EMAIL='__EMPTY__'
 
 if [ $MENU_CHOICE -le 36 ]; then
     echo  '36. [[[ PERL SHINYCMS, CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES ]]]'
@@ -1375,7 +1379,7 @@ if [ $MENU_CHOICE -le 36 ]; then
         ADMIN_FIRST_NAME=$USER_INPUT
         P $ADMIN_LAST_NAME "website administrator's last name"
         ADMIN_LAST_NAME=$USER_INPUT
-        P $ADMIN_EMAIL "website administrator's e-mail address"
+        P $ADMIN_EMAIL "website administrator's PUBLIC e-mail address"
         ADMIN_EMAIL=$USER_INPUT
 
         echo '[ Create ShinyCMS Database In MySQL ]'
@@ -1526,25 +1530,20 @@ if [ $MENU_CHOICE -le 39 ]; then
         ADMIN_FIRST_NAME=$USER_INPUT
         P $ADMIN_LAST_NAME "website administrator's last name"
         ADMIN_LAST_NAME=$USER_INPUT
-        P $ADMIN_EMAIL "website administrator's e-mail address"
+        P $ADMIN_EMAIL "website administrator's PUBLIC e-mail address"
         ADMIN_EMAIL=$USER_INPUT
         echo '[ Install FastCGI Via CPAN, Enable FastCGI Module In Apache ]'
         B cpanm FCGI FCGI::ProcManager
         S a2enmod fastcgi
 
-
-
-# START HERE: fix variable read below
-# START HERE: fix variable read below
-# START HERE: fix variable read below
-
-        echo '[ Create Apache Config File ]'
         # NEED UPDATE: add support for Google Webmaster Tools
-        read -d '' $APACHE_CONFIG_OUTPUT << EOF
+        echo '[ Create Apache Config File ]'
+
+APACHE_CONFIG_OUTPUT=$(cat <<END_HEREDOC
 <VirtualHost *:80>
     ServerName $DOMAIN_NAME
     ServerAlias www.$DOMAIN_NAME
-    ServerAdmin webmaster@$DOMAIN_NAME
+    ServerAdmin $ADMIN_EMAIL
 #    DocumentRoot /srv/www/$DOMAIN_NAME/public_html/  # mod_fastcgi overrides below
     <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre
         Require all granted
@@ -1570,8 +1569,13 @@ if [ $MENU_CHOICE -le 39 ]; then
     FastCgiExternalServer   /tmp/$DOMAIN_NAME.fcgi -socket /tmp/$DOMAIN_NAME.socket -idle-timeout 900
     Alias           /       /tmp/$DOMAIN_NAME.fcgi/
 </VirtualHost>
-EOF
+END_HEREDOC
+)
 
+        echo "[ The Following Content Will Be Saved In The Apache Config File /etc/apache2/sites-available/$DOMAIN_NAME.conf ]"
+        echo
+        echo "$APACHE_CONFIG_OUTPUT"
+        echo
         S "echo '$APACHE_CONFIG_OUTPUT' > /etc/apache2/sites-available/$DOMAIN_NAME.conf"
         S "echo \"<b>ERROR 502:</b> FastCGI Process Not Running, Please Inform Site Administrator <a href='mailto:$ADMIN_EMAIL'>$ADMIN_FIRST_NAME $ADMIN_LAST_NAME</a>\" > /home/$USERNAME/public_html/$DOMAIN_NAME-latest/modified/offline.html"
 
