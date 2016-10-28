@@ -1,6 +1,6 @@
 #!/bin/bash
-# Copyright © 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.053_000
+# Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
+# LAMP Installer Script v0.055_000
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -1525,7 +1525,6 @@ if [ $MENU_CHOICE -le 39 ]; then
         USERNAME=$USER_INPUT
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
         DOMAIN_NAME=$USER_INPUT
-        DOMAIN_NAME_UNDERSCORES=${DOMAIN_NAME//./_}  # replace dots with underscores
         P $ADMIN_FIRST_NAME "website administrator's first name"
         ADMIN_FIRST_NAME=$USER_INPUT
         P $ADMIN_LAST_NAME "website administrator's last name"
@@ -1560,7 +1559,7 @@ APACHE_CONFIG_OUTPUT=$(cat <<END_HEREDOC
 #    Alias    /googleSOMELONGNUMBER.html    /home/$USERNAME/public_html/$DOMAIN_NAME-latest/root/googleSOMELONGNUMBER.html
     # Allow Apache to serve static content.
     Alias       /static     /home/$USERNAME/public_html/$DOMAIN_NAME-latest/root/static
-    <Location /static>  # UNNECESSARY???
+    <Location /static>  # NEED ANSWER: is this line necessary?
         SetHandler          default-handler
     </Location>
     # Display friendly error page if the FastCGI process is not running.
@@ -1618,18 +1617,74 @@ if [ $MENU_CHOICE -le 40 ]; then
     echo  '40. [[[ PERL SHINYCMS, CONFIGURE APACHE MOD_PERL ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+        echo '[ You Should NOT Use This Section Instead Of Apache mod_fastcgi In Section 39, Unless You Have No Choice ]'
+        echo '[ WARNING: Do NOT Mix With Apache mod_fastcgi In Section 39! ]'
+        C 'Please read the warning above.  Seriously.'
+        P $USERNAME "new machine's username"
+        USERNAME=$USER_INPUT
+        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        DOMAIN_NAME=$USER_INPUT
+        P $ADMIN_FIRST_NAME "website administrator's first name"
+        ADMIN_FIRST_NAME=$USER_INPUT
+        P $ADMIN_LAST_NAME "website administrator's last name"
+        ADMIN_LAST_NAME=$USER_INPUT
+        P $ADMIN_EMAIL "website administrator's PUBLIC e-mail address"
+        ADMIN_EMAIL=$USER_INPUT
+
+        # NEED UPDATE: add support for Google Webmaster Tools
+        echo '[ Create Apache Config File ]'
+
+APACHE_CONFIG_OUTPUT=$(cat <<END_HEREDOC
+<VirtualHost *:80>
+    ServerName $DOMAIN_NAME
+    ServerAlias www.$DOMAIN_NAME
+    ServerAdmin $ADMIN_EMAIL
+    DocumentRoot /srv/www/$DOMAIN_NAME/public_html/
+    <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre
+        Require all granted
+    </Directory>
+    # Google Webmaster Tools, Robots Testing Tool 
+#    Alias    /googleSOMELONGNUMBER.html    /home/$USERNAME/public_html/$DOMAIN_NAME-latest/root/googleSOMELONGNUMBER.html
+    ErrorLog /srv/www/$DOMAIN_NAME/logs/error.log
+    CustomLog /srv/www/$DOMAIN_NAME/logs/access.log combined
+    <Perl>
+        use lib '/home/$USERNAME/public_html/$DOMAIN_NAME-latest/lib';  # ShinyCMS
+        use lib '/home/$USERNAME/perl5/lib/perl5';  # local::lib
+    </Perl>
+#   PerlRequire     /home/$USERNAME/public_html/$DOMAIN_NAME/.../startup.pl  # handled by 'use lib' code above 
+    PerlModule      ShinyCMS
+    Alias   /static     /home/$USERNAME/public_html/$DOMAIN_NAME-latest/root/static
+    <Location />
+        SetHandler          modperl 
+        PerlResponseHandler +ShinyCMS
+    </Location>
+    <Location /static>  # NEED ANSWER: is this line necessary?
+        SetHandler  default-handler
+    </Location>
+</VirtualHost>
+END_HEREDOC
+)
+
+        echo "[ The Following Content Will Be Saved In The Apache Config File /etc/apache2/sites-available/$DOMAIN_NAME.conf ]"
+        echo
+        echo "$APACHE_CONFIG_OUTPUT"
+        echo
+        S "echo '$APACHE_CONFIG_OUTPUT' > /etc/apache2/sites-available/$DOMAIN_NAME.conf"
+        S "echo \"<b>ERROR 502:</b> mod_perl Process Not Running, Please Inform Site Administrator <a href='mailto:$ADMIN_EMAIL'>$ADMIN_FIRST_NAME $ADMIN_LAST_NAME</a>\" > /home/$USERNAME/public_html/$DOMAIN_NAME-latest/modified/offline.html"
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now..."
     fi
     CURRENT_SECTION_COMPLETE
 fi
 
 if [ $MENU_CHOICE -le 41 ]; then
+    echo  '41. [[[ PERL SHINYCMS,  CREATE APACHE DIRECTORIES ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo "Nothing To Do On Current Machine!"
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
+        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
+    elif [ $MACHINE_CHOICE -eq 1 ]
     echo  '41. [[[ PERL SHINYCMS, CREATE APACHE DIRECTORIES & ENABLE STATIC PAGE ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
