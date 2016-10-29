@@ -564,7 +564,7 @@ if [ $MENU_CHOICE -le 12 ]; then
         S apt-get update
         S apt-get -f install
         echo '[ X-Windows Installation Triggers: xterm xfce4-terminal ]'
-        echo '[ Basic X-Windows Testing: x11-apps (contains xeyes) ]'
+        echo '[ Basic X-Windows Testing: x11-apps (contains xclock) ]'
         echo '[ General Tools: gkrellm hexchat firefox chromium-browser update-manager indicator-multiload unetbootin ]'
         S apt-get install xterm xfce4-terminal x11-apps gkrellm hexchat firefox chromium-browser update-manager indicator-multiload unetbootin
         echo '[ Check Install, Confirm No Errors ]'
@@ -615,14 +615,16 @@ if [ $MENU_CHOICE -le 14 ]; then
         echo '[ Test X-Windows Single-Session Connection ]'
         P $LOCAL_HOSTNAME "Existing Machine's Local Hostname"
         LOCAL_HOSTNAME=$USER_INPUT
-        B "export DISPLAY=$LOCAL_HOSTNAME:0.0; xeyes"
-        echo '[ Install & Start xpra Multi-Session Service ]'
+        B "export DISPLAY=$LOCAL_HOSTNAME:0.0; xclock"
+        echo '[ Install, Start, Test xpra Multi-Session Service ]'
+        echo '[ NOTE: If You Have xpra Installation Issues, Please See The Directions In This Same Section 14 For Existing Machines ]'
         S apt-get install xpra
-        B 'xpra start :100 --start-child=xfce4-terminal; export DISPLAY=:100.0; xeyes'
+        B 'xpra start :100 --start-child=xfce4-terminal'
+        B 'export DISPLAY=:100.0; xclock'
         echo '[ Default Enable xpra Multi-Session Connection ]'
         B 'echo -e "\n# enable XPRA persistent X server\nexport DISPLAY=:100.0" >> ~/.bashrc'
         echo '[ Test xpra Multi-Session Connection ]'
-        B '. ~/.bashrc; xeyes'
+        B 'source ~/.bashrc; xclock'
         echo '[ Optionally Stop xpra Service ]'
         B xpra stop
     elif [ $MACHINE_CHOICE -eq 1 ]; then
@@ -632,8 +634,7 @@ if [ $MENU_CHOICE -le 14 ]; then
         B 'ps aux | grep lightdm'
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
-        echo '[ WARNING: This sub-section is only for machines running the gdm display manager, NOT for those running lightdm! ]'
-        C 'Please read the warning above.  Seriously.'
+        echo '[ NOTE: This sub-section is only for machines running the gdm display manager, NOT for those running lightdm! ]'
         echo '[ gdm Only: Manually Edit gdm Config File To Match Following Lines ]'
         echo '...'
         echo '[security]'
@@ -647,8 +648,7 @@ if [ $MENU_CHOICE -le 14 ]; then
         S /etc/init.d/gdm restart
         echo
 
-        echo '[ WARNING: This sub-section is only for machines running the lightdm display manager, NOT for those running gdm! ]'
-        C 'Please read the warning above.  Seriously.'
+        echo '[ NOTE: This sub-section is only for machines running the lightdm display manager, NOT for those running gdm! ]'
         echo '[ lightdm Only: Manually Edit lightdm Config File To Match Following Lines ]'
         echo '...'
         echo '[SeatDefaults]'
@@ -670,9 +670,16 @@ if [ $MENU_CHOICE -le 14 ]; then
         echo '[ Enable X-Windows Single-Session Connection ]'
         B "xhost +$DOMAIN_NAME"
         echo '[ Install xpra Multi-Session Service ]'
+        echo '[ NOTE: Only use this if all your Ubuntu installations are the same major version, or if you are on the machine with the oldest version now. ]'
         S apt-get install xpra
-        echo '[ NOTE: If you experienced issues installing xpra via apt-get above, then you may have an old machine. ]'
-        echo '[ If this is the case, then complete the URL below, download the proper .deb file, and run the gdebi-gtk command to install the .deb file. ]'
+        echo '[ NOTE: Use this if you are in Ubuntu v16.04 Xenial now and your older machines are Ubuntu Trusty v14.04 running xpra v0.12.3
+        B wget http://xpra.org/dists/xenial/main/binary-amd64/xpra_0.14.35-1_amd64.deb  # XXXcompatible with xpra v0.12.3, does install on Ubuntu v16.04
+        S apt-get install gdebi
+        S gdebi-gtk ./xpra_0.12.3-1_amd64.deb
+        B rm xpra_0.14.35-1_amd64.deb
+        echo
+        echo '[ NOTE: If you experienced issues installing xpra via the 2 methods above, then you may have an old machine. ]'
+        echo '[ If this is the case, then complete the URL below, download the proper .deb file, and run the gdebi-gtk command (not dpkg) to install the .deb file & dependencies. ]'
         echo 'http://xpra.org/dists/USERDIST/main/USERARCH'
         echo '$ gdebi-gtk ./xpra_SOMEVERSION_USERARCH.deb'
         echo
@@ -785,13 +792,13 @@ if [ $MENU_CHOICE -le 19 ]; then
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo 'Follow the directions below.'
         echo
-        echo 'enable security & recommended updates only'
+        echo 'enable security updates only'
         echo 'check for updates daily'
         echo 'install security updates only'
         echo 'never remind of dist upgrade'
-        echo 'enable Ubuntu repositories only, disable restricted & multiverse'  # NEED ANSWER: why disable security updates from restricted & multiverse repos?
+        echo 'enable Ubuntu (main & universe) repositories only, disable other (restricted & multiverse)'  # NEED ANSWER: why disable security updates from restricted & multiverse repos?
         echo
-        B update-manager
+        S update-manager
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
