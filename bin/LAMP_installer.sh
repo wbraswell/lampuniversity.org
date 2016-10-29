@@ -1,8 +1,9 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.056_000
+# LAMP Installer Script v0.057_000
 
-# wget https://raw.githubusercontent.com/wbraswell/lampuniversity.org/master/bin/LAMP_installer.sh
+# PRE-INSTALL: download the latest version of this file and make it executable
+# wget https://raw.githubusercontent.com/wbraswell/lampuniversity.org/master/bin/LAMP_installer.sh; chmod a+x ./LAMP_installer.sh
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -672,7 +673,7 @@ if [ $MENU_CHOICE -le 14 ]; then
         echo '[ Install xpra Multi-Session Service ]'
         echo '[ NOTE: Only use this if all your Ubuntu installations are the same major version, or if you are on the machine with the oldest version now. ]'
         S apt-get install xpra
-        echo '[ NOTE: Use this if you are in Ubuntu v16.04 Xenial now and your older machines are Ubuntu Trusty v14.04 running xpra v0.12.3
+        echo '[ NOTE: Use this if you are in Ubuntu v16.04 Xenial now and your older machines are Ubuntu Trusty v14.04 running xpra v0.12.3 ]'
         B wget http://xpra.org/dists/xenial/main/binary-amd64/xpra_0.14.35-1_amd64.deb  # XXXcompatible with xpra v0.12.3, does install on Ubuntu v16.04
         S apt-get install gdebi
         S gdebi-gtk ./xpra_0.12.3-1_amd64.deb
