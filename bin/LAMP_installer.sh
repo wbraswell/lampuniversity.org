@@ -1,6 +1,8 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.055_000
+# LAMP Installer Script v0.056_000
+
+# wget https://raw.githubusercontent.com/wbraswell/lampuniversity.org/master/bin/LAMP_installer.sh
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -265,6 +267,8 @@ if [ $MENU_CHOICE -le 0 ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
         S $EDITOR /etc/group
+        echo '[ Cloud At Cost Only, Delete Installation Template File ]'
+        S rm -f linux-ubuntu-template.sh
         echo '[ Take Note Of IP Address For Use On Existing Machine ]'
         B ifconfig
         C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
@@ -614,15 +618,15 @@ if [ $MENU_CHOICE -le 14 ]; then
         B "export DISPLAY=$LOCAL_HOSTNAME:0.0; xeyes"
         echo '[ Install & Start xpra Multi-Session Service ]'
         S apt-get install xpra
-        B 'xpra start :100 --start-child=xfce4-terminal; xeyes'
+        B 'xpra start :100 --start-child=xfce4-terminal; export DISPLAY=:100.0; xeyes'
         echo '[ Default Enable xpra Multi-Session Connection ]'
-        B 'echo "export DISPLAY=:100.0" >> ~/.bashrc'
+        B 'echo -e "\n# enable XPRA persistent X server\nexport DISPLAY=:100.0" >> ~/.bashrc'
         echo '[ Test xpra Multi-Session Connection ]'
         B '. ~/.bashrc; xeyes'
         echo '[ Optionally Stop xpra Service ]'
         B xpra stop
     elif [ $MACHINE_CHOICE -eq 1 ]; then
-        C "Please configure your local firewall to open TCP port 6000..."
+        C "Please configure your local firewall to open port 6000 for both UDP & TCP..."
         echo '[ Determine Display Manager, Either gdm OR lightdm ]'
         B 'ps aux | grep gdm'
         B 'ps aux | grep lightdm'
