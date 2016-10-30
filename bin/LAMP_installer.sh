@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.058_000
+# LAMP Installer Script v0.060_000
 
 # PRE-INSTALL: download the latest version of this file and make it executable
 # wget https://raw.githubusercontent.com/wbraswell/lampuniversity.org/master/bin/LAMP_installer.sh; chmod a+x ./LAMP_installer.sh
@@ -215,8 +215,8 @@ echo  '37. [[[ PERL SHINYCMS,  BUILD DEMO DATA & RUN TESTS ]]]'
 echo  '38. [[[ PERL SHINYCMS,  BACKUP & RESTORE DATABASE ]]]'
 echo  '39. [[[ PERL SHINYCMS,  CONFIGURE APACHE MOD_FASTCGI ]]]'
 echo  '40. [[[ PERL SHINYCMS,  CONFIGURE APACHE MOD_PERL ]]]'
-echo  '41. [[[ PERL SHINYCMS,  CREATE APACHE DIRECTORIES ]]]'
-echo  '42. [[[ PERL SHINYCMS,  CONFIGURE APACHE PERMISSIONS ]]]'
+echo  '41. [[[ PERL SHINYCMS,  CREATE    APACHE DIRECTORIES & ENABLE STATIC  PAGE ]]]'
+echo  '42. [[[ PERL SHINYCMS,  CONFIGURE APACHE PERMISSIONS & ENABLE DYNAMIC PAGES ]]]'
 echo  '43. [[[ PERL SHINYCMS,  CONFIGURE SHINY ]]]'
 echo
 
@@ -1754,7 +1754,7 @@ if [ $MENU_CHOICE -le 41 ]; then
 fi
 
 if [ $MENU_CHOICE -le 42 ]; then
-    echo  '42. [[[ PERL SHINYCMS, CONFIGURE APACHE PERMISSIONS ]]]'
+    echo  '42. [[[ PERL SHINYCMS, CONFIGURE APACHE PERMISSIONS & ENABLE DYNAMIC PAGES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         D $EDITOR 'preferred text editor' 'vi'
@@ -1774,7 +1774,10 @@ if [ $MENU_CHOICE -le 42 ]; then
         S chown -R $USERNAME:www-data /home/$USERNAME/
         S chmod -R u+rwX,o+rX,o-w /home/$USERNAME/public_html/$DOMAIN_NAME-latest
         S chmod -R g+rwX /home/$USERNAME/public_html/$DOMAIN_NAME-latest/root/static/cms-uploads/
-        S chmod -R g+rX /home/$USERNAME/
+        S chmod -R g+rX /home/$USERNAME/public_html
+        S chmod g+rX /home/$USERNAME/
+        echo "[ Ensure Only User $USERNAME Can Read Files Which May Contain Passwords ]"
+        B chmod -R go-rwx ~/.:100-fakexinerama ~/.bash_logout ~/bin ~/.config ~/.dbus ~/.gitconfig ~/LAMP_installer.sh ~/.local ~/perl5 ~/.viminfo ~/.Xauthority ~/.xsession-errors ~/.bash_history ~/.bashrc ~/.cache ~/.cpanm ~/.fakexinerama ~/.gkrellm2 ~/.lesshst ~/.mysql_history ~/.profile ~/.ssh ~/.vimrc ~/.xpra
         S service apache2 reload
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
@@ -1802,7 +1805,7 @@ if [ $MENU_CHOICE -le 43 ]; then
         echo 'Admin area -> Users -> List Users -> Change Passwords For All 3 Users (DOUBLE CHECK, SHOULD ALREADY BE DONE IN SECTION 37)'
         echo 'Admin area -> Users -> List Users -> Edit All 3 Users -> Update E-Mail, etc.'
         echo 'Admin area -> Pages -> List Form Handlers -> Edit Contact Form -> Update "E-mail To" Field'
-        echo 'Admin area -> Pages -> List Pages -> Edit Home -> Add Image "/static/cms-uploads/images/homepage_added.png" & "Lorem Ipsum Dolor" Text'
+        echo 'Admin area -> Pages -> List Pages -> Edit Home -> Add Image "/static/cms-uploads/images/homepage_added.png" Aligned Left & "Lorem Ipsum Dolor" Text'
         echo 'Admin area -> Pages -> List Templates -> Edit Homepage -> Delete "video_url" Element -> Update'
         echo
         C "Please follow the directions above..."
