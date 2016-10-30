@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.057_000
+# LAMP Installer Script v0.058_000
 
 # PRE-INSTALL: download the latest version of this file and make it executable
 # wget https://raw.githubusercontent.com/wbraswell/lampuniversity.org/master/bin/LAMP_installer.sh; chmod a+x ./LAMP_installer.sh
@@ -186,6 +186,16 @@ echo  '17. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER ]]]'
 echo  '18. [[[ UBUNTU LINUX, CONFIGURE XFCE WINDOW MANAGER ]]]'
 echo  '19. [[[ UBUNTU LINUX, ENABLE AUTOMATIC SECURITY UPDATES ]]]'
 echo
+echo  '         <<< PERL & RPERL SECTIONS >>>'
+echo  'XX. [[[ UBUNTU LINUX,   INSTALL  PERL DEPENDENCIES ]]]'
+echo  '27. [[[        LINUX,   INSTALL  PERL LOCAL::LIB  & CPANM ]]]'
+echo  '28. [[[        LINUX,   INSTALL  PERLBREW         & CPANM ]]]'
+echo  '29. [[[        LINUX,   INSTALL  PERL FROM SOURCE & CPANM ]]]'
+echo  'XX. [[[ UBUNTU LINUX,   INSTALL RPERL DEPENDENCIES ]]]'
+echo  'XX. [[[  PERL,          INSTALL RPERL, LATEST   STABLE VIA CPANM ]]]'
+echo  'XX. [[[  PERL,          INSTALL RPERL, LATEST UNSTABLE VIA GITHUB ]]]'
+echo  'XX. [[[ RPERL,          RUN COMPILER TESTS ]]]'
+echo
 echo  '         <<< SERVICE SECTIONS >>>'
 echo  '20. [[[ UBUNTU LINUX,   INSTALL NFS ]]]'
 echo  '21. [[[ UBUNTU LINUX,   INSTALL APACHE & MOD_PERL ]]]'
@@ -194,9 +204,6 @@ echo  '23. [[[ UBUNTU LINUX,   INSTALL MYSQL & PHPMYADMIN ]]]'
 echo  '24. [[[ APACHE & MYSQL, CONFIGURE PHPMYADMIN ]]]'
 echo  '25. [[[ UBUNTU LINUX,   INSTALL WEBMIN ]]]'
 echo  '26. [[[ UBUNTU LINUX,   INSTALL POSTFIX ]]]'
-echo  '27. [[[ UBUNTU LINUX,   INSTALL PERL LOCAL::LIB  & CPANM ]]]'
-echo  '28. [[[ UBUNTU LINUX,   INSTALL PERLBREW         & CPANM ]]]'
-echo  '29. [[[ UBUNTU LINUX,   INSTALL PERL FROM SOURCE & CPANM ]]]'
 echo  '30. [[[ PERL,           INSTALL     LATEST CATALYST ]]]'
 echo  '31. [[[ UBUNTU LINUX,   INSTALL NON-LATEST CATALYST ]]]'
 echo  '32. [[[ PERL,           CHECK CATALYST VERSIONS ]]]'
@@ -685,7 +692,8 @@ if [ $MENU_CHOICE -le 14 ]; then
         echo '$ gdebi-gtk ./xpra_SOMEVERSION_USERARCH.deb'
         echo
         C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine Now... Then Come Back To This Point."
-        echo '[ Test xpra Multi-Session Connection ]'
+        echo '[ Test xpra Multi-Session Connection, Try The Following Command Inside The xpra X-Terminal ]'
+        echo 'gkrellm > /dev/null 2>&1 &'
         B "xpra attach ssh:$DOMAIN_NAME:100"
     fi
     CURRENT_SECTION_COMPLETE
@@ -824,10 +832,14 @@ if [ $MENU_CHOICE -le 20 ]; then
         S $EDITOR /etc/exports
         echo '[ Start NFS Service ]'
         S service nfs-kernel-server start
-        echo '[ Test NFS Service, Part 1, Start With "hello" ]'
+        echo '[ Test NFS Service, Part 1, Create "hello" & "delete_me" ]'
         S "echo 'hello world' > /nfs_exported/hello.txt"
+        S "echo 'nonsense' > /nfs_exported/delete_me.txt"
         C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now... Then Come Back To This Point."
-        echo '[ Test NFS Service, Part 2, Check For "howdy" ]'
+        echo '[ Test NFS Service, Part 2, Check & Delete "hello" ]'
+        S cat /nfs_exported/hello.txt
+        S rm /nfs_exported/hello.txt
+        echo '[ Test NFS Service, Part 2, Check & Delete "howdy" ]'
         S cat /nfs_exported/howdy.txt
         S rm /nfs_exported/howdy.txt
     elif [ $MACHINE_CHOICE -eq 1 ]; then
@@ -843,15 +855,19 @@ if [ $MENU_CHOICE -le 20 ]; then
         echo '[ Manually Edit NFS Service Import Config File /etc/fstab ]'
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
+        # NEED UPDATE: include "noauto" option in /etc/fstab entry below?
         echo '[ Copy NFS Import Entry From The Following Line ]'
         echo "$DOMAIN_NAME:/nfs_exported /nfs_imported/$DOMAIN_NAME nfs rsize=8192,wsize=8192,timeo=14,intr"
         echo
         S $EDITOR /etc/fstab
-        echo '[ Test NFS Service, Part 1, Update "howdy" ]'
-        S "echo \"howdy y'all\" > /nfs_imported/$DOMAIN_NAME/howdy.txt"
-        echo '[ Test NFS Service, Part 2, Check "hello" ]'
+        echo '[ Test NFS Service, Part 1, Check & Update "hello" ]'
         S cat /nfs_imported/$DOMAIN_NAME/hello.txt
-        S rm /nfs_imported/$DOMAIN_NAME/hello.txt
+        S "echo \"right back atcha\" >> /nfs_imported/$DOMAIN_NAME/hello.txt"
+        echo '[ Test NFS Service, Part 2, Check & Delete "delete_me" ]'
+        S cat /nfs_imported/$DOMAIN_NAME/delete_me.txt
+        S rm /nfs_imported/$DOMAIN_NAME/delete_me.txt
+        echo '[ Test NFS Service, Part 3, Create "howdy" ]'
+        S "echo \"howdy y'all\" > /nfs_imported/$DOMAIN_NAME/howdy.txt"
     fi
     CURRENT_SECTION_COMPLETE
 fi
@@ -1039,7 +1055,8 @@ if [ $MENU_CHOICE -le 24 ]; then
         S a2ensite phpmyadmin.$DOMAIN_NAME
         S service apache2 reload
 
-        echo '[ Fix "missing mcrypt" Error ]'
+        echo '[ Fix Error, "The mcrypt extension is missing." ]'
+        echo '[ NOTE: updatedb Command May Take A Long Time ]'
         S updatedb
         S locate mcrypt.ini
         P $MCRYPT_INI "full path to the mcrypt.ini file as returned by the locate command above"
@@ -1047,7 +1064,7 @@ if [ $MENU_CHOICE -le 24 ]; then
         S locate mcrypt.so
         P $MCRYPT_SO "full path to the mcrypt.so file as returned by the locate command above"
         MCRYPT_SO=$USER_INPUT
-        echo "[ Copy Data From The Following Line, Then Paste Into mcrypt Config File $MCRYPT_INI ]"
+        echo "[ Copy Data From The Following Line, Then Paste Into mcrypt Config File $MCRYPT_INI, Replacing Existing Line ]"
         echo "extension=$MCRYPT_SO"
         echo
         S $EDITOR $MCRYPT_INI
@@ -1096,10 +1113,13 @@ if [ $MENU_CHOICE -le 26 ]; then
         echo "[ For Internet Site Config Option, Use Fully-Qualified Domain Name $DOMAIN_NAME ]"
         S apt-get install postfix
 
-        echo '[ Copy Data From The Following Line, Then Paste Into Postfix Config File /etc/postfix/main.cf ]'
+        echo '[ Copy Data From The Following Line, Then Paste Into Postfix Config File /etc/postfix/main.cf, Replacing Existing Line ]'
         echo "myhostname = $DOMAIN_NAME"
         echo
         S $EDITOR /etc/postfix/main.cf
+
+        echo '[ Update Postfix Config File /etc/postfix/main.cf, Allow For Greylisting Delivery Delay Times ]'
+        S 'echo -e "\n# only try to deliver for 2 hours, wait 6 mins between attempts due to common 5-min greylisting delay\nmaximal_queue_lifetime = 2h\nmaximal_backoff_time = 15m\nminimal_backoff_time = 6m\nqueue_run_delay = 6m" >> /etc/postfix/main.cf'  # DEV NOTE: must wrap redirects in quotes
 
         echo '[ Start Postfix Service ]'
         S service postfix restart
@@ -1116,6 +1136,8 @@ if [ $MENU_CHOICE -le 26 ]; then
         echo "QUIT"
         echo
         B telnet localhost 25
+        echo '[ Check Postfix Queue For Test Postfix Message In Previous Step, Delivery May Be Delayed Due To Greylisting ]'
+        S postqueue -p
 
         echo '[ Test Postfix Service, Incoming Mail ]'
         # NEED FIX: Incoming E-Mail Not Yet Verified
@@ -1132,7 +1154,7 @@ if [ $MENU_CHOICE -le 26 ]; then
 fi
 
 if [ $MENU_CHOICE -le 27 ]; then
-    echo '27. [[[ UBUNTU LINUX, INSTALL PERL LOCAL::LIB  & CPANM ]]]'
+    echo '27. [[[ LINUX, INSTALL PERL LOCAL::LIB  & CPANM ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo '[ You SHOULD Use This Instead Of Perlbrew Or Perl From Source In Sections 28 & 29, Unless You Have No Choice ]'
@@ -1155,7 +1177,7 @@ if [ $MENU_CHOICE -le 27 ]; then
 fi
 
 if [ $MENU_CHOICE -le 28 ]; then
-    echo '28. [[[ UBUNTU LINUX, INSTALL PERLBREW & CPANM ]]]'
+    echo '28. [[[ LINUX, INSTALL PERLBREW & CPANM ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo '[ You SHOULD NOT Use This Instead Of local::lib In Section 27, Unless You Have No Choice ]'
@@ -1196,7 +1218,7 @@ if [ $MENU_CHOICE -le 28 ]; then
 fi
 
 if [ $MENU_CHOICE -le 29 ]; then
-    echo '29. [[[ UBUNTU LINUX, INSTALL PERL FROM SOURCE & CPANM ]]]'
+    echo '29. [[[ LINUX, INSTALL PERL FROM SOURCE & CPANM ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo '[ You SHOULD NOT Use This Instead Of local::lib In Section 27, Unless You Have No Choice ]'
@@ -1221,6 +1243,10 @@ if [ $MENU_CHOICE -le 30 ]; then
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo '[ WARNING: Do NOT Mix With Non-Latest Catalyst Via apt In Section 31! ]'
         C 'Please read the warning above.  Seriously.'
+        echo '[ Work Around Missing Dependency: Task::Catalyst -> Catalyst::Devel -> MooseX::Daemonize -> Devel::AssertOS -> Devel::CheckOS -> File::Find::Rule ]'
+        # DEV NOTE: remove when bug is fixed    https://github.com/DrHyde/perl-modules-Devel-CheckOS/issues/16
+        B cpanm File::Find::Rule
+        echo '[ NOTE: Installing Latest Catalyst Via CPAN May Take Over An Hour To Complete ]'
         B cpanm Task::Catalyst Catalyst::Devel
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
@@ -1248,10 +1274,11 @@ if [ $MENU_CHOICE -le 32 ]; then
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         B dpkg -p libcatalyst-perl
+        # NEED ANSWER: why do we have the following step for creating missing @INC directories???
         echo
         echo '[ Please Look For All Directories In @INC, In The Output Of The perl -V Command Below ]'
         echo '[ Then, For Each Directory In @INC, Perform The Following ]'
-        echo '$ ls -l /PATH/TO/DIRECTORY'
+        echo '$ ls -ld /PATH/TO/DIRECTORY'
         echo
         echo '[ Finally, For Each Directory In @INC Which Does Not Already Exist, Perform The Following ]'
         echo '$ sudo mkdir -p /PATH/TO/DIRECTORY'
@@ -1268,6 +1295,7 @@ if [ $MENU_CHOICE -le 32 ]; then
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
+    CURRENT_SECTION_COMPLETE
 fi
 
 # SECTION 33 VARIABLES
@@ -1327,6 +1355,10 @@ if [ $MENU_CHOICE -le 34 ]; then
         S apt-get update
         S apt-get -f install
         S apt-get install libapache2-mod-fastcgi
+        echo '[ Now Comment Or Delete The Same 2 Lines You Just Added To The Apt Config File /etc/apt/sources.list ]'
+        S $EDITOR /etc/apt/sources.list
+        S apt-get update
+        S apt-get -f install
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
@@ -1351,7 +1383,7 @@ if [ $MENU_CHOICE -le 35 ]; then
         B cpanm DBD::mysql Devel::Declare::MethodInstaller::Simple Text::CSV_XS inc::Module::Install Module::Install::Catalyst Test::Pod Test::Pod::Coverage
         B mkdir -p ~/public_html
         echo '[ Install MyShinyTemplate (ShinyCMS Fork) Via Github ]'
-        B git clone git@github.com:wbraswell/myshinytemplate.com.git ~/public_html/$DOMAIN_NAME-latest
+        B "wget https://github.com/wbraswell/myshinytemplate.com/archive/master.zip;  unzip master.zip;  mv myshinytemplate.com-master ~/public_html/$DOMAIN_NAME-latest; rm master.zip"
         B "cd ~/public_html/$DOMAIN_NAME-latest; perl Makefile.PL; cpanm --installdeps .; cpanm --installdeps ."
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
@@ -1366,6 +1398,7 @@ MYSQL_USERNAME='__EMPTY__'
 MYSQL_USERNAME_DEFAULT='__EMPTY__'
 MYSQL_PASSWORD='__EMPTY__'
 SITE_NAME='__EMPTY__'
+SITE_NAME_DEFAULT='__EMPTY__'
 ADMIN_FIRST_NAME='__EMPTY__'
 ADMIN_LAST_NAME='__EMPTY__'
 
@@ -1381,7 +1414,9 @@ if [ $MENU_CHOICE -le 36 ]; then
         DOMAIN_NAME_NO_USER=$DOMAIN_NAME
         DOMAIN_NAME_NO_USER+='__no_user'
         MYSQL_USERNAME_DEFAULT=`expr match "$DOMAIN_NAME" '\([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789]*\)'`  # extract lowest-level hostname
-        SITE_NAME=$MYSQL_USERNAME_DEFAULT
+        SITE_NAME_DEFAULT=$MYSQL_USERNAME_DEFAULT
+        D $SITE_NAME "optional 'CamelCase' version of hostname $SITE_NAME_DEFAULT to be used as descriptive site name, NO SPACES, MAKE IT MATCH YOUR HOSTNAME" $SITE_NAME_DEFAULT
+        SITE_NAME=$USER_INPUT
         MYSQL_USERNAME_DEFAULT+='_user'
         D $MYSQL_USERNAME "new mysql username to be created (different than new machine's OS username)" $MYSQL_USERNAME_DEFAULT
         MYSQL_USERNAME=$USER_INPUT
@@ -1405,23 +1440,29 @@ if [ $MENU_CHOICE -le 36 ]; then
         echo '[ Create ShinyCMS Config File ]'
         CD ~/public_html/$DOMAIN_NAME-latest
         B 'rm modified/shinycms.conf; mv shinycms.conf.redacted modified/shinycms.conf; ln -s modified/shinycms.conf ./shinycms.conf'
-        B sed -ri -e "s/Will\ Braswell/$ADMIN_FIRST_NAME\ $ADMIN_LAST_NAME/g" shinycms.conf
-        B sed -ri -e "s/william\.braswell\@autoparallel\.com/$ADMIN_EMAIL/g" shinycms.conf
+        B sed -ri -e "s/NEED_USERNAME/$USERNAME/g" shinycms.conf
+        B sed -ri -e "s/NEED_DOMAIN_NAME/$DOMAIN_NAME/g" shinycms.conf
+        B sed -ri -e "s/NEED_ADMIN_FIRST_NAME/$ADMIN_FIRST_NAME/g" shinycms.conf
+        B sed -ri -e "s/NEED_ADMIN_LAST_NAME/$ADMIN_LAST_NAME/g" shinycms.conf
+        B sed -ri -e "s/NEED_ADMIN_EMAIL/$ADMIN_EMAIL/g" shinycms.conf
         B sed -ri -e "s/MyShinyTemplate/$SITE_NAME/g" shinycms.conf
-        B sed -ri -e "s/myshinytemplate\.com/$DOMAIN_NAME/g" shinycms.conf
-        B sed -ri -e "s/wbraswell/$USERNAME/g" shinycms.conf
         B sed -ri -e "s/myshinytemplate_com/$DOMAIN_NAME_UNDERSCORES/g" shinycms.conf
+        B sed -ri -e "s/myshinytemplate\.com/$DOMAIN_NAME/g" shinycms.conf
         B sed -ri -e "s/template_user/$MYSQL_USERNAME/g" shinycms.conf
         B sed -ri -e "s/REDACTED/$MYSQL_PASSWORD/g" shinycms.conf
 
         echo '[ Create ShinyCMS Appendant Files ]'
         B make clean
         MYSHINY_FILES=$(grep -Elr --binary-files=without-match myshiny ./*)
-        B sed -ri -e "s/myshinytemplate\.com/$DOMAIN_NAME/g" $MYSHINY_FILES
+        B sed -ri -e "s/NEED_USERNAME/$USERNAME/g" $MYSHINY_FILES
+        B sed -ri -e "s/NEED_DOMAIN_NAME/$DOMAIN_NAME/g" $MYSHINY_FILES
+        B sed -ri -e "s/NEED_ADMIN_FIRST_NAME/$ADMIN_FIRST_NAME/g" $MYSHINY_FILES
+        B sed -ri -e "s/NEED_ADMIN_LAST_NAME/$ADMIN_LAST_NAME/g" $MYSHINY_FILES
+        B sed -ri -e "s/NEED_ADMIN_EMAIL/$ADMIN_EMAIL/g" $MYSHINY_FILES
+        B sed -ri -e "s/MyShinyTemplate/$SITE_NAME/g" $MYSHINY_FILES
         B sed -ri -e "s/myshinytemplate_com/$DOMAIN_NAME_UNDERSCORES/g" $MYSHINY_FILES
-        B sed -ri -e "s/MyShinyTemplate\.com/$DOMAIN_NAME/g" $MYSHINY_FILES
+        B sed -ri -e "s/myshinytemplate\.com/$DOMAIN_NAME/g" $MYSHINY_FILES
         B sed -ri -e "s/template_user/$MYSQL_USERNAME/g" $MYSHINY_FILES
-        B sed -ri -e "s/wbraswell/$USERNAME/g" $MYSHINY_FILES
         
         CD ~/public_html/$DOMAIN_NAME-latest/modified
         B mv fastcgi_start__myshinytemplate.com.sh fastcgi_start__$DOMAIN_NAME.sh
@@ -1434,6 +1475,8 @@ if [ $MENU_CHOICE -le 36 ]; then
         B cp mysqldump__$DOMAIN_NAME_NO_USER.sh.redacted ~/bin/mysqldump__$DOMAIN_NAME_NO_USER.sh
         B sed -ri -e "s/REDACTED/'$MYSQL_PASSWORD'/g" ~/bin/mysqldump__$DOMAIN_NAME_NO_USER.sh  # ADD PASSWORD, USE SINGLE QUOTES IN CASE OF SPECIAL CHARACTERS
         B ln -s ~/public_html/$DOMAIN_NAME-latest/modified/*.sh ~/bin
+        echo "[ Ensure Only User $USERNAME Can Read Files Which May Contain Passwords ]"
+        B chmod -R go-rwx ~/bin
 
         echo '[ Ensure No ShinyCMS Appendant File Templates Remain ]'
         CD ~/public_html/$DOMAIN_NAME-latest
@@ -1489,7 +1532,6 @@ if [ $MENU_CHOICE -le 38 ]; then
         DOMAIN_NAME_UNDERSCORES_NO_USER=$DOMAIN_NAME_UNDERSCORES
         DOMAIN_NAME_UNDERSCORES_NO_USER+='__no_user'
         MYSQL_USERNAME_DEFAULT=`expr match "$DOMAIN_NAME" '\([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789]*\)'`  # extract lowest-level hostname
-        SITE_NAME=$MYSQL_USERNAME_DEFAULT
         MYSQL_USERNAME_DEFAULT+='_user'
         D $MYSQL_USERNAME "mysql username (different than new machine's OS username)" $MYSQL_USERNAME_DEFAULT
         MYSQL_USERNAME=$USER_INPUT
@@ -1533,6 +1575,8 @@ if [ $MENU_CHOICE -le 39 ]; then
         echo '[ You SHOULD Use This Section Instead Of Apache mod_perl In Section 40, Unless You Have No Choice ]'
         echo '[ WARNING: Do NOT Mix With Apache mod_perl In Section 40! ]'
         C 'Please read the warning above.  Seriously.'
+        D $EDITOR 'preferred text editor' 'vi'
+        EDITOR=$USER_INPUT
         P $USERNAME "new machine's username"
         USERNAME=$USER_INPUT
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
@@ -1567,7 +1611,7 @@ APACHE_CONFIG_OUTPUT=$(cat <<END_HEREDOC
         Order allow,deny
         Allow from all
     </Location>
-    # Google Webmaster Tools, Robots Testing Tool 
+    # ENABLE FOLLOWING LINE If Using Google Webmaster Tools, Robots Testing Tool; Assumes Github Repo In /home/$USERNAME/public_html/$DOMAIN_NAME-latest
 #    Alias    /googleSOMELONGNUMBER.html    /home/$USERNAME/public_html/$DOMAIN_NAME-latest/root/googleSOMELONGNUMBER.html
     # Allow Apache to serve static content.
     Alias       /static     /home/$USERNAME/public_html/$DOMAIN_NAME-latest/root/static
@@ -1583,11 +1627,12 @@ APACHE_CONFIG_OUTPUT=$(cat <<END_HEREDOC
 END_HEREDOC
 )
 
-        echo "[ The Following Content Will Be Saved In The Apache Config File /etc/apache2/sites-available/$DOMAIN_NAME.conf ]"
+        echo "[ Copy Data From The Following Lines, Then Paste Into The Apache Site Config File /etc/apache2/sites-available/$DOMAIN_NAME.conf, Replacing Existing Content ]"
         echo
         echo "$APACHE_CONFIG_OUTPUT"
         echo
-        S "echo '$APACHE_CONFIG_OUTPUT' > /etc/apache2/sites-available/$DOMAIN_NAME.conf"
+#        S "echo '$APACHE_CONFIG_OUTPUT' > /etc/apache2/sites-available/$DOMAIN_NAME.conf"  # DEV NOTE: content too long to fit inside a variable?
+        S $EDITOR /etc/apache2/sites-available/$DOMAIN_NAME.conf
         S "echo \"<b>ERROR 502:</b> FastCGI Process Not Running, Please Inform Site Administrator <a href='mailto:$ADMIN_EMAIL'>$ADMIN_FIRST_NAME $ADMIN_LAST_NAME</a>\" > /home/$USERNAME/public_html/$DOMAIN_NAME-latest/modified/offline.html"
 
         echo '[ WARNING: Choose ONLY ONE Of The Following Options To Start FastCGI Service! ]'
@@ -1632,6 +1677,8 @@ if [ $MENU_CHOICE -le 40 ]; then
         echo '[ You Should NOT Use This Section Instead Of Apache mod_fastcgi In Section 39, Unless You Have No Choice ]'
         echo '[ WARNING: Do NOT Mix With Apache mod_fastcgi In Section 39! ]'
         C 'Please read the warning above.  Seriously.'
+        D $EDITOR 'preferred text editor' 'vi'
+        EDITOR=$USER_INPUT
         P $USERNAME "new machine's username"
         USERNAME=$USER_INPUT
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
@@ -1655,7 +1702,7 @@ APACHE_CONFIG_OUTPUT=$(cat <<END_HEREDOC
     <Directory />  # required for Apache v2.4 in Ubuntu v14.04.pre
         Require all granted
     </Directory>
-    # Google Webmaster Tools, Robots Testing Tool 
+    # ENABLE FOLLOWING LINE If Using Google Webmaster Tools, Robots Testing Tool; Assumes Github Repo In /home/$USERNAME/public_html/$DOMAIN_NAME-latest
 #    Alias    /googleSOMELONGNUMBER.html    /home/$USERNAME/public_html/$DOMAIN_NAME-latest/root/googleSOMELONGNUMBER.html
     ErrorLog /srv/www/$DOMAIN_NAME/logs/error.log
     CustomLog /srv/www/$DOMAIN_NAME/logs/access.log combined
@@ -1677,11 +1724,12 @@ APACHE_CONFIG_OUTPUT=$(cat <<END_HEREDOC
 END_HEREDOC
 )
 
-        echo "[ The Following Content Will Be Saved In The Apache Config File /etc/apache2/sites-available/$DOMAIN_NAME.conf ]"
+        echo "[ Copy Data From The Following Lines, Then Paste Into The Apache Site Config File /etc/apache2/sites-available/$DOMAIN_NAME.conf, Replacing Existing Content ]"
         echo
         echo "$APACHE_CONFIG_OUTPUT"
         echo
-        S "echo '$APACHE_CONFIG_OUTPUT' > /etc/apache2/sites-available/$DOMAIN_NAME.conf"
+#        S "echo '$APACHE_CONFIG_OUTPUT' > /etc/apache2/sites-available/$DOMAIN_NAME.conf"  # DEV NOTE: content too long to fit inside a variable?
+        S $EDITOR /etc/apache2/sites-available/$DOMAIN_NAME.conf
         S "echo \"<b>ERROR 502:</b> mod_perl Process Not Running, Please Inform Site Administrator <a href='mailto:$ADMIN_EMAIL'>$ADMIN_FIRST_NAME $ADMIN_LAST_NAME</a>\" > /home/$USERNAME/public_html/$DOMAIN_NAME-latest/modified/offline.html"
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
@@ -1690,13 +1738,6 @@ END_HEREDOC
 fi
 
 if [ $MENU_CHOICE -le 41 ]; then
-    echo  '41. [[[ PERL SHINYCMS,  CREATE APACHE DIRECTORIES ]]]'
-    echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo "Nothing To Do On Current Machine!"
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
-        C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
-    elif [ $MACHINE_CHOICE -eq 1 ]
     echo  '41. [[[ PERL SHINYCMS, CREATE APACHE DIRECTORIES & ENABLE STATIC PAGE ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then

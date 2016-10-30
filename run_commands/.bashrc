@@ -1,4 +1,4 @@
-# Last Updated 20160816 2016.229
+# Last Updated 20161029 2016.303
 
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
@@ -8,32 +8,42 @@
 
 # Source global definitions
 if [ -f /etc/bashrc ]; then
-    . /etc/bashrc
+    source /etc/bashrc
 fi
 
-# local::lib, do NOT mix with perlbrew below
+# [[[ BEGIN CONTENT, LAMP UNIVERSITY & RPERL FAMILY OF SOFTWARE ]]]
+# [[[ BEGIN CONTENT, LAMP UNIVERSITY & RPERL FAMILY OF SOFTWARE ]]]
+# [[[ BEGIN CONTENT, LAMP UNIVERSITY & RPERL FAMILY OF SOFTWARE ]]]
+
+# local::lib, do NOT mix with Perlbrew below
 if [ -d $HOME/perl5/lib/perl5 ]; then 
     eval $(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)
 fi
 
-# perlbrew, do NOT mix with local::lib above
+# Perlbrew, do NOT mix with local::lib above
 #source ~/perl5/perlbrew/etc/bashrc
 
 # current directory code
 export PERL5LIB=blib/lib:lib:$PERL5LIB
 export PATH=.:script:bin:$HOME/script:$HOME/bin:$PATH
 
-# rperl github latest code
-export PERL5LIB=$HOME/github_repos/rperl-latest/lib:$PERL5LIB
-export PATH=$HOME/github_repos/rperl-latest/script:$PATH
+# RPerl GitHub latest code
+if [ -d $HOME/github_repos/rperl-latest ]; then 
+    export PERL5LIB=$HOME/github_repos/rperl-latest/lib:$PERL5LIB
+    export PATH=$HOME/github_repos/rperl-latest/script:$PATH
+fi
 
-# mathperl github latest code
-export PERL5LIB=$HOME/github_repos/mathperl-latest/lib:$PERL5LIB
-export PATH=$HOME/github_repos/mathperl-latest/script:$PATH
+# MathPerl GitHub latest code
+if [ -d $HOME/github_repos/mathperl-latest ]; then 
+    export PERL5LIB=$HOME/github_repos/mathperl-latest/lib:$PERL5LIB
+    export PATH=$HOME/github_repos/mathperl-latest/script:$PATH
+if
 
-# physicsperl github latest code
-export PERL5LIB=$HOME/github_repos/physicsperl-latest/lib:$PERL5LIB
-export PATH=$HOME/github_repos/physicsperl-latest/script:$PATH
+# PhysicsPerl GitHub latest code
+if [ -d $HOME/github_repos/physicsperl-latest ]; then 
+    export PERL5LIB=$HOME/github_repos/physicsperl-latest/lib:$PERL5LIB
+    export PATH=$HOME/github_repos/physicsperl-latest/script:$PATH
+fi
 
 # perlall
 if [ -f ~/.perlall ]; then
@@ -42,6 +52,10 @@ fi
 
 # Vi; for opening files in new tab of existing gvim, couldn't figure how to put this in .vimrc
 alias gvim="gvim --remote-tab-silent"
+
+# [[[ END CONTENT, LAMP UNIVERSITY & RPERL FAMILY OF SOFTWARE ]]]
+# [[[ END CONTENT, LAMP UNIVERSITY & RPERL FAMILY OF SOFTWARE ]]]
+# [[[ END CONTENT, LAMP UNIVERSITY & RPERL FAMILY OF SOFTWARE ]]]
 
 # END NON-INTERACTIVE CONTENT
 
@@ -158,7 +172,7 @@ fi
 
 # INTERACTIVE CUSTOM USER CONTENT BELOW
 
-# SSH Keys; for Github, etc.
+# SSH Keys; for GitHub, etc.
 if [ -f /usr/bin/keychain ] && [ -f $HOME/.ssh/id_rsa ]; then
     /usr/bin/keychain $HOME/.ssh/id_rsa;  source $HOME/.keychain/$HOSTNAME-sh
 fi
