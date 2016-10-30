@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.060_000
+# LAMP Installer Script v0.061_000
 
 # PRE-INSTALL: download the latest version of this file and make it executable
 # wget https://raw.githubusercontent.com/wbraswell/lampuniversity.org/master/bin/LAMP_installer.sh; chmod a+x ./LAMP_installer.sh
@@ -187,37 +187,38 @@ echo  '18. [[[ UBUNTU LINUX, CONFIGURE XFCE WINDOW MANAGER ]]]'
 echo  '19. [[[ UBUNTU LINUX, ENABLE AUTOMATIC SECURITY UPDATES ]]]'
 echo
 echo  '         <<< PERL & RPERL SECTIONS >>>'
-echo  'XX. [[[ UBUNTU LINUX,   INSTALL  PERL DEPENDENCIES ]]]'
-echo  '27. [[[        LINUX,   INSTALL  PERL LOCAL::LIB  & CPANM ]]]'
-echo  '28. [[[        LINUX,   INSTALL  PERLBREW         & CPANM ]]]'
-echo  '29. [[[        LINUX,   INSTALL  PERL FROM SOURCE & CPANM ]]]'
-echo  'XX. [[[ UBUNTU LINUX,   INSTALL RPERL DEPENDENCIES ]]]'
-echo  'XX. [[[  PERL,          INSTALL RPERL, LATEST   STABLE VIA CPANM ]]]'
-echo  'XX. [[[  PERL,          INSTALL RPERL, LATEST UNSTABLE VIA GITHUB ]]]'
-echo  'XX. [[[ RPERL,          RUN COMPILER TESTS ]]]'
+echo  '20. [[[ UBUNTU LINUX,   INSTALL SYSTEM-WIDE                    CPANM ]]]'
+echo  '21. [[[ UBUNTU LINUX,   INSTALL SINGLE-USER PERL LOCAL::LIB  & CPANM ]]]'
+echo  '22. [[[ UBUNTU LINUX,   INSTALL SINGLE-USER PERLBREW         & CPANM ]]]'
+echo  '23. [[[ UBUNTU LINUX,   INSTALL SYSTEM-WIDE PERL FROM SOURCE & CPANM ]]]'
+echo  '24. [[[ UBUNTU LINUX,   INSTALL RPERL DEPENDENCIES ]]]'
+echo  '25. [[[  PERL,          INSTALL RPERL, LATEST   STABLE VIA CPANM ]]]'
+echo  '26. [[[  PERL,          INSTALL RPERL, LATEST UNSTABLE VIA GITHUB ]]]'
+echo  '27. [[[ RPERL,          RUN COMPILER TESTS ]]]'
+echo  '28. [[[ RPERL,          INSTALL RPERL FAMILY & RUN DEMOS ]]]'
 echo
 echo  '         <<< SERVICE SECTIONS >>>'
-echo  '20. [[[ UBUNTU LINUX,   INSTALL NFS ]]]'
-echo  '21. [[[ UBUNTU LINUX,   INSTALL APACHE & MOD_PERL ]]]'
-echo  '22. [[[ APACHE,         CONFIGURE DOMAIN(S) ]]]'
-echo  '23. [[[ UBUNTU LINUX,   INSTALL MYSQL & PHPMYADMIN ]]]'
-echo  '24. [[[ APACHE & MYSQL, CONFIGURE PHPMYADMIN ]]]'
-echo  '25. [[[ UBUNTU LINUX,   INSTALL WEBMIN ]]]'
-echo  '26. [[[ UBUNTU LINUX,   INSTALL POSTFIX ]]]'
-echo  '30. [[[ PERL,           INSTALL     LATEST CATALYST ]]]'
-echo  '31. [[[ UBUNTU LINUX,   INSTALL NON-LATEST CATALYST ]]]'
-echo  '32. [[[ PERL,           CHECK CATALYST VERSIONS ]]]'
-echo  '33. [[[ PERL,           INSTALL RAPIDAPP ]]]'
-echo  '34. [[[ UBUNTU LINUX,   INSTALL SHINYCMS DEPENDENCIES ]]]'
-echo  '35. [[[ PERL SHINYCMS,  INSTALL SHINYCMS DEPENDENCIES & SHINYCMS ]]]'
-echo  '36. [[[ PERL SHINYCMS,  CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES ]]]'
-echo  '37. [[[ PERL SHINYCMS,  BUILD DEMO DATA & RUN TESTS ]]]'
-echo  '38. [[[ PERL SHINYCMS,  BACKUP & RESTORE DATABASE ]]]'
-echo  '39. [[[ PERL SHINYCMS,  CONFIGURE APACHE MOD_FASTCGI ]]]'
-echo  '40. [[[ PERL SHINYCMS,  CONFIGURE APACHE MOD_PERL ]]]'
-echo  '41. [[[ PERL SHINYCMS,  CREATE    APACHE DIRECTORIES & ENABLE STATIC  PAGE ]]]'
-echo  '42. [[[ PERL SHINYCMS,  CONFIGURE APACHE PERMISSIONS & ENABLE DYNAMIC PAGES ]]]'
-echo  '43. [[[ PERL SHINYCMS,  CONFIGURE SHINY ]]]'
+echo  '29. [[[ UBUNTU LINUX,   INSTALL NFS ]]]'
+echo  '30. [[[ UBUNTU LINUX,   INSTALL APACHE & MOD_PERL ]]]'
+echo  '31. [[[ APACHE,         CONFIGURE DOMAIN(S) ]]]'
+echo  '32. [[[ UBUNTU LINUX,   INSTALL MYSQL & PHPMYADMIN ]]]'
+echo  '33. [[[ APACHE & MYSQL, CONFIGURE PHPMYADMIN ]]]'
+echo  '34. [[[ UBUNTU LINUX,   INSTALL WEBMIN ]]]'
+echo  '35. [[[ UBUNTU LINUX,   INSTALL POSTFIX ]]]'
+echo  '36. [[[ PERL,           INSTALL     LATEST CATALYST ]]]'
+echo  '37. [[[ UBUNTU LINUX,   INSTALL NON-LATEST CATALYST ]]]'
+echo  '38. [[[ PERL,           CHECK CATALYST VERSIONS ]]]'
+echo  '39. [[[ PERL,           INSTALL RAPIDAPP ]]]'
+echo  '40. [[[ UBUNTU LINUX,   INSTALL SHINYCMS DEPENDENCIES ]]]'
+echo  '41. [[[ PERL SHINYCMS,  INSTALL SHINYCMS DEPENDENCIES & SHINYCMS ]]]'
+echo  '42. [[[ PERL SHINYCMS,  CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES ]]]'
+echo  '43. [[[ PERL SHINYCMS,  BUILD DEMO DATA & RUN TESTS ]]]'
+echo  '44. [[[ PERL SHINYCMS,  BACKUP & RESTORE DATABASE ]]]'
+echo  '45. [[[ PERL SHINYCMS,  CONFIGURE APACHE MOD_FASTCGI ]]]'
+echo  '46. [[[ PERL SHINYCMS,  CONFIGURE APACHE MOD_PERL ]]]'
+echo  '47. [[[ PERL SHINYCMS,  CREATE    APACHE DIRECTORIES & ENABLE STATIC  PAGE ]]]'
+echo  '48. [[[ PERL SHINYCMS,  CONFIGURE APACHE PERMISSIONS & ENABLE DYNAMIC PAGES ]]]'
+echo  '49. [[[ PERL SHINYCMS,  CONFIGURE SHINY ]]]'
 echo
 
 while true; do
@@ -814,8 +815,182 @@ if [ $MENU_CHOICE -le 19 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
+
+
+
+# START HERE: fill in content for 20, 25, 26, 27, 28
+# START HERE: fill in content for 20, 25, 26, 27, 28
+# START HERE: fill in content for 20, 25, 26, 27, 28
+
 if [ $MENU_CHOICE -le 20 ]; then
-    echo '20. [[[ UBUNTU LINUX, INSTALL NFS ]]]'
+    echo '20. [[[ UBUNTU LINUX, INSTALL SYSTEM-WIDE CPANM ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+
+        echo '[ NEED ADD COMMANDS! ]'
+        S apt-get install cpanminus
+
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+
+
+
+
+
+
+
+if [ $MENU_CHOICE -le 21 ]; then
+    echo '21. [[[ UBUNTU LINUX, INSTALL SINGLE-USER PERL LOCAL::LIB & CPANM ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo '[ You SHOULD Use This Instead Of Perlbrew Or Perl From Source In Sections 22 & 23, Unless You Have No Choice ]'
+        echo '[ WARNING: Do NOT Mix With Perlbrew In Section 22! ]'
+        echo '[ WARNING: Do NOT Mix With Perl From Source In Section 23! ]'
+        C 'Please read the warnings above.  Seriously.'
+        echo '[ Copied From RPerl Installer ]'
+        S apt-get install curl
+        B 'curl -L cpanmin.us | perl - -l $HOME/perl5 App::cpanminus local::lib'
+        # echo 'eval $(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)' >> ~/.bashrc  # DEV NOTE: pre-munged command for comparison
+        B echo "'" eval '$(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)' "'" '>> ~/.bashrc'
+        C 'Please Log Out And Log Back In, Which Should Reset The $PERL Environmental Variables, Then Come Back To This Point.'
+        echo '[ Ensure The Following 4 Environmental Variables Now Include ~/perl5: PERL_MM_OPT, PERL_MB_OPT, PERL5LIB, PATH ]'
+        #B source ~/.bashrc  # DEV NOTE: force logout and log back in
+        B 'set | grep perl5'
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 22 ]; then
+    echo '22. [[[ UBUNTU LINUX, INSTALL SINGLE-USER PERLBREW & CPANM ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo '[ You SHOULD NOT Use This Instead Of local::lib In Section 21, Unless You Have No Choice ]'
+        echo '[ WARNING: Do NOT Mix With local::lib In Section 21! ]'
+        echo '[ WARNING: Do NOT Mix With Perl From Source In Section 23! ]'
+        C 'Please read the warnings above.  Seriously.'
+        echo '[ Copied From RPerl Installer ]'
+
+        echo '[ You Should Use apt-get Instead Of curl Below, Unless You Are Not In Ubuntu Or Have No Choice ]'
+        echo '[ WARNING: Use Only ONE Of The Following Two Commands, EITHER apt-get OR curl, But NOT Both! ]'
+        C 'Please read the warning above.  Seriously.'
+        S sudo apt-get install perlbrew
+        # OR
+        S 'curl -L http://install.perlbrew.pl | bash'
+
+        echo '[ Configure Perlbrew ]'
+        B perlbrew init
+        echo '[ In Texas, The Following Perlbrew Mirror Is Recommended: Arlington, TX #222 http://mirror.uta.edu/CPAN/ ]'
+        B perlbrew mirror
+        B 'echo "source ~/perl5/perlbrew/etc/bashrc" >> ~/.bashrc'
+        C 'Please Log Out And Log Back In, Which Should Reset The $PERL Environmental Variables, Then Come Back To This Point.'
+        #B source ~/.bashrc  # DEV NOTE: force logout and log back in
+        echo '[ Ensure The Following 3 Environmental Variables Now Include ~/perl5: PERLBREW_MANPATH, PERLBREW_PATH, PERLBREW_ROOT ]'
+        B 'set | grep perl5'
+        
+        echo '[ Build Perlbrew Perl v5.24.0 ]'
+        B perlbrew install perl-5.24.0
+        echo '[ Temporaily Enable Perlbrew Perl v5.24.0 ]'
+        B perlbrew use perl-5.24.0
+        echo '[ Permanently Enable Perlbrew Perl v5.24.0 ]'
+        B perlbrew switch perl-5.24.0
+        echo '[ Install Perlbrew CPANM ]'
+        B perlbrew install-cpanm
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 23 ]; then
+    echo '23. [[[ UBUNTU LINUX, INSTALL SYSTEM-WIDE PERL FROM SOURCE & CPANM ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo '[ You SHOULD NOT Use This Instead Of local::lib In Section 21, Unless You Have No Choice ]'
+        echo '[ WARNING: Do NOT Mix With local::lib In Section 21! ]'
+        echo '[ WARNING: Do NOT Mix With Perlbrew In Section 22! ]'
+        C 'Please read the warnings above.  Seriously.'
+        echo '[ Copied From RPerl Installer ]'
+        B wget http://www.cpan.org/src/5.0/perl-5.24.0.tar.bz2
+        B bunzip2 perl-5.24.0.tar.bz2
+        B 'cd perl-5.24.0; perl Makefile.PL; make; make test'
+        S 'cd perl-5.24.0; make install'
+        S perl -MCPAN -e 'install App::cpanminus'
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+
+
+
+if [ $MENU_CHOICE -le 25 ]; then
+    echo '25. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPANM ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+
+        echo '[ NEED ADD COMMANDS! ]'
+
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 26 ]; then
+    echo '26. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+
+        echo '[ NEED ADD COMMANDS! ]'
+
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 27 ]; then
+    echo '27. [[[ RPERL, RUN COMPILER TESTS ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+
+        echo '[ NEED ADD COMMANDS! ]'
+
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+if [ $MENU_CHOICE -le 28 ]; then
+    echo '28. [[[ RPERL, INSTALL RPERL FAMILY & RUN DEMOS ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+
+        echo '[ NEED ADD COMMANDS! ]'
+
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+
+
+
+
+
+
+
+if [ $MENU_CHOICE -le 29 ]; then
+    echo '29. [[[ UBUNTU LINUX, INSTALL NFS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo '[ Install NFS Service ]'
@@ -872,8 +1047,8 @@ if [ $MENU_CHOICE -le 20 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 21 ]; then
-    echo '21. [[[ UBUNTU LINUX, INSTALL APACHE & MOD_PERL ]]]'
+if [ $MENU_CHOICE -le 30 ]; then
+    echo '30. [[[ UBUNTU LINUX, INSTALL APACHE & MOD_PERL ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         S apt-get install apache2 libapache2-mod-perl2
@@ -915,11 +1090,11 @@ if [ $MENU_CHOICE -le 21 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-# SECTION 22 VARIABLES
+# SECTION 31 VARIABLES
 ADMIN_EMAIL='__EMPTY__'
 
-if [ $MENU_CHOICE -le 22 ]; then
-    echo '22. [[[ APACHE, CONFIGURE DOMAIN(S) ]]]'
+if [ $MENU_CHOICE -le 31 ]; then
+    echo '31. [[[ APACHE, CONFIGURE DOMAIN(S) ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         D $EDITOR 'preferred text editor' 'vi'
@@ -992,8 +1167,8 @@ if [ $MENU_CHOICE -le 22 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 23 ]; then
-    echo '23. [[[ UBUNTU LINUX, INSTALL MYSQL & PHPMYADMIN ]]]'
+if [ $MENU_CHOICE -le 32 ]; then
+    echo '32. [[[ UBUNTU LINUX, INSTALL MYSQL & PHPMYADMIN ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo '[ Do NOT configure Apache automatically ]'
@@ -1006,12 +1181,12 @@ if [ $MENU_CHOICE -le 23 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-# SECTION 24 VARIABLES
+# SECTION 33 VARIABLES
 MCRYPT_INI='__EMPTY__'
 MCRYPT_SO='__EMPTY__'
 
-if [ $MENU_CHOICE -le 24 ]; then
-    echo '24. [[[ APACHE & MYSQL, CONFIGURE PHPMYADMIN ]]]'
+if [ $MENU_CHOICE -le 33 ]; then
+    echo '33. [[[ APACHE & MYSQL, CONFIGURE PHPMYADMIN ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         D $EDITOR 'preferred text editor' 'vi'
@@ -1076,8 +1251,8 @@ if [ $MENU_CHOICE -le 24 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 25 ]; then
-    echo '25. [[[ UBUNTU LINUX, INSTALL WEBMIN ]]]'
+if [ $MENU_CHOICE -le 34 ]; then
+    echo '34. [[[ UBUNTU LINUX, INSTALL WEBMIN ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         D $EDITOR 'preferred text editor' 'vi'
@@ -1098,8 +1273,8 @@ if [ $MENU_CHOICE -le 25 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 26 ]; then
-    echo '26. [[[ UBUNTU LINUX, INSTALL POSTFIX ]]]'
+if [ $MENU_CHOICE -le 35 ]; then
+    echo '35. [[[ UBUNTU LINUX, INSTALL POSTFIX ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         D $EDITOR 'preferred text editor' 'vi'
@@ -1153,95 +1328,17 @@ if [ $MENU_CHOICE -le 26 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 27 ]; then
-    echo '27. [[[ LINUX, INSTALL PERL LOCAL::LIB  & CPANM ]]]'
+
+
+
+
+
+
+if [ $MENU_CHOICE -le 36 ]; then
+    echo '36. [[[ PERL, INSTALL LATEST CATALYST ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo '[ You SHOULD Use This Instead Of Perlbrew Or Perl From Source In Sections 28 & 29, Unless You Have No Choice ]'
-        echo '[ WARNING: Do NOT Mix With Perlbrew In Section 28! ]'
-        echo '[ WARNING: Do NOT Mix With Perl From Source In Section 29! ]'
-        C 'Please read the warnings above.  Seriously.'
-        echo '[ Copied From RPerl Installer ]'
-        S apt-get install curl
-        B 'curl -L cpanmin.us | perl - -l $HOME/perl5 App::cpanminus local::lib'
-        # echo 'eval $(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)' >> ~/.bashrc  # DEV NOTE: pre-munged command for comparison
-        B echo "'" eval '$(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)' "'" '>> ~/.bashrc'
-        C 'Please Log Out And Log Back In, Which Should Reset The $PERL Environmental Variables, Then Come Back To This Point.'
-        echo '[ Ensure The Following 4 Environmental Variables Now Include ~/perl5: PERL_MM_OPT, PERL_MB_OPT, PERL5LIB, PATH ]'
-        #B source ~/.bashrc  # DEV NOTE: force logout and log back in
-        B 'set | grep perl5'
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
-        echo "Nothing To Do On Existing Machine!"
-    fi
-    CURRENT_SECTION_COMPLETE
-fi
-
-if [ $MENU_CHOICE -le 28 ]; then
-    echo '28. [[[ LINUX, INSTALL PERLBREW & CPANM ]]]'
-    echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo '[ You SHOULD NOT Use This Instead Of local::lib In Section 27, Unless You Have No Choice ]'
-        echo '[ WARNING: Do NOT Mix With local::lib In Section 27! ]'
-        echo '[ WARNING: Do NOT Mix With Perl From Source In Section 29! ]'
-        C 'Please read the warnings above.  Seriously.'
-        echo '[ Copied From RPerl Installer ]'
-
-        echo '[ You Should Use apt-get Instead Of curl Below, Unless You Are Not In Ubuntu Or Have No Choice ]'
-        echo '[ WARNING: Use Only ONE Of The Following Two Commands, EITHER apt-get OR curl, But NOT Both! ]'
-        C 'Please read the warning above.  Seriously.'
-        S sudo apt-get install perlbrew
-        # OR
-        S 'curl -L http://install.perlbrew.pl | bash'
-
-        echo '[ Configure Perlbrew ]'
-        B perlbrew init
-        echo '[ In Texas, The Following Perlbrew Mirror Is Recommended: Arlington, TX #222 http://mirror.uta.edu/CPAN/ ]'
-        B perlbrew mirror
-        B 'echo "source ~/perl5/perlbrew/etc/bashrc" >> ~/.bashrc'
-        C 'Please Log Out And Log Back In, Which Should Reset The $PERL Environmental Variables, Then Come Back To This Point.'
-        #B source ~/.bashrc  # DEV NOTE: force logout and log back in
-        echo '[ Ensure The Following 3 Environmental Variables Now Include ~/perl5: PERLBREW_MANPATH, PERLBREW_PATH, PERLBREW_ROOT ]'
-        B 'set | grep perl5'
-        
-        echo '[ Build Perlbrew Perl v5.24.0 ]'
-        B perlbrew install perl-5.24.0
-        echo '[ Temporaily Enable Perlbrew Perl v5.24.0 ]'
-        B perlbrew use perl-5.24.0
-        echo '[ Permanently Enable Perlbrew Perl v5.24.0 ]'
-        B perlbrew switch perl-5.24.0
-        echo '[ Install Perlbrew CPANM ]'
-        B perlbrew install-cpanm
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
-        echo "Nothing To Do On Existing Machine!"
-    fi
-    CURRENT_SECTION_COMPLETE
-fi
-
-if [ $MENU_CHOICE -le 29 ]; then
-    echo '29. [[[ LINUX, INSTALL PERL FROM SOURCE & CPANM ]]]'
-    echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo '[ You SHOULD NOT Use This Instead Of local::lib In Section 27, Unless You Have No Choice ]'
-        echo '[ WARNING: Do NOT Mix With local::lib In Section 27! ]'
-        echo '[ WARNING: Do NOT Mix With Perlbrew In Section 28! ]'
-        C 'Please read the warnings above.  Seriously.'
-        echo '[ Copied From RPerl Installer ]'
-        B wget http://www.cpan.org/src/5.0/perl-5.24.0.tar.bz2
-        B bunzip2 perl-5.24.0.tar.bz2
-        B 'cd perl-5.24.0; perl Makefile.PL; make; make test'
-        S 'cd perl-5.24.0; make install'
-        S perl -MCPAN -e 'install App::cpanminus'
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
-        echo "Nothing To Do On Existing Machine!"
-    fi
-    CURRENT_SECTION_COMPLETE
-fi
-
-if [ $MENU_CHOICE -le 30 ]; then
-    echo '30. [[[ PERL, INSTALL LATEST CATALYST ]]]'
-    echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo '[ WARNING: Do NOT Mix With Non-Latest Catalyst Via apt In Section 31! ]'
+        echo '[ WARNING: Do NOT Mix With Non-Latest Catalyst Via apt In Section 37! ]'
         C 'Please read the warning above.  Seriously.'
         echo '[ Work Around Missing Dependency: Task::Catalyst -> Catalyst::Devel -> MooseX::Daemonize -> Devel::AssertOS -> Devel::CheckOS -> File::Find::Rule ]'
         # DEV NOTE: remove when bug is fixed    https://github.com/DrHyde/perl-modules-Devel-CheckOS/issues/16
@@ -1254,11 +1351,11 @@ if [ $MENU_CHOICE -le 30 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 31 ]; then
-    echo '31. [[[ UBUNTU LINUX, INSTALL NON-LATEST CATALYST ]]]'
+if [ $MENU_CHOICE -le 37 ]; then
+    echo '37. [[[ UBUNTU LINUX, INSTALL NON-LATEST CATALYST ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo '[ WARNING: Do NOT Mix With Latest Catalyst Via CPAN In Section 30! ]'
+        echo '[ WARNING: Do NOT Mix With Latest Catalyst Via CPAN In Section 36! ]'
         C 'Please read the warning above.  Seriously.'
         S apt-get install libmodule-install-perl libcatalyst-engine-apache-perl
         S service apache2 restart
@@ -1269,8 +1366,8 @@ if [ $MENU_CHOICE -le 31 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 32 ]; then
-    echo '32. [[[ PERL, CHECK CATALYST VERSIONS ]]]'
+if [ $MENU_CHOICE -le 38 ]; then
+    echo '38. [[[ PERL, CHECK CATALYST VERSIONS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         B dpkg -p libcatalyst-perl
@@ -1298,11 +1395,11 @@ if [ $MENU_CHOICE -le 32 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-# SECTION 33 VARIABLES
+# SECTION 39 VARIABLES
 MYSQL_ROOTPASS='__EMPTY__'
 
-if [ $MENU_CHOICE -le 33 ]; then
-    echo '33. [[[ PERL, INSTALL RAPIDAPP ]]]'
+if [ $MENU_CHOICE -le 39 ]; then
+    echo '39. [[[ PERL, INSTALL RAPIDAPP ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         P $USERNAME "new machine's username"
@@ -1337,13 +1434,13 @@ if [ $MENU_CHOICE -le 33 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 34 ]; then
-    echo '34. [[[ UBUNTU LINUX, INSTALL SHINYCMS DEPENDENCIES ]]]'
+if [ $MENU_CHOICE -le 40 ]; then
+    echo '40. [[[ UBUNTU LINUX, INSTALL SHINYCMS DEPENDENCIES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
-        echo '[ WARNING: Prerequisite Dependencies Include Full LAMP Stack (Sections 0 - 11, 20 - 23); mod_perl (Section 21) OR mod_fastcgi (This Section); Postfix (Section 26); And Expat, etc (This Section). ]'
+        echo '[ WARNING: Prerequisite Dependencies Include Full LAMP Stack (Sections 0 - 11, 30 - 23); mod_perl (Section 31) OR mod_fastcgi (This Section); Postfix (Section 35); And Expat, etc (This Section). ]'
         C 'Please read the warning above.  Seriously.'
         echo '[ Install Expat, etc ]'
         S sudo apt-get install expat libexpat1-dev libxml2-dev zlib1g-dev
@@ -1365,8 +1462,8 @@ if [ $MENU_CHOICE -le 34 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 35 ]; then
-    echo  '35. [[[ PERL SHINYCMS, INSTALL SHINYCMS DEPENDENCIES & SHINYCMS ]]]'
+if [ $MENU_CHOICE -le 41 ]; then
+    echo  '41. [[[ PERL SHINYCMS, INSTALL SHINYCMS DEPENDENCIES & SHINYCMS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         P $USERNAME "new machine's username"
@@ -1391,7 +1488,7 @@ if [ $MENU_CHOICE -le 35 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-# SECTION 36 VARIABLES
+# SECTION 42 VARIABLES
 DOMAIN_NAME_UNDERSCORES='__EMPTY__'
 DOMAIN_NAME_NO_USER='__EMPTY__'
 MYSQL_USERNAME='__EMPTY__'
@@ -1402,8 +1499,8 @@ SITE_NAME_DEFAULT='__EMPTY__'
 ADMIN_FIRST_NAME='__EMPTY__'
 ADMIN_LAST_NAME='__EMPTY__'
 
-if [ $MENU_CHOICE -le 36 ]; then
-    echo  '36. [[[ PERL SHINYCMS, CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES ]]]'
+if [ $MENU_CHOICE -le 42 ]; then
+    echo  '42. [[[ PERL SHINYCMS, CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         P $USERNAME "new machine's username"
@@ -1492,8 +1589,8 @@ if [ $MENU_CHOICE -le 36 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 37 ]; then
-    echo  '37. [[[ PERL SHINYCMS, BUILD DEMO DATABASE & RUN TESTS ]]]'
+if [ $MENU_CHOICE -le 43 ]; then
+    echo  '43. [[[ PERL SHINYCMS, BUILD DEMO DATABASE & RUN TESTS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
@@ -1519,11 +1616,11 @@ if [ $MENU_CHOICE -le 37 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-# SECTION 38 VARIABLES
+# SECTION 44 VARIABLES
 DOMAIN_NAME_UNDERSCORES_NO_USER='__EMPTY__'
 
-if [ $MENU_CHOICE -le 38 ]; then
-    echo  '38. [[[ PERL SHINYCMS, BACKUP & RESTORE DATABASE ]]]'
+if [ $MENU_CHOICE -le 44 ]; then
+    echo  '44. [[[ PERL SHINYCMS, BACKUP & RESTORE DATABASE ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
@@ -1568,12 +1665,12 @@ if [ $MENU_CHOICE -le 38 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 39 ]; then
-    echo  '39. [[[ PERL SHINYCMS, CONFIGURE APACHE MOD_FASTCGI ]]]'
+if [ $MENU_CHOICE -le 45 ]; then
+    echo  '45. [[[ PERL SHINYCMS, CONFIGURE APACHE MOD_FASTCGI ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo '[ You SHOULD Use This Section Instead Of Apache mod_perl In Section 40, Unless You Have No Choice ]'
-        echo '[ WARNING: Do NOT Mix With Apache mod_perl In Section 40! ]'
+        echo '[ You SHOULD Use This Section Instead Of Apache mod_perl In Section 46, Unless You Have No Choice ]'
+        echo '[ WARNING: Do NOT Mix With Apache mod_perl In Section 46! ]'
         C 'Please read the warning above.  Seriously.'
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
@@ -1670,12 +1767,12 @@ END_HEREDOC
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 40 ]; then
-    echo  '40. [[[ PERL SHINYCMS, CONFIGURE APACHE MOD_PERL ]]]'
+if [ $MENU_CHOICE -le 46 ]; then
+    echo  '46. [[[ PERL SHINYCMS, CONFIGURE APACHE MOD_PERL ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo '[ You Should NOT Use This Section Instead Of Apache mod_fastcgi In Section 39, Unless You Have No Choice ]'
-        echo '[ WARNING: Do NOT Mix With Apache mod_fastcgi In Section 39! ]'
+        echo '[ You Should NOT Use This Section Instead Of Apache mod_fastcgi In Section 45, Unless You Have No Choice ]'
+        echo '[ WARNING: Do NOT Mix With Apache mod_fastcgi In Section 45! ]'
         C 'Please read the warning above.  Seriously.'
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
@@ -1737,8 +1834,8 @@ END_HEREDOC
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 41 ]; then
-    echo  '41. [[[ PERL SHINYCMS, CREATE APACHE DIRECTORIES & ENABLE STATIC PAGE ]]]'
+if [ $MENU_CHOICE -le 47 ]; then
+    echo  '47. [[[ PERL SHINYCMS, CREATE APACHE DIRECTORIES & ENABLE STATIC PAGE ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
@@ -1753,8 +1850,8 @@ if [ $MENU_CHOICE -le 41 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 42 ]; then
-    echo  '42. [[[ PERL SHINYCMS, CONFIGURE APACHE PERMISSIONS & ENABLE DYNAMIC PAGES ]]]'
+if [ $MENU_CHOICE -le 48 ]; then
+    echo  '48. [[[ PERL SHINYCMS, CONFIGURE APACHE PERMISSIONS & ENABLE DYNAMIC PAGES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         D $EDITOR 'preferred text editor' 'vi'
@@ -1785,8 +1882,8 @@ if [ $MENU_CHOICE -le 42 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 43 ]; then
-    echo  '43. [[[ PERL SHINYCMS, CONFIGURE SHINY ]]]'
+if [ $MENU_CHOICE -le 49 ]; then
+    echo  '49. [[[ PERL SHINYCMS, CONFIGURE SHINY ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
