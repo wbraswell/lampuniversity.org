@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.072_000'
+VERSION='0.073_000'
 
 # PRE-INSTALL: download the latest version of this file and make it executable
 # wget https://raw.githubusercontent.com/wbraswell/lampuniversity.org/master/bin/LAMP_installer.sh; chmod a+x ./LAMP_installer.sh
@@ -56,7 +56,8 @@ SOURCE () {  # source (.) with error check & note
 }
 
 CD () {  # _C_hange _D_irectory with error check
-    echo '$ cd' $1
+    CD_DIR="${1/#\~/$HOME}"  # replace ~/FOO with $HOME/FOO to avoid 'directory not found' error
+    echo '$ cd' $CD_DIR
     while true; do
         read -p 'Run above command, yes or no?  [yes] ' -n 1 PROMPT_INPUT
         case $PROMPT_INPUT in
@@ -67,10 +68,10 @@ CD () {  # _C_hange _D_irectory with error check
         esac
     done
 
-    if [ -d "$1" ]; then
-        cd $1
+    if [ -d "$CD_DIR" ]; then
+        cd $CD_DIR
     else
-        echo 'Cannot change directory to ' $1 ' because such directory does not exist'
+        echo 'Cannot change directory to ' $CD_DIR ' because such directory does not exist'
     fi
 }
 
