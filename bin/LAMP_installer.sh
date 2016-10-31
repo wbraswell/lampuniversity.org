@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.068_000'
+VERSION='0.069_000'
 
 # PRE-INSTALL: download the latest version of this file and make it executable
 # wget https://raw.githubusercontent.com/wbraswell/lampuniversity.org/master/bin/LAMP_installer.sh; chmod a+x ./LAMP_installer.sh
@@ -1139,7 +1139,7 @@ if [ $MENU_CHOICE -le 27 ]; then
         S apt-get install keychain
         C '[ SECURE GIT OPTION ON NON-UBUNTU ONLY: Please See Your Operating System Documentation To Install Keychain Key Manager For OpenSSH ]'
         echo '[ SECURE GIT OPTION ONLY: Enable Keychain ]'
-        B 'echo -e "\n# SSH Keys; for GitHub, etc.\nif [ -f /usr/bin/keychain ] && [ -f $HOME/.ssh/id_rsa ]; then\n/usr/bin/keychain $HOME/.ssh/id_rsa; source $HOME/.keychain/$HOSTNAME-sh\nfi" >> ~/.bashrc;'
+        B 'echo -e "\n# SSH Keys; for GitHub, etc.\nif [ -f /usr/bin/keychain ] && [ -f \$HOME/.ssh/id_rsa ]; then\n    /usr/bin/keychain \$HOME/.ssh/id_rsa; source \$HOME/.keychain/\$HOSTNAME-sh\nfi" >> ~/.bashrc;'
         SOURCE ~/.bashrc
         echo '[ SECURE GIT OPTION ONLY: Enable SSH Key On GitHub ]'
         echo '[ SECURE GIT OPTION ONLY: Copy Data From The Following Lines ]'
