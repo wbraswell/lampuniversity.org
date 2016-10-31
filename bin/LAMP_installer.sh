@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.064_000
+# LAMP Installer Script v0.065_000
 
 # PRE-INSTALL: download the latest version of this file and make it executable
 # wget https://raw.githubusercontent.com/wbraswell/lampuniversity.org/master/bin/LAMP_installer.sh; chmod a+x ./LAMP_installer.sh
@@ -854,20 +854,22 @@ if [ $MENU_CHOICE -le 20 ]; then
         B 'curl -L cpanmin.us > /dev/null'
         echo
         echo '[ Look For Any Errors In The Output From The curl Command Above ]'
-        echo '[ IF AND ONLY IF The Above curl Command Gives The Error On The Following Line, THEN Execute The echo Command In The Next Step ]'
+        echo '[ WARNING: IF AND ONLY IF The Above curl Command Gives The Error On The Following Line, THEN Execute The echo Command In The Next Step ]'
+        C 'Please read the warning above.  Seriously.'
         echo 'curl: (77) error setting certificate verify locations'
         echo
         B "echo 'cacert=/etc/ssl/certs/ca-certificates.crt' >> ~/.curlrc"
 
         echo '[ Optionally Disable Previous local::lib Or Perlbrew Installations ]'
+        echo '[ NOTE: You SHOULD Disable Any Previous Perl Installations, Unless You Know What You Are Doing ]'
         B mv ~/perl5 ~/perl5.old
 
-        echo '[ Install ExtUtils::MakeMaker System-Wide, Check Current Version, Must Be v7.04 Or Newer ]'
-        B 'perl -MExtUtils::MakeMaker\ 999'  # system-wide v7.04 or newer required by Inline::C & possibly others
+        echo '[ Install ExtUtils::MakeMaker System-Wide, Check Current System-Wide Version, Must Be v7.04 Or Newer ]'
+        S 'perl -MExtUtils::MakeMaker\ 999'  # system-wide v7.04 or newer required by Inline::C & possibly others
         echo '[ Install ExtUtils::MakeMaker System-Wide ]'
         S cpan ExtUtils::MakeMaker
         echo '[ Install ExtUtils::MakeMaker System-Wide, Check Updated Version, Must Be v7.04 Or Newer ]'
-        B 'perl -MExtUtils::MakeMaker\ 999'
+        S 'perl -MExtUtils::MakeMaker\ 999'
 
         echo '[ Install ExtUtils::MakeMaker, Check Perl Version To Determine Which Of The Following Sections To Choose ]'
         B perl -v
