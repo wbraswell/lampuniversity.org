@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.069_000'
+VERSION='0.071_000'
 
 # PRE-INSTALL: download the latest version of this file and make it executable
 # wget https://raw.githubusercontent.com/wbraswell/lampuniversity.org/master/bin/LAMP_installer.sh; chmod a+x ./LAMP_installer.sh
@@ -1099,6 +1099,7 @@ fi
 GITHUB_EMAIL='__EMPTY__'
 GITHUB_FIRST_NAME='__EMPTY__'
 GITHUB_LAST_NAME='__EMPTY__'
+RPERL_REPO_DIRECTORY='__EMPTY__'
 
 if [ $MENU_CHOICE -le 27 ]; then
     echo '27. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB ]]]'
@@ -1123,6 +1124,8 @@ if [ $MENU_CHOICE -le 27 ]; then
         GITHUB_FIRST_NAME=$USER_INPUT
         P $GITHUB_LAST_NAME "last name used for GitHub account (any value if not using Secure Git option)"
         GITHUB_LAST_NAME=$USER_INPUT
+        D $RPERL_REPO_DIRECTORY 'directory where the RPerl repository should be downloaded (different than final RPerl installation directory)' "~/rperl-latest"
+        RPERL_REPO_DIRECTORY=$USER_INPUT
 
         # DEV NOTE: for more info, see  https://help.github.com/articles/generating-ssh-keys
         #if [ ! -f ~/.ssh/id_rsa.pub ] && [ ! -f ~/.ssh/id_dsa.pub ]; then  # NEED ANSWER: do we need id_dsa.pub???
@@ -1139,10 +1142,11 @@ if [ $MENU_CHOICE -le 27 ]; then
         S apt-get install keychain
         C '[ SECURE GIT OPTION ON NON-UBUNTU ONLY: Please See Your Operating System Documentation To Install Keychain Key Manager For OpenSSH ]'
         echo '[ SECURE GIT OPTION ONLY: Enable Keychain ]'
-        B 'echo -e "\n# SSH Keys; for GitHub, etc.\nif [ -f /usr/bin/keychain ] && [ -f \$HOME/.ssh/id_rsa ]; then\n    /usr/bin/keychain \$HOME/.ssh/id_rsa; source \$HOME/.keychain/\$HOSTNAME-sh\nfi" >> ~/.bashrc;'
+        echo '[ NOTE: Do Not Run The Following Step If You Already Copied Your Own Pre-Existing LAMP University .bashrc File In Section 0 ]'
+        B 'echo -e "\n# SSH Keys; for GitHub, etc.\nif [ -f /usr/bin/keychain ] && [ -f \$HOME/.ssh/id_rsa ]; then\n    /usr/bin/keychain \$HOME/.ssh/id_rsa\n    source \$HOME/.keychain/\$HOSTNAME-sh\nfi" >> ~/.bashrc;'
         SOURCE ~/.bashrc
-        echo '[ SECURE GIT OPTION ONLY: Enable SSH Key On GitHub ]'
-        echo '[ SECURE GIT OPTION ONLY: Copy Data From The Following Lines ]'
+        echo '[ SECURE GIT OPTION ONLY: How To Enable SSH Key On GitHub... ]'
+        echo '[ SECURE GIT OPTION ONLY: Copy Data Produced By The Next Command ]'
         echo '[ SECURE GIT OPTION ONLY: Then Browse To https://github.com/settings/ssh ]'
         echo "[ SECURE GIT OPTION ONLY: Then Click 'Add SSH Key', Paste Copied Key Data, Title '$USERNAME@$HOSTNAME', Click 'Save' ]"
         echo
@@ -1157,16 +1161,16 @@ if [ $MENU_CHOICE -le 27 ]; then
         B git config --global user.name "$GITHUB_FIRST_NAME $GITHUB_LAST_NAME"
         B git config --global core.editor "$EDITOR"
         echo '[ SECURE GIT OPTION ONLY: Clone (Download) RPerl Repository Onto New Machine ]'
-        B git clone git@github.com:wbraswell/rperl.git ~/rperl-latest
+        B git clone git@github.com:wbraswell/rperl.git $RPERL_REPO_DIRECTORY
         # OR
         echo '[ PUBLIC GIT OPTION ONLY: Clone (Download) RPerl Repository Onto New Machine ]'
-        B git clone https://github.com/wbraswell/rperl.git ~/rperl-latest
+        B git clone https://github.com/wbraswell/rperl.git $RPERL_REPO_DIRECTORY
         # OR
         echo '[ PUBLIC ZIP OPTION ONLY: Download RPerl Repository Onto New Machine ]'
-        B 'wget https://github.com/wbraswell/rperl/archive/master.zip; unzip master.zip; mv rperl-master ~/rperl-latest; rm master.zip'
+        B 'wget https://github.com/wbraswell/rperl/archive/master.zip; unzip master.zip; mv rperl-master $RPERL_REPO_DIRECTORY; rm master.zip'
 
         echo '[ ALL OPTIONS: Install RPerl Dependencies Via CPAN ]'
-        CD ~/rperl-latest
+        CD $RPERL_REPO_DIRECTORY
         B 'perl Makefile.PL; cpanm --installdeps .'
         echo '[ ALL OPTIONS: Build & Test RPerl ]'
         B 'make; make test'
