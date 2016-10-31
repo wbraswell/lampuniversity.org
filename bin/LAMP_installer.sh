@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.067_000'
+VERSION='0.068_000'
 
 # PRE-INSTALL: download the latest version of this file and make it executable
 # wget https://raw.githubusercontent.com/wbraswell/lampuniversity.org/master/bin/LAMP_installer.sh; chmod a+x ./LAMP_installer.sh
@@ -306,7 +306,7 @@ if [ $MENU_CHOICE -le 0 ]; then
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo '1. [[[ EXISTING MACHINE; CLIENT; LOCAL USER SYSTEM ]]]'
         C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
-        P $USERNAME "new machine's username"
+        D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
         N $IP_ADDRESS "new machine's IP address (ex: 123.145.167.189)"
         IP_ADDRESS=$USER_INPUT
@@ -485,7 +485,7 @@ if [ $MENU_CHOICE -le 7 ]; then
         S apt-get install clamav clamav-daemon 
         S freshclam
         S clamscan -r /home
-        P $USERNAME "new machine's username"
+        D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
         S "cd /home/$USERNAME; wget http://www.eicar.org/download/eicar.com"
         S clamscan -r /home
@@ -1115,7 +1115,7 @@ if [ $MENU_CHOICE -le 27 ]; then
 
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
-        P $USERNAME "new machine's username"
+        D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
         P $GITHUB_EMAIL "e-mail address used for GitHub account (any value if not using Secure Git option)"
         GITHUB_EMAIL=$USER_INPUT
@@ -1401,7 +1401,7 @@ if [ $MENU_CHOICE -le 31 ]; then
         echo '[ Manually Edit Operating System User Group Config File /etc/group, Add New Username To www-data Group ]'
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
-        P $USERNAME "new machine's username"
+        D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
         echo '[ Example Data Format On The Following Line, Group Number 33 May Differ In Your /etc/group, Use Your Group Number Instead Of 33 ]'
         echo "www-data:x:33:$USERNAME"
@@ -1444,7 +1444,7 @@ if [ $MENU_CHOICE -le 32 ]; then
     if [ $MACHINE_CHOICE -eq 0 ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
-        P $USERNAME "new machine's username"
+        D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
         DOMAIN_NAME=$USER_INPUT
@@ -1624,7 +1624,7 @@ if [ $MENU_CHOICE -le 36 ]; then
     if [ $MACHINE_CHOICE -eq 0 ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
-        P $USERNAME "new machine's username"
+        D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
         DOMAIN_NAME=$USER_INPUT
@@ -1738,7 +1738,7 @@ if [ $MENU_CHOICE -le 40 ]; then
     echo '40. [[[ PERL, INSTALL RAPIDAPP ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        P $USERNAME "new machine's username"
+        D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
         echo '[ You Should Use mysql & cpanm Instead Of git clone Below, Unless You Want The Experimental Version Or Have No Choice ]'
         echo '[ WARNING: Use Only ONE Of The Following Two Sets Of Commands, EITHER mysql & cpanm OR git clone, But NOT Both! ]'
@@ -1804,7 +1804,7 @@ if [ $MENU_CHOICE -le 42 ]; then
     echo  '42. [[[ PERL SHINYCMS, INSTALL SHINYCMS DEPENDENCIES & SHINYCMS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        P $USERNAME "new machine's username"
+        D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
         DOMAIN_NAME=$USER_INPUT
@@ -1841,7 +1841,7 @@ if [ $MENU_CHOICE -le 43 ]; then
     echo  '43. [[[ PERL SHINYCMS, CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        P $USERNAME "new machine's username"
+        D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
         DOMAIN_NAME=$USER_INPUT
@@ -2012,7 +2012,7 @@ if [ $MENU_CHOICE -le 46 ]; then
         C 'Please read the warning above.  Seriously.'
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
-        P $USERNAME "new machine's username"
+        D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
         DOMAIN_NAME=$USER_INPUT
@@ -2114,7 +2114,7 @@ if [ $MENU_CHOICE -le 47 ]; then
         C 'Please read the warning above.  Seriously.'
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
-        P $USERNAME "new machine's username"
+        D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
         DOMAIN_NAME=$USER_INPUT
@@ -2194,7 +2194,7 @@ if [ $MENU_CHOICE -le 49 ]; then
     if [ $MACHINE_CHOICE -eq 0 ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
-        P $USERNAME "new machine's username"
+        D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
         DOMAIN_NAME=$USER_INPUT
