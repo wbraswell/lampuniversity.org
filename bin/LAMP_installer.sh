@@ -1,6 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.066_000
+# LAMP Installer Script
+VERSION='0.067_000'
 
 # PRE-INSTALL: download the latest version of this file and make it executable
 # wget https://raw.githubusercontent.com/wbraswell/lampuniversity.org/master/bin/LAMP_installer.sh; chmod a+x ./LAMP_installer.sh
@@ -171,7 +172,7 @@ B () {  # _B_ash command
     echo
 }
 
-echo  '    [[[<<< LAMP Installer Script >>>]]]'
+echo "[[[<<< LAMP Installer Script v$VERSION >>>]]]"
 echo
 echo '  [[[<<< Tested Using Fresh Installs >>>]]]'
 echo
@@ -1129,7 +1130,7 @@ if [ $MENU_CHOICE -le 27 ]; then
             echo '[ SECURE GIT OPTION ONLY: Generate SSH Keys, Do Create Secure Key Passphrase When Prompted ]'
             echo '[ WARNING: Be Sure To Record Your Secure Key Passphrase & Store It In A Safe Place ]'
             C 'Please read the warning above.  Seriously.'
-            B "ssh-keygen -t rsa -C '$GITHUB_EMAIL'; eval `ssh-agent -s`; ssh-add ~/.ssh/id_rsa; ssh-agent -k"
+            B "ssh-keygen -t rsa -C '$GITHUB_EMAIL'; eval `ssh-agent -s` ssh-add ~/.ssh/id_rsa; ssh-agent -k"
         else
             echo '[ SECURE GIT OPTION ONLY: SSH Key File(s) Already Exist, Skipping Key Generation ]'
         fi
