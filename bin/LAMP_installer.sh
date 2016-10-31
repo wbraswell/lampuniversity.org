@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.062_000
+# LAMP Installer Script v0.063_000
 
 # PRE-INSTALL: download the latest version of this file and make it executable
 # wget https://raw.githubusercontent.com/wbraswell/lampuniversity.org/master/bin/LAMP_installer.sh; chmod a+x ./LAMP_installer.sh
@@ -836,12 +836,6 @@ if [ $MENU_CHOICE -le 19 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-
-
-
-
-
-
 if [ $MENU_CHOICE -le 20 ]; then
     echo '20. [[[ UBUNTU LINUX, INSTALL PERL DEPENDENCIES ]]]'
     echo
@@ -850,14 +844,14 @@ if [ $MENU_CHOICE -le 20 ]; then
         echo '[ Git: Source Code Version Control, Required To Install Latest Development & Unstable Software ]'
         echo '[ cURL: Downloader, Required To Install cpanminus & Perlbrew & Perl-Build ]'
         echo '[ ExtUtils::MakeMaker: Source Code Builder, Required To Build Many Perl Software Suites ]'
-
+        echo
         echo '[ Install git ]'
         S apt-get install git
         
         echo '[ Install cURL ]'
         S apt-get install curl
         echo '[ Check cURL Installation ]'
-        B curl -L cpanmin.us > /dev/null
+        B 'curl -L cpanmin.us > /dev/null'
         echo '[ Execute The echo Command Below IF AND ONLY IF The Above curl Command Gives The Error On The Following Line ]'
         echo 'curl: (77) error setting certificate verify locations'
         echo
@@ -1177,13 +1171,6 @@ if [ $MENU_CHOICE -le 27 ]; then
     fi
     CURRENT_SECTION_COMPLETE
 fi
-
-
-
-
-
-
-
 
 # SECTION 28 VARIABLES
 RPERL_VERBOSE='__EMPTY__'
