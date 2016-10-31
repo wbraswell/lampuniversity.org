@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.071_000'
+VERSION='0.072_000'
 
 # PRE-INSTALL: download the latest version of this file and make it executable
 # wget https://raw.githubusercontent.com/wbraswell/lampuniversity.org/master/bin/LAMP_installer.sh; chmod a+x ./LAMP_installer.sh
@@ -126,7 +126,7 @@ D () {  # prompt user for input w/ _D_efault value
     while true; do
             read -p "Please type the $2, or press <ENTER> for $3... " USER_INPUT
         case $USER_INPUT in
-            [abcdefghijklmnopqrstuvwxyz/]+([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_./]) ) echo; break;;
+            +([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\~\!\@\#\$\%\^\&\*\(\)\-\_\=\+\[\]\{\}\\\|\/\?\,\.\<\>]) ) echo; break;;
             '' ) echo; USER_INPUT=$3; break;;
             * ) echo "Please type the $2, or press <ENTER> for $3! "; echo;;
         esac
