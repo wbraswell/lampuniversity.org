@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
-# LAMP Installer Script v0.065_000
+# LAMP Installer Script v0.066_000
 
 # PRE-INSTALL: download the latest version of this file and make it executable
 # wget https://raw.githubusercontent.com/wbraswell/lampuniversity.org/master/bin/LAMP_installer.sh; chmod a+x ./LAMP_installer.sh
@@ -867,6 +867,8 @@ if [ $MENU_CHOICE -le 20 ]; then
         echo '[ Install ExtUtils::MakeMaker System-Wide, Check Current System-Wide Version, Must Be v7.04 Or Newer ]'
         S 'perl -MExtUtils::MakeMaker\ 999'  # system-wide v7.04 or newer required by Inline::C & possibly others
         echo '[ Install ExtUtils::MakeMaker System-Wide ]'
+        echo '[ NOTE: You MUST Have v7.04 Or Newer Installed System-Wide (And Also Single-User) For RPerl ]'
+        echo '[ Choose Yes For Automatic Configuration & Also Yes For Automatic CPAN Mirror Selection ]'
         S cpan ExtUtils::MakeMaker
         echo '[ Install ExtUtils::MakeMaker System-Wide, Check Updated Version, Must Be v7.04 Or Newer ]'
         S 'perl -MExtUtils::MakeMaker\ 999'
@@ -945,7 +947,8 @@ if [ $MENU_CHOICE -le 22 ]; then
         echo '[ EITHER OPTION: ExtUtils::MakeMaker v7.04 Or Newer Is Required By Inline::C, May Need To Re-Install In Single-User Mode ]'
         echo '[ EITHER OPTION: Check Version Of ExtUtils::MakeMaker, Re-Install If Older Than v7.04 ]'
         B 'perl -MExtUtils::MakeMaker\ 999'
-        echo '[ EITHER OPTION: Re-Install ExtUtils::MakeMaker Via Single-User CPAN, Because Perlbrew Overrides System-Wide CPAN ]'
+        echo '[ EITHER OPTION: Re-Install ExtUtils::MakeMaker Via CPAN, Because Perlbrew Acts As System-Wide Perl In Single-User Mode ]'
+        echo '[ NOTE: You MUST Have v7.04 Or Newer Installed System-Wide (And Also Single-User) For RPerl ]'
         B cpanm ExtUtils::MakeMaker
         echo '[ EITHER OPTION: Re-Check Version Of ExtUtils::MakeMaker, Must Be v7.04 Or Newer ]'
         B 'perl -MExtUtils::MakeMaker\ 999'
@@ -1126,7 +1129,7 @@ if [ $MENU_CHOICE -le 27 ]; then
             echo '[ SECURE GIT OPTION ONLY: Generate SSH Keys, Do Create Secure Key Passphrase When Prompted ]'
             echo '[ WARNING: Be Sure To Record Your Secure Key Passphrase & Store It In A Safe Place ]'
             C 'Please read the warning above.  Seriously.'
-            B "ssh-keygen -t rsa -C '@GITHUB_EMAIL'; eval `ssh-agent -s`; ssh-add ~/.ssh/id_rsa; ssh-agent -k"
+            B "ssh-keygen -t rsa -C '$GITHUB_EMAIL'; eval `ssh-agent -s`; ssh-add ~/.ssh/id_rsa; ssh-agent -k"
         else
             echo '[ SECURE GIT OPTION ONLY: SSH Key File(s) Already Exist, Skipping Key Generation ]'
         fi
