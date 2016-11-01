@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.073_000'
+VERSION='0.074_000'
 
 # PRE-INSTALL: download the latest version of this file and make it executable
 # wget https://raw.githubusercontent.com/wbraswell/lampuniversity.org/master/bin/LAMP_installer.sh; chmod a+x ./LAMP_installer.sh
@@ -1195,14 +1195,14 @@ if [ $MENU_CHOICE -le 28 ]; then
     echo '28. [[[ RPERL, RUN COMPILER TESTS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        D $RPERL_VERBOSE 'additional user output, 0 for off, 1 for on' '1'
+        D $RPERL_VERBOSE 'RPERL_VERBOSE additional user output, 0 for off, 1 for on' '1'
         RPERL_VERBOSE=$USER_INPUT
-        D $RPERL_DEBUG 'additional system output, 0 for off, 1 for on' '1'
+        D $RPERL_DEBUG 'RPERL_DEBUG additional system output, 0 for off, 1 for on' '1'
         RPERL_DEBUG=$USER_INPUT
-        D $RPERL_WARNINGS 'additional user & system warnings, 0 for off, 1 for on' '0'
+        D $RPERL_WARNINGS 'RPERL_WARNINGS additional user & system warnings, 0 for off, 1 for on' '0'
         RPERL_WARNINGS=$USER_INPUT
         D $RPERL_INSTALL_DIRECTORY 'directory where RPerl is currently installed' "~/perl5/lib/perl5"
-        RPERL_VERBOSE=$USER_INPUT
+        RPERL_INSTALL_DIRECTORY=$USER_INPUT
 
         echo '[ These RPerl Test Commands Must Be Executed From Within The RPerl Installation Directory ]'
         CD $RPERL_INSTALL_DIRECTORY
