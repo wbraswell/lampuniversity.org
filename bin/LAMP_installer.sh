@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.077_000'
+VERSION='0.078_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -657,12 +657,11 @@ if [ $MENU_CHOICE -le 14 ]; then
         echo '[ NOTE: If You Have xpra Installation Issues, Please See The Directions In This Same Section 14 For Existing Machines ]'
         S apt-get install xpra
         B 'xpra start :100 --start-child=xfce4-terminal'
-        B 'export DISPLAY=:100.0; xclock'
-        echo '[ Default Enable xpra Multi-Session Connection ]'
-        B 'echo -e "\n# enable XPRA persistent X server\nexport DISPLAY=:100.0" >> ~/.bashrc'
         echo '[ Test xpra Multi-Session Connection ]'
-        SOURCE ~/.bashrc
-        B xclock
+        echo '[ Please Run The Next Command, Then While xclock Is Running, Go Back To Existing Machine, Connect To xpra, And Close xclock When Visible ]'
+        B 'export DISPLAY=:100.0; xclock'
+        echo '[ Default Enable Output To xpra Multi-Session Connection ]'
+        B 'echo -e "\n# enable output to XPRA persistent X server\nexport DISPLAY=:100.0" >> ~/.bashrc'
         echo '[ Optionally Stop xpra Service ]'
         B xpra stop
     elif [ $MACHINE_CHOICE -eq 1 ]; then
