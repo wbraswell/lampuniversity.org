@@ -6,6 +6,4 @@ if [[ $1 == '' ]]; then
     exit
 fi
 
-#xpra attach --opengl=no ssh:$1:100 2> /dev/null 1>&2 &
-#xpra attach --opengl=no ssh:$1:100
 xpra attach ssh:$1:100
