@@ -251,7 +251,7 @@ echo
 while true; do
     read -p 'Please type your chosen main menu section number, or press <ENTER> for 0... ' MENU_CHOICE
     case $MENU_CHOICE in
-        [0123456789]|[123][0123456789]|4[0123] ) echo; break;;
+        [0123456789]|[1234][0123456789]|5[0] ) echo; break;;
         '' ) echo; MENU_CHOICE=0; break;;
         * ) echo 'Please choose a section number from the menu!'; echo;;
     esac
