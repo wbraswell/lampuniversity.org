@@ -176,3 +176,4 @@ fi
 if [ -f /usr/bin/keychain ] && [ -f $HOME/.ssh/id_rsa ]; then
     /usr/bin/keychain $HOME/.ssh/id_rsa;  source $HOME/.keychain/$HOSTNAME-sh
 fi
+

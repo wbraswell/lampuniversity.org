@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.079_000'
+VERSION='0.080_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -661,7 +661,7 @@ if [ $MENU_CHOICE -le 14 ]; then
         echo '[ Please Run The Next Command, Then While xclock Is Running, Go Back To Existing Machine, Connect To xpra, And Close xclock When Visible ]'
         B 'export DISPLAY=:100.0; xclock'
         echo '[ Default Enable Output To xpra Multi-Session Connection ]'
-        B 'echo -e "\n# enable output to XPRA persistent X server\nexport DISPLAY=:100.0" >> ~/.bashrc'
+        B 'echo -e "\n# enable output to XPRA persistent X server\nexport DISPLAY=:100.0\n" >> ~/.bashrc'
         echo '[ Optionally Stop xpra Service ]'
         B xpra stop
     elif [ $MACHINE_CHOICE -eq 1 ]; then
@@ -904,7 +904,8 @@ if [ $MENU_CHOICE -le 21 ]; then
         echo
         echo '[ Install local::lib & CPANM in ~/perl5 ]'
         B 'curl -L cpanmin.us | perl - -l $HOME/perl5 App::cpanminus local::lib'
-        echo '[ Enable local::lib In .bashrc Run Commands Startup File, Do Not Repeat If Already Using LAMP University .bashrc File ]'
+        echo '[ Enable local::lib In .bashrc Run Commands Startup File ]'
+        echo '[ NOTE: Do Not Run The Following Step If You Already Copied Your Own Pre-Existing LAMP University .bashrc File In Section 0 ]'
         # DEV NOTE: pre-munged command for comparison
 #       if [ -d $HOME/perl5/lib/perl5 ]; then
 #           eval $(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)
@@ -1157,7 +1158,7 @@ if [ $MENU_CHOICE -le 27 ]; then
         C '[ SECURE GIT OPTION ON NON-UBUNTU ONLY: Please See Your Operating System Documentation To Install Keychain Key Manager For OpenSSH ]'
         echo '[ SECURE GIT OPTION ONLY: Enable Keychain ]'
         echo '[ NOTE: Do Not Run The Following Step If You Already Copied Your Own Pre-Existing LAMP University .bashrc File In Section 0 ]'
-        B 'echo -e "\n# SSH Keys; for GitHub, etc.\nif [ -f /usr/bin/keychain ] && [ -f \$HOME/.ssh/id_rsa ]; then\n    /usr/bin/keychain \$HOME/.ssh/id_rsa\n    source \$HOME/.keychain/\$HOSTNAME-sh\nfi" >> ~/.bashrc;'
+        B 'echo -e "\n# SSH Keys; for GitHub, etc.\nif [ -f /usr/bin/keychain ] && [ -f \$HOME/.ssh/id_rsa ]; then\n    /usr/bin/keychain \$HOME/.ssh/id_rsa\n    source \$HOME/.keychain/\$HOSTNAME-sh\nfi\n" >> ~/.bashrc;'
         SOURCE ~/.bashrc
         echo '[ SECURE GIT OPTION ONLY: How To Enable SSH Key On GitHub... ]'
         echo '[ SECURE GIT OPTION ONLY: Copy Data Produced By The Next Command ]'
@@ -1880,7 +1881,7 @@ if [ $MENU_CHOICE -le 43 ]; then
         D $SITE_NAME "optional 'CamelCase' version of hostname $SITE_NAME_DEFAULT to be used as descriptive site name, NO SPACES, MAKE IT MATCH YOUR HOSTNAME" $SITE_NAME_DEFAULT
         SITE_NAME=$USER_INPUT
         MYSQL_USERNAME_DEFAULT+='_user'
-        D $MYSQL_USERNAME "new mysql username to be created (different than new machine's OS username)" $MYSQL_USERNAME_DEFAULT
+        D $MYSQL_USERNAME "new mysql username to be created, 16 characters maximum length (different than new machine's OS username)" $MYSQL_USERNAME_DEFAULT
         MYSQL_USERNAME=$USER_INPUT
         P $MYSQL_PASSWORD "new mysql password"
         MYSQL_PASSWORD=$USER_INPUT
