@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.080_000'
+VERSION='0.081_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -1566,6 +1566,8 @@ if [ $MENU_CHOICE -le 34 ]; then
         EDITOR=$USER_INPUT
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
         DOMAIN_NAME=$USER_INPUT
+        P $ADMIN_EMAIL "website administrator's PUBLIC e-mail address"
+        ADMIN_EMAIL=$USER_INPUT
 
         echo '[ Check MySQL Version Number, For Use In Next Step ]'
         B mysql -V
