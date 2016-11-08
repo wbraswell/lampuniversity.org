@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.083_000'
+VERSION='0.084_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -1935,7 +1935,7 @@ if [ $MENU_CHOICE -le 43 ]; then
         echo '[ Create ShinyCMS Database In MySQL ]'
         echo '[ Copy Commands From The Following Lines ]'
         echo "mysql> CREATE DATABASE $DOMAIN_NAME_UNDERSCORES;"
-        echo "mysql> CREATE USER '$USERNAME'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';"
+        echo "mysql> CREATE USER '$MYSQL_USERNAME'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';"
         echo "mysql> GRANT ALL PRIVILEGES ON $DOMAIN_NAME_UNDERSCORES.* TO '$MYSQL_USERNAME'@'localhost';"
         echo "mysql> QUIT"
         echo
@@ -2053,7 +2053,7 @@ if [ $MENU_CHOICE -le 45 ]; then
         echo '[ Restore Database, Create Empty Database To Receive Restoration ]'
         echo '[ Copy Commands From The Following Lines ]'
         echo "mysql> CREATE DATABASE $DOMAIN_NAME_UNDERSCORES;"
-        echo "mysql> CREATE USER '$USERNAME'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';"
+        echo "mysql> CREATE USER '$MYSQL_USERNAME'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';"
         echo "mysql> GRANT ALL PRIVILEGES ON $DOMAIN_NAME_UNDERSCORES.* TO '$MYSQL_USERNAME'@'localhost';"
         echo "mysql> QUIT"
         echo
