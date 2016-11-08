@@ -1567,8 +1567,10 @@ if [ $MENU_CHOICE -le 34 ]; then
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
         DOMAIN_NAME=$USER_INPUT
 
-        echo '[ Ensure MySQL Setting have_innodb Is Set To YES ]'
-        echo '[ Copy Command From The Following Line, Check Return Value As Shown Below ]'
+        echo '[ Check MySQL Version Number, For Use In Next Step ]'
+        B mysql -V
+        echo '[ MYSQL VERSION 5.5 OR OLDER ONLY: Ensure MySQL Setting have_innodb Is Set To YES ]'
+        echo '[ MYSQL VERSION 5.5 OR OLDER ONLY: Copy Command From The Following Line, Check Return Value As Shown Below ]'
         echo
         echo "mysql> SHOW VARIABLES LIKE 'have_innodb';"
         echo "+---------------+-------+"
@@ -1576,6 +1578,20 @@ if [ $MENU_CHOICE -le 34 ]; then
         echo "+---------------+-------+"
         echo "| have_innodb   | YES   |"
         echo "+---------------+-------+"
+        echo "mysql> QUIT"
+        echo
+        echo
+        echo '[ MYSQL VERSION 5.6 OR NEWER ONLY: Ensure MySQL InnoDB Engine Support Column Is Set To YES Or DEFAULT ]'
+        echo '[ MYSQL VERSION 5.6 OR NEWER ONLY: Copy Command From The Following Line, Check Return Value As Shown Below ]'
+        echo
+        echo "mysql> SHOW ENGINES;"
+        echo "+--------------------+---------+----------------------------------------------------------------+--------------+------+------------+"
+        echo "| Engine             | Support | Comment                                                        | Transactions | XA   | Savepoints |"
+        echo "+--------------------+---------+----------------------------------------------------------------+--------------+------+------------+"
+        echo "| ...                | ...     | ...                                                            | ...          | ...  | ...        |"
+        echo "| InnoDB             | DEFAULT | Supports transactions, row-level locking, and foreign keys     | YES          | YES  | YES        |"
+        echo "| ...                | ...     | ...                                                            | ...          | ...  | ...        |"
+        echo "+--------------------+---------+----------------------------------------------------------------+--------------+------+------------+"
         echo "mysql> QUIT"
         echo
         B mysql --user=root --password
