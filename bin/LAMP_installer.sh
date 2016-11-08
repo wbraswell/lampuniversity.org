@@ -1876,6 +1876,7 @@ if [ $MENU_CHOICE -le 42 ]; then
         DOMAIN_NAME=$USER_INPUT
         echo '[ Ensure MySQL Configured To Support Perl Distribution DBD::mysql `make test` Command ]'
         echo '[ Copy Commands From The Following Lines ]'
+        echo "mysql> CREATE USER '$USERNAME'@'localhost' identified by '';"
         echo "mysql> GRANT ALL PRIVILEGES ON test.* TO '$USERNAME'@'localhost';"
         echo "mysql> QUIT"
         echo
@@ -2042,10 +2043,10 @@ if [ $MENU_CHOICE -le 45 ]; then
         C 'Please read the warning above.  Seriously.'
 
         echo '[ Backup Database, Do NOT Include ShinyCMS User & Password Data, Export Raw sql File ]'
-        B "mysqldump --user=$MYSQL_USERNAME --password='$MYSQL_PASSWORD' $DOMAIN_NAME_UNDERSCORES --lock-all-tables --ignore-table=$DOMAIN_NAME_UNDERSCORES.user > $DOMAIN_NAME_UNDERSCORES_NO_USER.sql"
+        B "mysqldump --user=$MYSQL_USERNAME --password='$MYSQL_PASSWORD' $DOMAIN_NAME_UNDERSCORES --lock-tables --ignore-table=$DOMAIN_NAME_UNDERSCORES.user > $DOMAIN_NAME_UNDERSCORES_NO_USER.sql"
 
         echo '[ Backup Database, DO Include ShinyCMS User & Password Data, Export Raw sql File ]'
-        B "mysqldump --user=$MYSQL_USERNAME --password='$MYSQL_PASSWORD' $DOMAIN_NAME_UNDERSCORES --lock-all-tables > $DOMAIN_NAME_UNDERSCORES.sql"
+        B "mysqldump --user=$MYSQL_USERNAME --password='$MYSQL_PASSWORD' $DOMAIN_NAME_UNDERSCORES --lock-tables > $DOMAIN_NAME_UNDERSCORES.sql"
 
         echo '[ Restore Database, Create Empty Database To Receive Restoration ]'
         echo '[ Copy Commands From The Following Lines ]'
