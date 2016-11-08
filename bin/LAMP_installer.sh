@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.081_000'
+VERSION='0.082_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -1534,6 +1534,12 @@ if [ $MENU_CHOICE -le 32 ]; then
         S chown -R www-data.www-data /srv/www
         S chmod -R g+rwX /srv/www
         S chmod -R o-w /srv/www
+        echo '[ Check If Apache Is Running & You Can Successfully Load The Live Page ]'
+        echo
+        echo " http://$DOMAIN_NAME"
+        echo
+        C 'Please load the URL above in your web browser.'
+
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
@@ -1548,6 +1554,8 @@ if [ $MENU_CHOICE -le 33 ]; then
         echo '[ DO     configure database with dbconfig-common ]'
         echo
         S apt-get install mysql-server mysql-client libmysqlclient-dev phpmyadmin
+        echo '[ UBUNTU v16.04 OR NEWER ONLY: Install Additional PHP Package ]'
+        S apt-get install php-mbstring
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
@@ -1569,7 +1577,7 @@ if [ $MENU_CHOICE -le 34 ]; then
         P $ADMIN_EMAIL "website administrator's PUBLIC e-mail address"
         ADMIN_EMAIL=$USER_INPUT
 
-        echo '[ Check MySQL Version Number, For Use In Next Step ]'
+        echo '[ Check MySQL Version Number, For Use In Next Steps ]'
         B mysql -V
         echo '[ MYSQL VERSION 5.5 OR OLDER ONLY: Ensure MySQL Setting have_innodb Is Set To YES ]'
         echo '[ MYSQL VERSION 5.5 OR OLDER ONLY: Copy Command From The Following Line, Check Return Value As Shown Below ]'
@@ -1583,6 +1591,7 @@ if [ $MENU_CHOICE -le 34 ]; then
         echo "mysql> QUIT"
         echo
         echo
+
         echo '[ MYSQL VERSION 5.6 OR NEWER ONLY: Ensure MySQL InnoDB Engine Support Column Is Set To YES Or DEFAULT ]'
         echo '[ MYSQL VERSION 5.6 OR NEWER ONLY: Copy Command From The Following Line, Check Return Value As Shown Below ]'
         echo
@@ -1625,10 +1634,10 @@ if [ $MENU_CHOICE -le 34 ]; then
         echo '[ NOTE: updatedb Command May Take A Long Time ]'
         S updatedb
         S locate mcrypt.ini
-        P $MCRYPT_INI "full path to the mcrypt.ini file as returned by the locate command above"
+        P $MCRYPT_INI "full path to the 'mcrypt.ini' file as returned by the locate command above (not '20-mcrypt.ini' or other similar files)"
         MCRYPT_INI=$USER_INPUT
         S locate mcrypt.so
-        P $MCRYPT_SO "full path to the mcrypt.so file as returned by the locate command above"
+        P $MCRYPT_SO "full path to the 'mcrypt.so' file as returned by the locate command above (not 'libmcrypt.so.4.4.8' or other similar files)"
         MCRYPT_SO=$USER_INPUT
         echo "[ Copy Data From The Following Line, Then Paste Into mcrypt Config File $MCRYPT_INI, Replacing Existing Line ]"
         echo "extension=$MCRYPT_SO"
@@ -1636,6 +1645,12 @@ if [ $MENU_CHOICE -le 34 ]; then
         S $EDITOR $MCRYPT_INI
         S php5enmod mcrypt
         S service apache2 reload
+
+        echo '[ Check If phpMyAdmin Is Running & You Can Successfully Log In ]'
+        echo
+        echo " http://phpmyadmin.$DOMAIN_NAME"
+        echo
+        C "Please load the URL above in your web browser, and log in using the 'root' mysql user & password."
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
@@ -1818,20 +1833,25 @@ if [ $MENU_CHOICE -le 40 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
+# SECTION 41 VARIABLES
+UBUNTU_RELEASE_NAME='__EMPTY__'
+
 if [ $MENU_CHOICE -le 41 ]; then
     echo '41. [[[ UBUNTU LINUX, INSTALL SHINYCMS DEPENDENCIES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
+        D $UBUNTU_RELEASE_NAME 'Ubuntu release name (trusty, xenial, etc.)' 'trusty'
+        UBUNTU_RELEASE_NAME=$USER_INPUT
         echo '[ WARNING: Prerequisite Dependencies Include Full LAMP Stack (Sections 0 - 11, 21 - 24); mod_perl (Section 31) OR mod_fastcgi (This Section); Postfix (Section 36); And Expat, etc (This Section). ]'
         C 'Please read the warning above.  Seriously.'
         echo '[ Install Expat, etc ]'
         S sudo apt-get install expat libexpat1-dev libxml2-dev zlib1g-dev
         echo '[ Install FastCGI ]'
-        echo '[ Copy Data From The Following Lines, Then Paste Into The Apt Config File /etc/apt/sources.list ]'
-        echo 'deb http://us.archive.ubuntu.com/ubuntu/ trusty multiverse      # needed for FastCGI'
-        echo 'deb-src http://us.archive.ubuntu.com/ubuntu/ trusty multiverse  # needed for FastCGI'
+        echo '[ Copy Data From The Following Lines, Then Paste Into The Apt Config File /etc/apt/sources.list, OR Uncomment Equivalent Existing Lines ]'
+        echo "deb http://us.archive.ubuntu.com/ubuntu/ $UBUNTU_RELEASE_NAME multiverse      # needed for FastCGI"
+        echo "deb-src http://us.archive.ubuntu.com/ubuntu/ $UBUNTU_RELEASE_NAME multiverse  # needed for FastCGI"
         S $EDITOR /etc/apt/sources.list
         S apt-get update
         S apt-get -f install
