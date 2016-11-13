@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.086_000'
+VERSION='0.087_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -2403,14 +2403,49 @@ S service apache2 restart
 chgrp www-data /home/wbraswell/
 chmod g+rX /home/wbraswell/
 
+
+
+
+
+
+# ALL SYNTAX HIGHLIGHTERS
+S apt-get install npm nodejs-legacy
+
+# SyntaxHighlighter, Alex Gorbatchev
+# https://github.com/syntaxhighlighter/syntaxhighlighter/wiki/Building
+CD ~/github_repos
+B git clone https://github.com/syntaxhighlighter/syntaxhighlighter.git syntaxhighlighter-latest
+CD syntaxhighlighter-latest
+B npm install
+B ./node_modules/.bin/gulp setup-project
+B ./node_modules/.bin/gulp build --brushes=perl --theme=default
+
+
+# CodeMirror, Marijn Haverbeke
+CD ~/github_repos
+B git clone https://github.com/codemirror/CodeMirror.git codemirror-latest
+CD codemirror-latest
+B npm install
+B npm run build
+# browse to index.html
+B npm test
+
+
+# Ace, Ajax.org Cloud9 Editor
+B git clone https://github.com/ajaxorg/ace.git ace-latest
+CD ace-latest
+
+# Ace Builds
+B git clone https://github.com/ajaxorg/ace-builds/ ace-builds-latest
+
+
+
+
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
 #    CURRENT_SECTION_COMPLETE  # final section!
 fi
-
-
-
 
 
 
