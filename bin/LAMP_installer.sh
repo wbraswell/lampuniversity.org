@@ -2432,11 +2432,23 @@ B npm test
 
 
 # Ace, Ajax.org Cloud9 Editor
+# https://github.com/ajaxorg/ace
 B git clone https://github.com/ajaxorg/ace.git ace-latest
 CD ace-latest
+B node ./static.js
+# browse to http://localhost:8888/kitchen-sink.html
+# optional extra build
+B npm install
+B node ./Makefile.dryice.js
+# OR
+B node ./Makefile.dryice.js full --target ../ace-builds
+B node lib/ace/test/all.js
+# browse to http://localhost:8888/lib/ace/test/tests.html
 
 # Ace Builds
 B git clone https://github.com/ajaxorg/ace-builds/ ace-builds-latest
+# browse to editor.html
+# browse to kitchen-sink.html
 
 
 
