@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.087_000'
+VERSION='0.088_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -2449,6 +2449,59 @@ B node lib/ace/test/all.js
 B git clone https://github.com/ajaxorg/ace-builds/ ace-builds-latest
 # browse to editor.html
 # browse to kitchen-sink.html
+
+
+
+
+
+# non-threaded Perl, libperl.a
+# B wget NEED_URL
+# B NEED UNZIP COMMAND
+# CD NEED_DIRECTORY
+B "./Configure -des -Uusethreads -Doptimize='-g' -Dusedevel -Accflags=-fPIC"
+B make
+B make test
+S make install
+
+# non-threaded Perl, libperl.so
+B "./Configure -des -Uusethreads -Doptimize='-g' -Dusedevel -Duseshrplib"
+B make
+B make test
+S make install
+
+# non-threaded mod_perl
+B perl Makefile.PL MP_APXS=/usr/bin/apxs MP_NO_THREADS=1
+B make
+B make test
+S make install
+
+
+
+
+
+S gdb /usr/sbin/apache2
+#(gdb) break perl_parse
+#(gdb) run -k start -X
+# RUNNING...
+#<<< DEBUG >>>: in ShinyCMS.pm, returned from setup()
+#<<< DEBUG >>>: in ShinyCMS.pm, about to return 1
+#warning: Temporarily disabling breakpoints for unloaded shared library "/home/foo_user/perl5/lib/perl5/x86_64-linux/auto/B/Hooks/OP/Check/Check.so"
+#Program received signal SIGSEGV, Segmentation fault.
+#0x00007fffef697bd8 in ?? ()
+
+#(gdb) up
+##1  0x00007ffff400fc3f in Perl_newUNOP (type=17, flags=8192, first=0x55555cb18d38) at op.c:4811
+#4811        unop = (UNOP*) CHECKOP(type, unop);
+
+#(gdb) info threads
+#  Id   Target Id         Frame 
+#* 1    Thread 0x7ffff7fd1780 (LWP 10198) "/usr/sbin/apach" 0x00007ffff400fc3f in Perl_newUNOP (type=17, flags=8192, first=0x55555cb18d38) at op.c:4811
+
+#(gdb) print PL_check[17]
+#$1 = (Perl_check_t) 0x7fffef697bd8
+
+
+
 
 
 
