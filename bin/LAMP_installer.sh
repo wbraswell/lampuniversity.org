@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.088_000'
+VERSION='0.089_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -247,11 +247,13 @@ echo  '48. [[[ PERL SHINYCMS,  CREATE    APACHE DIRECTORIES & ENABLE STATIC  PAG
 echo  '49. [[[ PERL SHINYCMS,  CONFIGURE APACHE PERMISSIONS & ENABLE DYNAMIC PAGES ]]]'
 echo  '50. [[[ PERL SHINYCMS,  CONFIGURE SHINY ]]]'
 echo
+echo  '51. [[[ PERL CLOUDFORFREE, FOOOOOO ]]]'
+echo
 
 while true; do
     read -p 'Please type your chosen main menu section number, or press <ENTER> for 0... ' MENU_CHOICE
     case $MENU_CHOICE in
-        [0123456789]|[1234][0123456789]|5[0] ) echo; break;;
+        [0123456789]|[1234][0123456789]|5[01] ) echo; break;;
         '' ) echo; MENU_CHOICE=0; break;;
         * ) echo 'Please choose a section number from the menu!'; echo;;
     esac
@@ -2334,6 +2336,8 @@ if [ $MENU_CHOICE -le 51 ]; then
     echo  '51. [[[ PERL CLOUDFORFREE, FOOOOOO ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
+        D $USERNAME "new machine's username" `whoami`
+        USERNAME=$USER_INPUT
 
 
 S aptitude install apache2-dev
@@ -2372,6 +2376,7 @@ S a2enmod apreq2
 
 #S cpanm Apache2::Request  # unnecessary, dependency of A2::FM below
 S cpanm Apache2::FileManager
+# installs in /usr/local/lib/x86_64-linux-gnu/perl/5.22.1 among other places?
 
 # CRITICAL BUG: Apache2::FileManager
 #In this file:
@@ -2400,8 +2405,8 @@ S vi /etc/apache2/sites-enabled/FOO.conf
 S service apache2 restart
 # http://starman.autoparallel.com/FileManager
 
-chgrp www-data /home/wbraswell/
-chmod g+rX /home/wbraswell/
+S chgrp www-data /home/wbraswell/
+S chmod g+rX /home/wbraswell/
 
 
 
@@ -2469,13 +2474,98 @@ B make
 B make test
 S make install
 
-# non-threaded mod_perl
+# MOD_PERL, SYSTEM TO BUILD, UNTHREADED
+# NEED DOWNLOAD & UNZIP
 B perl Makefile.PL MP_APXS=/usr/bin/apxs MP_NO_THREADS=1
 B make
 B make test
 S make install
 
 
+# PERL, BUILD TO SYSTEM
+S mv /usr/bin/perl /usr/bin/perl.BUILD_PERL_DISABLED
+S mv /usr/bin/perl.SYSTEM_PERL_DISABLED /usr/bin/perl
+
+# LIBPERL, BUILD TO SYSTEM
+S rm /usr/lib/x86_64-linux-gnu/libperl.a 
+S cp /home/wbraswell/perl_build/libperl.a.SYSTEM_PERL_DISABLED /usr/lib/x86_64-linux-gnu/libperl.a 
+S rm /usr/lib/x86_64-linux-gnu/libperl.so.5.22.1
+S cp /home/wbraswell/perl_build/libperl.so.5.22.1.SYSTEM_PERL_DISABLED /usr/lib/x86_64-linux-gnu/libperl.so.5.22.1
+
+# PERL INSTALL DIRS, NOT DISABLED
+# /usr/local/lib/x86_64-linux-gnu/perl/5.22.1  Apache2::FileManager, APR::Request, Apache2::Request, Apache2::Upload 
+
+# PERL INSTALL DIRS, BUILD TO SYSTEM
+S mv /usr/lib/x86_64-linux-gnu/perl5/5.22 /usr/lib/x86_64-linux-gnu/perl5/5.22.BUILD_PERL_DISABLED
+S mv /usr/lib/x86_64-linux-gnu/perl5/5.22.SYSTEM_PERL_DISABLED /usr/lib/x86_64-linux-gnu/perl5/5.22
+S mv /usr/lib/x86_64-linux-gnu/perl/5.22.1 /usr/lib/x86_64-linux-gnu/perl/5.22.1.BUILD_PERL_DISABLED
+S mv /usr/lib/x86_64-linux-gnu/perl/5.22.1.SYSTEM_PERL_DISABLED /usr/lib/x86_64-linux-gnu/perl/5.22.1
+S mv /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl-base.BUILD_PERL_DISABLED
+S mv /usr/lib/x86_64-linux-gnu/perl-base.SYSTEM_PERL_DISABLED /usr/lib/x86_64-linux-gnu/perl-base
+S mv /usr/local/lib/perl5/site_perl/5.22.1/x86_64-linux /usr/local/lib/perl5/site_perl/5.22.1/x86_64-linux.BUILD_PERL_DISABLED
+S mv /usr/local/lib/perl5/site_perl/5.22.1/x86_64-linux.SYSTEM_PERL_DISABLED /usr/local/lib/perl5/site_perl/5.22.1/x86_64-linux
+S mv /usr/local/lib/perl5/5.22.1 /usr/local/lib/perl5/5.22.1.BUILD_PERL_DISABLED
+S mv /usr/local/lib/perl5/5.22.1.SYSTEM_PERL_DISABLED /usr/local/lib/perl5/5.22.1
+
+S mv /home/$USERNAME/perl5 /home/$USERNAME/perl5.BUILD_PERL_DISABLED
+S mv /home/$USERNAME/perl5.SYSTEM_PERL_DISABLED /home/$USERNAME/perl5
+
+# PERL CODE, DISABLE BAD MODULE
+S mv /usr/lib/x86_64-linux-gnu/perl5/5.22/Data/Alias.pm /usr/lib/x86_64-linux-gnu/perl5/5.22/Data/Alias.pm.SEGFAULT_DISABLED
+
+
+
+# MOD_PERL, SYSTEM TO BUILD
+S apt-get remove libapache2-mod-perl2
+B wget https://cpan.metacpan.org/authors/id/P/PH/PHRED/mod_perl-2.0.5.tar.gz
+B tar -xzvf mod_perl-2.0.5.tar.gz
+CD mod_perl-2.0.5
+B perl Makefile.PL
+B make
+B make test
+B make install
+
+# MOD_PERL, BUILD TO SYSTEM
+S mod_perl_uninstall.sh
+S apt-get install libapache2-mod-perl2
+#S apt-get install libapache2-mod-perl2-dev  # UNNECESSARY
+
+
+# METHOD::SIGNATURES::SIMPLE & DEVEL::DECLARE & B::HOOKS::OP::CHECK, SYSTEM TO BUILD
+B method_signatures_simple_uninstall.sh
+B wget https://cpan.metacpan.org/authors/id/R/RH/RHESA/Method-Signatures-Simple-1.00.tar.gz
+B tar -xzvf Method-Signatures-Simple-1.00.tar.gz
+CD Method-Signatures-Simple-1.00
+B perl Makefile.PL
+B make
+B make test
+B make install
+
+B devel_declare_uninstall.sh
+B wget https://cpan.metacpan.org/authors/id/F/FL/FLORA/Devel-Declare-0.006006.tar.gz
+B tar -xzvf Devel-Declare-0.006006.tar.gz
+CD Devel-Declare-0.006006
+B perl Makefile.PL
+B make
+B make test
+B make install
+
+S mv /usr/lib/x86_64-linux-gnu/perl5/5.22/B /usr/lib/x86_64-linux-gnu/perl5/5.22/B.SYSTEM_PERL_DISABLED
+S mv /usr/lib/x86_64-linux-gnu/perl5/5.22/auto/B /usr/lib/x86_64-linux-gnu/perl5/5.22/auto/B.SYSTEM_PERL_DISABLED
+#B wget https://cpan.metacpan.org/authors/id/Z/ZE/ZEFRAM/B-Hooks-OP-Check-0.19.tar.gz
+B wget https://cpan.metacpan.org/authors/id/F/FL/FLORA/B-Hooks-OP-Check-0.18.tar.gz
+B tar -xzvf B-Hooks-OP-Check-0.18.tar.gz
+CD B-Hooks-OP-Check-0.18
+B perl Makefile.PL
+B make
+B make test
+B make install
+
+
+
+
+
+# START HERE: recreate on cloud-comp0-00; debug mod_perl; install github B::Hooks::OP::Check; setup ssh; file Check.xs bug report; file Data::Alias bug report
 
 
 
