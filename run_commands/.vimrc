@@ -14,3 +14,6 @@ behave mswin
 :set smartindent
 :set tabstop=4
 :set shiftwidth=4
+
+" enable <CTRL>-arrow keybindings to jump words instead of delete lines
+:set term=xterm

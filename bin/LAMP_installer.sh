@@ -2565,7 +2565,7 @@ B make install
 
 
 
-# START HERE: recreate on cloud-comp0-00; debug mod_perl; install github B::Hooks::OP::Check; setup ssh; file Check.xs bug report; file Data::Alias bug report
+# START HERE: recreate on cloud-comp0-00; debug mod_perl; install github B::Hooks::OP::Check; setup ssh; file mod_perl bug report; file Check.xs bug report; file Data::Alias bug report
 
 
 
