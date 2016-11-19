@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.090_000'
+VERSION='0.091_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -703,7 +703,7 @@ if [ $MENU_CHOICE -le 14 ]; then
         S /etc/init.d/lightdm restart
         echo
 
-        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
         DOMAIN_NAME=$USER_INPUT
 
         echo '[ Enable X-Windows Single-Session Connection ]'
@@ -1396,7 +1396,7 @@ if [ $MENU_CHOICE -le 30 ]; then
         C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
         echo '[ Install NFS Client (Via Service Package) ]'
         S apt-get install nfs-kernel-server nfs-common
-        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
         DOMAIN_NAME=$USER_INPUT
         echo '[ Create NFS Import Directory & Mount NFS Share ]'
         S mkdir -p /nfs_imported/$DOMAIN_NAME
@@ -1476,7 +1476,7 @@ if [ $MENU_CHOICE -le 32 ]; then
         EDITOR=$USER_INPUT
         D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
-        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
         DOMAIN_NAME=$USER_INPUT
         P $ADMIN_EMAIL "website administrator's PUBLIC e-mail address"
         ADMIN_EMAIL=$USER_INPUT
@@ -1576,7 +1576,7 @@ if [ $MENU_CHOICE -le 34 ]; then
     if [ $MACHINE_CHOICE -eq 0 ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
-        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
         DOMAIN_NAME=$USER_INPUT
         P $ADMIN_EMAIL "website administrator's PUBLIC e-mail address"
         ADMIN_EMAIL=$USER_INPUT
@@ -1669,7 +1669,7 @@ if [ $MENU_CHOICE -le 35 ]; then
     if [ $MACHINE_CHOICE -eq 0 ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
-        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
         DOMAIN_NAME=$USER_INPUT
         echo "[ Copy Data From The Following Line, Then Paste Into Apt Config File /etc/apt/sources.list ]"
         echo 'deb http://download.webmin.com/download/repository sarge contrib'
@@ -1693,7 +1693,7 @@ if [ $MENU_CHOICE -le 36 ]; then
         EDITOR=$USER_INPUT
         D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
-        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
         DOMAIN_NAME=$USER_INPUT
 
         echo '[ Enable Outgoing E-Mail ]'
@@ -1879,7 +1879,7 @@ if [ $MENU_CHOICE -le 42 ]; then
     if [ $MACHINE_CHOICE -eq 0 ]; then
         D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
-        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
         DOMAIN_NAME=$USER_INPUT
         echo '[ Ensure MySQL Configured To Support Perl Distribution DBD::mysql `make test` Command ]'
         echo '[ Copy Commands From The Following Lines ]'
@@ -1917,7 +1917,7 @@ if [ $MENU_CHOICE -le 43 ]; then
     if [ $MACHINE_CHOICE -eq 0 ]; then
         D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
-        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
         DOMAIN_NAME=$USER_INPUT
         DOMAIN_NAME_UNDERSCORES=${DOMAIN_NAME//./_}  # replace dots with underscores
         DOMAIN_NAME_NO_USER=$DOMAIN_NAME
@@ -2006,7 +2006,7 @@ if [ $MENU_CHOICE -le 44 ]; then
     echo  '44. [[[ PERL SHINYCMS, BUILD DEMO DATABASE & RUN TESTS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
         DOMAIN_NAME=$USER_INPUT
         CD ~/public_html/$DOMAIN_NAME-latest
         echo '[ WARNING: Only Utilize ONE Of The Following Build Commands, Either With Or Without Demo Data ]'
@@ -2040,7 +2040,7 @@ if [ $MENU_CHOICE -le 45 ]; then
     echo  '45. [[[ PERL SHINYCMS, BACKUP & RESTORE DATABASE ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
         DOMAIN_NAME=$USER_INPUT
         DOMAIN_NAME_UNDERSCORES=${DOMAIN_NAME//./_}  # replace dots with underscores
         DOMAIN_NAME_UNDERSCORES_NO_USER=$DOMAIN_NAME_UNDERSCORES
@@ -2094,7 +2094,7 @@ if [ $MENU_CHOICE -le 46 ]; then
         EDITOR=$USER_INPUT
         D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
-        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
         DOMAIN_NAME=$USER_INPUT
         P $ADMIN_FIRST_NAME "website administrator's first name"
         ADMIN_FIRST_NAME=$USER_INPUT
@@ -2196,7 +2196,7 @@ if [ $MENU_CHOICE -le 47 ]; then
         EDITOR=$USER_INPUT
         D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
-        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
         DOMAIN_NAME=$USER_INPUT
         P $ADMIN_FIRST_NAME "website administrator's first name"
         ADMIN_FIRST_NAME=$USER_INPUT
@@ -2256,7 +2256,7 @@ if [ $MENU_CHOICE -le 48 ]; then
     echo  '48. [[[ PERL SHINYCMS, CREATE APACHE DIRECTORIES & ENABLE STATIC PAGE ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
         DOMAIN_NAME=$USER_INPUT
         S mkdir -p /srv/www/$DOMAIN_NAME/public_html
         S mkdir /srv/www/$DOMAIN_NAME/logs
@@ -2276,7 +2276,7 @@ if [ $MENU_CHOICE -le 49 ]; then
         EDITOR=$USER_INPUT
         D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
-        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
         DOMAIN_NAME=$USER_INPUT
 
         echo '[ Add Username To Web Server User Group www-data, Allowing Username To Modify Appropriate Permissions ]'
@@ -2304,7 +2304,7 @@ if [ $MENU_CHOICE -le 50 ]; then
     echo  '50. [[[ PERL SHINYCMS, CONFIGURE SHINY ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
+        D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
         DOMAIN_NAME=$USER_INPUT
         DOMAIN_NAME_UNDERSCORES=${DOMAIN_NAME//./_}  # replace dots with underscores
 
