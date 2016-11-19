@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.089_000'
+VERSION='0.090_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -1504,6 +1504,8 @@ if [ $MENU_CHOICE -le 32 ]; then
         echo '...OR...'
         echo
         echo '[ SUBDOMAIN USE ONLY (Not Domain) ]'
+        echo '[ Disable DOMAIN_NAME_ONLY Line, If Also Installing phpMyAdmin ]'
+        echo '[ OR ]'
         echo '[ Change DOMAIN_NAME_ONLY To bar.com Portion Of foo.bar.com Subdomain ]'
         echo
         echo "<VirtualHost *:80>"
@@ -1653,6 +1655,8 @@ if [ $MENU_CHOICE -le 34 ]; then
         echo " http://phpmyadmin.$DOMAIN_NAME"
         echo
         C "Please load the URL above in your web browser, and log in using the 'root' mysql user & password."
+        echo '[ If Your Browser Received The Subdomain Apache Page Instead Of phpMyAdmin, Then Disable DOMAIN_NAME_ONLY Line In Apache Site Config File ]'
+        S "$EDITOR /etc/apache2/sites-available/$DOMAIN_NAME.conf"
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
