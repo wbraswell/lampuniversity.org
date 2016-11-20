@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.092_000'
+VERSION='0.092_100'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -1920,7 +1920,7 @@ if [ $MENU_CHOICE -le 43 ]; then
         D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
         DOMAIN_NAME=$USER_INPUT
         DOMAIN_NAME_UNDERSCORES=${DOMAIN_NAME//./_}  # replace dots with underscores
-        DOMAIN_NAME_UNDERSCORES=${DOMAIN_NAME//-/_}  # replace hyphens with underscores
+        DOMAIN_NAME_UNDERSCORES=${DOMAIN_NAME_UNDERSCORES//-/_}  # replace hyphens with underscores
         DOMAIN_NAME_NO_USER=$DOMAIN_NAME
         DOMAIN_NAME_NO_USER+='__no_user'
         MYSQL_USERNAME_DEFAULT=`expr match "$DOMAIN_NAME" '\([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789]*\)'`  # extract lowest-level hostname
