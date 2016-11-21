@@ -1,18 +1,63 @@
 Auto-Parallel Technologies, Inc.
+
+... in cooperation with ...
+
+Austin Perl Mongers
+
+... presents ...
+
 LAMP University
-Perl Certification & Degree Requirements
+Perl Certification & Rank & Degree Requirements
+Last Updated 20161121 2016.326
 
 
-LEVEL 1 CERTIFIED:
+LEVEL 1 CERTIFICATION COURSES:
 
-Learning Perl, 6th Edition
-http://shop.oreilly.com/product/0636920018452.do
+Participants of each certification course (1A, 1B, etc) must pass a formal examination.
+Graduates of each course will receive a framed certificate & 1 year of Perl career mentorship.
+A minimum of 5 participants is required for each course.
+All 3 course textbooks are utilized throughout level 1 certification.
+
+Curriculum:
+
+Learning Perl, 7th Edition
+http://shop.oreilly.com/product/0636920049517.do
 
 Learning Perl Student Workbook, 2nd Edition
 http://shop.oreilly.com/product/0636920018469.do
 
+Learning RPerl
+http://www.rperl.org/learning_rperl.html
 
-LEVEL 2 CERTIFIED:
+LEVEL 1A, PERL WHITE BELT:
+    Go from zero to Perl & earn your white belt by getting Perl installed on your own laptop & writing your first Perl programs.
+    Linux & Perl Installation, Scalar Data, Array Data, Subroutines
+    Chapters 1 - 4
+    24 credit hours
+    $650 per student
+
+LEVEL 1B, PERL YELLOW BELT:
+    Earn your second rank belt by writing more complex Perl programs & increasing your confidence as an aspiring software developer.
+    File Operations, Hash Data, Regular Expressions, Additional Control Structures
+    Chapters 5 - 10
+    40 credit hours
+    $950 per student
+
+LEVEL 1C, PERL ORANGE BELT:
+    Earn your full level 1 certification & advance to the rank of orange belt by completing all textbook exercises & launching a real-life web app.
+    Object-Oriented Programming, Operating System Processes, Dynamic Web Development, Additional Advanced Techniques
+    Real-Life Web Application Project & Follow-Up Sessions
+    Chapters 11 - 17
+    56 credit hours
+    $1,250 per student
+
+LEVEL 1 BUNDLE, LEVELS 1A + 1B + 1C:
+    Save money & earn all 3 rank belts for full level 1 certification!
+    $350 discount
+    $2,500 per student
+
+
+LEVEL 2 CERTIFICATION COURSES:
 
 Intermediate Perl, 2nd Edition
 http://shop.oreilly.com/product/0636920012689.do
@@ -24,31 +69,31 @@ http://shop.oreilly.com/product/0636920018476.do
 <<< ASSOCIATE DEGREE IN PERL >>>
 
 
-LEVEL 3 CERTIFIED:
+LEVEL 3 CERTIFICATION COURSES:
 
 Mastering Perl, 2nd Edition
 http://shop.oreilly.com/product/0636920012702.do
 
 
-LEVEL 4 CERTIFIED:
+LEVEL 4 CERTIFICATION COURSES:
 
 Perl Best Practices
 http://shop.oreilly.com/product/9780596001735.do
 
-Learning RPerl
+Intermediate RPerl
 http://www.rperl.org
 
 
 <<< BACHELOR'S DEGREE IN PERL >>>
 
 
-LEVEL 5 CERTIFIED:
+LEVEL 5 CERTIFICATION COURSES:
 
 Programming Perl, 4th Edition
 http://shop.oreilly.com/product/9780596004927.do
 
 
-LEVEL 6 CERTIFIED:
+LEVEL 6 CERTIFICATION COURSES:
 
 Advanced Perl Programming, 2nd Edition
 http://shop.oreilly.com/product/9780596004569.do
@@ -57,7 +102,7 @@ http://shop.oreilly.com/product/9780596004569.do
 <<< MASTER'S DEGREE IN PERL >>>
 
 
-LEVEL 7 CERTIFIED:
+LEVEL 7 CERTIFICATION COURSES:
 
 Prerequisite: Linux Certification Level 3
 
@@ -65,13 +110,13 @@ Automating System Administration with Perl, 2nd Edition
 http://shop.oreilly.com/product/9780596006396.do
 
 
-LEVEL 8 CERTIFIED:
+LEVEL 8 CERTIFICATION COURSES:
 
 Elective material, choose any of the remaining books with an animal on the cover:
 http://shop.oreilly.com/category/browse-subjects/programming/perl.do
 
 
-LEVEL 9 CERTIFIED:
+LEVEL 9 CERTIFICATION COURSES:
 
 Real-life thesis project, to be selected with the assistance of the LAMP University professor.
 
@@ -79,7 +124,7 @@ Real-life thesis project, to be selected with the assistance of the LAMP Univers
 <<< DOCTORATE DEGREE IN PERL >>>
 
 
-LEVEL 10 CERTIFIED:
+LEVEL 10 CERTIFICATION COURSES:
 
 Elective material, choose any of the remaining books with an animal on the cover:
 http://shop.oreilly.com/category/browse-subjects/programming/perl.do
