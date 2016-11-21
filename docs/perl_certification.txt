@@ -13,12 +13,13 @@ Last Updated 20161121 2016.326
 
 LEVEL 1 CERTIFICATION COURSES:
 
-Participants of each certification course (1A, 1B, etc) must pass a formal examination.
+Students in each certification course (1A, 1B, etc) must pass a formal examination.
 Graduates of each course will receive a framed certificate & 1 year of Perl career mentorship.
-A minimum of 5 participants is required for each course.
-All 3 course textbooks are utilized throughout level 1 certification.
+A minimum of 5 participants are required for each course.
+Students must provide a laptop which can be totally wiped clean for fresh Perl installation.
+All 3 course textbooks are utilized throughout level 1 certification & are included in course fees.
 
-Curriculum:
+Curriculum Textbooks:
 
 Learning Perl, 7th Edition
 http://shop.oreilly.com/product/0636920049517.do
