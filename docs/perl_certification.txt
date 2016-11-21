@@ -32,21 +32,21 @@ http://www.rperl.org/learning_rperl.html
 
 LEVEL 1A, PERL WHITE BELT:
     Go from zero to Perl & earn your white belt by getting Perl installed on your own laptop & writing your first Perl programs.
-    Linux & Perl Installation, Scalar Data, Array Data, Subroutines
+    Topics: Linux & Perl Installation, Scalar Data, Array Data, Subroutines
     Chapters 1 - 4
     24 credit hours
     $650 per student
 
 LEVEL 1B, PERL YELLOW BELT:
     Earn your second rank belt by writing more complex Perl programs & increasing your confidence as an aspiring software developer.
-    File Operations, Hash Data, Regular Expressions, Additional Control Structures
+    Topics: File Operations, Hash Data, Regular Expressions, Additional Control Structures
     Chapters 5 - 10
     40 credit hours
     $950 per student
 
 LEVEL 1C, PERL ORANGE BELT:
     Earn your full level 1 certification & advance to the rank of orange belt by completing all textbook exercises & launching a real-life web app.
-    Object-Oriented Programming, Operating System Processes, Dynamic Web Development, Additional Advanced Techniques
+    Topics: Object-Oriented Programming, Operating System Processes, Dynamic Web Development, Additional Advanced Techniques
     Real-Life Web Application Project & Follow-Up Sessions
     Chapters 11 - 17
     56 credit hours
