@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.092_100'
+VERSION='0.093_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -194,7 +194,7 @@ echo \ '1. [[[        LINUX, CONFIGURE CLOUD NETWORKING ]]]'
 echo \ '2. [[[ UBUNTU LINUX, USB INSTALL, FIX BROKEN SWAP DEVICE ]]]'
 echo \ '3. [[[ UBUNTU LINUX, FIX BROKEN LOCALE ]]]'
 echo \ '4. [[[ UBUNTU LINUX, INSTALL EXPERIMENTAL UBUNTU SDK BEFORE OTHER PACKAGES ]]]'
-echo \ '5. [[[ UBUNTU LINUX, UPGRADE ALL OPERATING SYSTEM PACKAGES ]]]'
+echo \ '5. [[[ UBUNTU LINUX, UPGRADE ENTIRE OPERATING SYSTEM OR ALL PACKAGES ]]]'
 echo \ '6. [[[ UBUNTU LINUX, INSTALL BASE CLI OPERATING SYSTEM PACKAGES ]]]'
 echo \ '7. [[[ UBUNTU LINUX, INSTALL & TEST CLAMAV ANTI-VIRUS ]]]'
 echo \ '8. [[[        LINUX, INSTALL LAMP UNIVERSITY TOOLS ]]]'
@@ -439,13 +439,16 @@ if [ $MENU_CHOICE -le 4 ]; then
 fi
 
 if [ $MENU_CHOICE -le 5 ]; then
-    echo '5. [[[ UBUNTU LINUX, UPGRADE ALL OPERATING SYSTEM PACKAGES ]]]'
+    echo '5. [[[ UBUNTU LINUX, UPGRADE ENTIRE OPERATING SYSTEM OR ALL PACKAGES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo '[ WARNING: THIS SECTION IS EXPERIMENTAL!  This should NOT be done if you are not sure about what you are doing!!! ]'
-        C 'Please read the warning above.  Seriously.'
+        echo '[ WARNING: You should probably not mix do-release-upgrade with the following apt-get & aptitude commands. ]'
+        C 'Please read the warnings above.  Seriously.'
         # NEED FIX: gvim AKA vim-gtk3 Has Unmet Dependencies After `apt-get upgrade` In Ubuntu 16.04.1 Xenial
         # https://bugs.launchpad.net/ubuntu/+source/vim/+bug/1613949
+        echo '[ Upgrade Entire Operating System Distribution Release ]'
+        S do-release-upgrade
         echo '[ Update Package List & Upgrade All Packages ]'
         S apt-get update
         S apt-get upgrade
@@ -2570,7 +2573,7 @@ B make install
 
 
 
-# START HERE: recreate on cloud-comp0-00; debug mod_perl; install github B::Hooks::OP::Check; setup ssh; file mod_perl bug report; file Check.xs bug report; file Data::Alias bug report
+# START HERE: recreate on cloud-comp0-00; install github B::Hooks::OP::Check; setup ssh; file mod_perl bug report; file Check.xs bug report; file Data::Alias bug report
 
 
 
