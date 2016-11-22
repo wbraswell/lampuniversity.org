@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.093_000'
+VERSION='0.094_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -856,6 +856,7 @@ if [ $MENU_CHOICE -le 20 ]; then
         echo '[ Git: Source Code Version Control, Required To Install Latest Development & Unstable Software ]'
         echo '[ cURL: Downloader, Required To Install cpanminus & Perlbrew & Perl-Build ]'
         echo '[ ExtUtils::MakeMaker: Source Code Builder, Required To Build Many Perl Software Suites ]'
+        echo '[ Perl Debug: Symbols For The Perl Interpreter, Optional For Perl Core & XS & RPerl Debugging ]'
         echo
         echo '[ Install git ]'
         S apt-get install git
@@ -886,7 +887,10 @@ if [ $MENU_CHOICE -le 20 ]; then
         echo '[ Install ExtUtils::MakeMaker System-Wide, Check Updated Version, Must Be v7.04 Or Newer ]'
         S 'perl -MExtUtils::MakeMaker\ 999'
 
-        echo '[ Install ExtUtils::MakeMaker, Check Perl Version To Determine Which Of The Following Sections To Choose ]'
+        echo '[ Install Perl Debugging Symbols System-Wide ]'
+        S apt-get install perl-debug
+
+        echo '[ Check Perl Version To Determine Which Of The Following Sections To Choose ]'
         B perl -v
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
