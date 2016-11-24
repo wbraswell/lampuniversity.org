@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.095_000'
+VERSION='0.096_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -9,6 +9,8 @@ VERSION='0.095_000'
 
 # PRE-INSTALL: download the latest version of this file and make it executable
 # wget https://raw.githubusercontent.com/wbraswell/lampuniversity.org/master/bin/LAMP_installer.sh; chmod a+x ./LAMP_installer.sh
+# OR
+# wget http://tinyurl.com/lampinstaller; chmod a+x ./LAMP_installer.sh
 
 # enable extended pattern matching in case statements
 shopt -s extglob
