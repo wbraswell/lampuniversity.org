@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.094_000'
+VERSION='0.095_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -602,6 +602,8 @@ if [ $MENU_CHOICE -le 12 ]; then
     echo '12. [[[ UBUNTU LINUX, INSTALL BASE GUI OPERATING SYSTEM PACKAGES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
+        D $EDITOR 'preferred text editor' 'vi'
+        EDITOR=$USER_INPUT
         echo '[ Check Install, Confirm No Errors ]'
         S apt-get update
         S apt-get -f install
@@ -609,6 +611,12 @@ if [ $MENU_CHOICE -le 12 ]; then
         echo '[ Basic X-Windows Testing: x11-apps (contains xclock) ]'
         echo '[ General Tools: gkrellm hexchat firefox chromium-browser update-manager indicator-multiload unetbootin ]'
         S apt-get install xterm xfce4-terminal x11-apps gkrellm hexchat firefox chromium-browser update-manager indicator-multiload unetbootin
+        echo '[ OPTIONAL: Adobe Pepper Flash Plugin, Must Manually Enable Canonical Partner Repository, Then Disable When Done ]'
+        S $EDITOR /etc/apt/sources.list
+        S apt-get update
+        S apt-get install adobe-flashplugin
+        S $EDITOR /etc/apt/sources.list
+        S apt-get update
         echo '[ Check Install, Confirm No Errors ]'
         S apt-get -f install
     elif [ $MACHINE_CHOICE -eq 1 ]; then
@@ -2352,6 +2360,7 @@ if [ $MENU_CHOICE -le 51 ]; then
         USERNAME=$USER_INPUT
 
 
+S apt-get install aptitude
 S aptitude install apache2-dev
     # accept solution w/ downgrades only
 S apt-get install libapache2-mod-perl2-dev
@@ -2524,6 +2533,16 @@ S mv /home/$USERNAME/perl5.SYSTEM_PERL_DISABLED /home/$USERNAME/perl5
 
 # PERL CODE, DISABLE BAD MODULE
 S mv /usr/lib/x86_64-linux-gnu/perl5/5.22/Data/Alias.pm /usr/lib/x86_64-linux-gnu/perl5/5.22/Data/Alias.pm.SEGFAULT_DISABLED
+
+
+# MOD_PERL, UBUNTU SYSTEM TO CPAN SYSTEM
+S apt-get remove libapache2-mod-perl2
+S apt-get install aptitude
+S aptitude install apache2-dev
+CD /usr/lib/x86_64-linux-gnu/
+S ln -s ./libgdbm.so.3 ./libgdbm.so
+source /etc/apache2/envvars
+S cpan mod_perl2
 
 
 
