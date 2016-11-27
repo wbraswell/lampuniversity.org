@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.099_000'
+VERSION='0.100_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -450,6 +450,8 @@ if [ $MENU_CHOICE -le 5 ]; then
         # NEED FIX: gvim AKA vim-gtk3 Has Unmet Dependencies After `apt-get upgrade` In Ubuntu 16.04.1 Xenial
         # https://bugs.launchpad.net/ubuntu/+source/vim/+bug/1613949
         echo '[ Upgrade Entire Operating System Distribution Release ]'
+        S apt-get update
+        S apt-get install ubuntu-release-upgrader-core
         S do-release-upgrade
         echo '[ Update Package List & Upgrade All Packages ]'
         S apt-get update
