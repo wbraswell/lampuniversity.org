@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.100_000'
+VERSION='0.101_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -481,9 +481,9 @@ if [ $MENU_CHOICE -le 6 ]; then
         echo '[ Check Install, Confirm No Errors ]'
         S apt-get update
         S apt-get -f install
-        echo '[ General Tools: g++ make ssh perl perl-doc vim git htop linuxlogo lynx screen ]'
+        echo '[ General Tools: g++ make ssh perl perl-doc vim git htop linuxlogo lynx traceroute screen ]'
         echo '[ LAMP University Tools Requirements: zip unzip ]'
-        S apt-get install g++ make ssh perl perl-doc vim git htop linuxlogo lynx screen zip unzip
+        S apt-get install g++ make ssh perl perl-doc vim git htop linuxlogo lynx traceroute screen zip unzip
         echo '[ Check Install, Confirm No Errors ]'
         S apt-get -f install
     elif [ $MACHINE_CHOICE -eq 1 ]; then
