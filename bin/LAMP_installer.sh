@@ -10,7 +10,7 @@ VERSION='0.102_000'
 # PRE-INSTALL: download the latest version of this file and make it executable
 # wget https://raw.githubusercontent.com/wbraswell/lampuniversity.org/master/bin/LAMP_installer.sh; chmod a+x ./LAMP_installer.sh
 # OR
-# wget http://tinyurl.com/lampinstaller -O LAMP_installer.sh; chmod a+x ./LAMP_installer.sh
+# wget tinyurl.com/lampinstaller; chmod a+x lampinstaller
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -364,7 +364,8 @@ if [ $MENU_CHOICE -le 1 ]; then
         S "echo $DOMAIN_NAME > /etc/hostname"  # DEV NOTE: must wrap redirects in quotes
         echo '[ Modify Network Interfaces File, Append Google DNS Servers To End Of File ]'
         S 'echo -e "\ndns-nameservers 8.8.8.8 8.8.4.4" >> /etc/network/interfaces'  # DEV NOTE: must wrap redirects in quotes
-        echo '[ Reboot, Then Check /etc/resolv.conf File To Confirm The Following Lines Have Been Appended ]'
+        echo '[ You MUST Reboot Now To Enable New Hostname ]'
+        echo '[ Then Check /etc/resolv.conf File To Confirm The Following Lines Have Been Appended ]'
         echo 'nameserver 8.8.8.8'
         echo 'nameserver 8.8.4.4'
         echo
