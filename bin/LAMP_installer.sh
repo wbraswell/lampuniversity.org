@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.101_000'
+VERSION='0.102_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -303,10 +303,8 @@ if [ $MENU_CHOICE -le 0 ]; then
         S chown -R $USERNAME.$USERNAME /home/$USERNAME
         S chmod -R go-rwx /home/$USERNAME
         S chsh -s /bin/bash $USERNAME
-        echo "[ Manually Add $USERNAME To User Group sudo, Allows Running root Commands (Like update-manager) Via sudo In xpra ]"
-        D $EDITOR 'preferred text editor' 'vi'
-        EDITOR=$USER_INPUT
-        S $EDITOR /etc/group
+        echo "[ Add $USERNAME To User Group sudo, Allows Running root Commands (Like update-manager) Via sudo In xpra ]"
+        S usermod -aG sudo $USERNAME 
         echo '[ Cloud At Cost Only, Delete Installation Template File ]'
         S rm -f linux-ubuntu-template.sh
         echo '[ Take Note Of IP Address For Use On Existing Machine ]'
@@ -1446,17 +1444,14 @@ if [ $MENU_CHOICE -le 31 ]; then
     echo '31. [[[ UBUNTU LINUX, INSTALL APACHE & MOD_PERL ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        S apt-get install apache2 libapache2-mod-perl2
-
-        echo '[ Manually Edit Operating System User Group Config File /etc/group, Add New Username To www-data Group ]'
-        D $EDITOR 'preferred text editor' 'vi'
-        EDITOR=$USER_INPUT
         D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
-        echo '[ Example Data Format On The Following Line, Group Number 33 May Differ In Your /etc/group, Use Your Group Number Instead Of 33 ]'
-        echo "www-data:x:33:$USERNAME"
-        echo
-        S $EDITOR /etc/group
+
+        echo '[ Install Apache & mod_perl Packages ]'
+        S apt-get install apache2 libapache2-mod-perl2
+
+        echo "[ Add $USERNAME To User Group www-data, Allows Web Content To Be Served From /home/$USERNAME ]"
+        S usermod -aG www-data $USERNAME 
 
         echo '[ Subdomain Support ]'
         echo "If you plan to serve a subdomain (ex: foo.bar.com), then please ensure the following CNAME alias entry is set in your hosting provider's DNS zone file:"
@@ -2293,18 +2288,13 @@ if [ $MENU_CHOICE -le 49 ]; then
     echo  '49. [[[ PERL SHINYCMS, CONFIGURE APACHE PERMISSIONS & ENABLE DYNAMIC PAGES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
-        D $EDITOR 'preferred text editor' 'vi'
-        EDITOR=$USER_INPUT
         D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
         D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
         DOMAIN_NAME=$USER_INPUT
 
-        echo '[ Add Username To Web Server User Group www-data, Allowing Username To Modify Appropriate Permissions ]'
-        echo '[ Copy Data From The Following Line, Then Paste Into Operating System User Group Config File /etc/group ]'
-        echo "www-data:x:33:$USERNAME"
-        echo
-        S $EDITOR /etc/group
+        echo "[ Add $USERNAME To User Group www-data, Allows Web Content To Be Served From /home/$USERNAME ]"
+        S usermod -aG www-data $USERNAME
 
         echo '[ Configure Operating System User/Group/Other Permissions ]'
         S chown -R $USERNAME:www-data /home/$USERNAME/
@@ -2312,6 +2302,7 @@ if [ $MENU_CHOICE -le 49 ]; then
         S chmod -R g+rwX /home/$USERNAME/public_html/$DOMAIN_NAME-latest/root/static/cms-uploads/
         S chmod -R g+rX /home/$USERNAME/public_html
         S chmod g+rX /home/$USERNAME/
+
         echo "[ Ensure Only User $USERNAME Can Read Files Which May Contain Passwords ]"
         B chmod -R go-rwx ~/.:100-fakexinerama ~/.bash_logout ~/bin ~/.config ~/.dbus ~/.gitconfig ~/LAMP_installer.sh ~/.local ~/perl5 ~/.viminfo ~/.Xauthority ~/.xsession-errors ~/.bash_history ~/.bashrc ~/.cache ~/.cpanm ~/.fakexinerama ~/.gkrellm2 ~/.lesshst ~/.mysql_history ~/.profile ~/.ssh ~/.vimrc ~/.xpra
         S service apache2 reload
