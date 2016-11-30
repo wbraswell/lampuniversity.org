@@ -2622,7 +2622,19 @@ S gdb /usr/sbin/apache2
 
 
 
+# run plack manually
+source /home/wbraswell/.bashrc; 
+export PATH=/home/wbraswell/github_repos/rperl-latest/script/:$PATH; 
+export PERL5LIB=/home/wbraswell/github_repos/rperl-latest/lib/:/home/wbraswell/perl5:/home/wbraswell/perl5/lib/perl5:$PERL5LIB; 
+set | grep PERL
 
+vi /etc/apache2/sites-available/phpmyadmin.cloud-web2.autoparallel.com.conf
+    Listen 800
+    <VirtualHost *:800>
+        ...
+    </VirtualHost>
+a2dissite cloud-web2.autoparallel.com
+service apache2 reload
 
 
 
