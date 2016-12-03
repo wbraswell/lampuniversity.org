@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.105_000'
+VERSION='0.106_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -2365,7 +2365,16 @@ S aptitude install apache2-dev
 S apt-get install libapache2-mod-perl2-dev
 
 # download cloudforfree code
-S apt-get install expect  # `unbuffer` required by cloudforfree.org Code.pm
+
+# `unbuffer` required by cloudforfree.org Code.pm
+# Ubuntu v14.04
+S vi /etc/apt/sources.list
+    deb http://archive.ubuntu.com/ubuntu trusty-updates main universe
+S apt-get update
+S apt-get install expect-dev
+# OR
+# Ubuntu v16.04
+S apt-get install expect
 
 
 S apt-get install cpanm
