@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.108_000'
+VERSION='0.109_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -2303,8 +2303,10 @@ if [ $MENU_CHOICE -le 49 ]; then
 #        S chown -R $USERNAME:www-data /home/$USERNAME/
         S chown -R $USERNAME:$USERNAME /home/$USERNAME/
         S chown $USERNAME:www-data /home/$USERNAME/
+        S chown -R $USERNAME:www-data /home/$USERNAME/perl5
         S chown -R $USERNAME:www-data /home/$USERNAME/github_repos
         S chown -R $USERNAME:www-data /home/$USERNAME/public_html
+        S chmod -R g+rX /home/$USERNAME/perl5
         S chmod -R g+rX /home/$USERNAME/github_repos
         S chmod -R u+rwX,o+rX,o-w /home/$USERNAME/public_html/$DOMAIN_NAME-latest
         S chmod -R g+rwX /home/$USERNAME/public_html/$DOMAIN_NAME-latest/root/static/cms-uploads/
