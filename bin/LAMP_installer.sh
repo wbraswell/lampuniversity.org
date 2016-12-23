@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.110_000'
+VERSION='0.111_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -209,7 +209,7 @@ echo  '12. [[[ UBUNTU LINUX, INSTALL BASE GUI OPERATING SYSTEM PACKAGES ]]]'
 echo  '13. [[[ UBUNTU LINUX, INSTALL EXTRA GUI OPERATING SYSTEM PACKAGES ]]]'
 echo  '14. [[[ UBUNTU LINUX, INSTALL XPRA ]]]'
 echo  '15. [[[ UBUNTU LINUX, INSTALL VIRTUALBOX GUEST ADDITIONS ]]]'
-echo  '16. [[[ UBUNTU LINUX, UNINSTALL HUD & UNINSTALL OR RECONFIGURE GVFS ]]]'
+echo  '16. [[[ UBUNTU LINUX, UNINSTALL HUD & BLUETOOTH & MODEMMANAGER & GVFS ]]]'
 echo  '17. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER ]]]'
 echo  '18. [[[ UBUNTU LINUX, CONFIGURE XFCE WINDOW MANAGER ]]]'
 echo  '19. [[[ UBUNTU LINUX, ENABLE AUTOMATIC SECURITY UPDATES ]]]'
@@ -766,11 +766,15 @@ if [ $MENU_CHOICE -le 15 ]; then
 fi
 
 if [ $MENU_CHOICE -le 16 ]; then
-    echo '16. [[[ UBUNTU LINUX, UNINSTALL HUD & UNINSTALL OR RECONFIGURE GVFS ]]]'
+    echo '16. [[[ UBUNTU LINUX, UNINSTALL HUD & BLUETOOTH & MODEMMANAGER & GVFS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo '[ Uninstall HUD To Free System Memory ]'
         S apt-get purge hud
+        echo '[ Uninstall Bluetooth Support To Free System Memory ]'
+        S apt-get purge blueman bluez bluez-obexd
+        echo '[ Uninstall Mobile Broadband ModemManager To Free System Memory ]'
+        S apt-get purge modemmanager
         echo '[ Uninstall Or Disable GVFS To Speed Up Thunar File Explorer ]'
         echo '[ OPTION 1 ONLY: Uninstall GVFS Completely ]'
         S apt-get purge gvfs-daemons
