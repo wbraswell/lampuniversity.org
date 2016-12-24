@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.111_000'
+VERSION='0.112_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -2179,7 +2179,7 @@ END_HEREDOC
         echo '[ 4 Options Include: Manual local::lib; Manual Perlbrew; Automatic Upstart; Automatic SysVinit ]'
         C 'Please read the warning above.  Seriously.'
         echo '[ Start FastCGI Service, Manual, local::lib ]'
-        echo "[ Run As Non-Root User $USERNAME By User $USERNAME, Must Have Created Symlinks In Section 36 (EDIT MYSHINYTEMPLATE-FILES) ]"
+        echo "[ Run As Non-Root User $USERNAME By User $USERNAME, Must Have Created Symlinks In Section 43 (EDIT MYSHINYTEMPLATE FILES) ]"
         B ~/bin/fastcgi_start__$DOMAIN_NAME.sh
 
         # OR
@@ -2649,6 +2649,10 @@ source /home/wbraswell/.bashrc;
 export PATH=/home/wbraswell/github_repos/rperl-latest/script/:$PATH; 
 export PERL5LIB=/home/wbraswell/github_repos/apache2filemanager-latest/lib/:/home/wbraswell/github_repos/rperl-latest/lib/:/home/wbraswell/perl5:/home/wbraswell/perl5/lib/perl5:$PERL5LIB; 
 set | grep PERL
+
+OR Apache2 FastCGI:
+paste above lines into cloudforfree.org-latest/modified/fastcgi_start__cloudforfree.org.sh
+
 
 vi /etc/apache2/sites-available/phpmyadmin.cloud-web2.autoparallel.com.conf
     Listen 800
