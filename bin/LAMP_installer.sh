@@ -2666,6 +2666,9 @@ service apache2 reload
 ./script/shinycms_server.pl -p 80 -r  # Shiny
 plackup --port 3000 app.psgi  # A2::FM
 
+cpanm Starman
+./script/shinycms_server.pl -p 80 --fork
+
 
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
