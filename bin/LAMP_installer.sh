@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.113_000'
+VERSION='0.114_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -607,6 +607,9 @@ if [ $MENU_CHOICE -le 11 ]; then
     fi
     CURRENT_SECTION_COMPLETE
 fi
+
+# SECTION 12 VARIABLES
+UBUNTU_RELEASE_NAME='__EMPTY__'
 
 if [ $MENU_CHOICE -le 12 ]; then
     echo '12. [[[ UBUNTU LINUX, INSTALL BASE GUI OPERATING SYSTEM PACKAGES ]]]'
@@ -1873,9 +1876,6 @@ if [ $MENU_CHOICE -le 40 ]; then
     fi
     CURRENT_SECTION_COMPLETE
 fi
-
-# SECTION 41 VARIABLES
-UBUNTU_RELEASE_NAME='__EMPTY__'
 
 if [ $MENU_CHOICE -le 41 ]; then
     echo '41. [[[ UBUNTU LINUX, INSTALL SHINYCMS DEPENDENCIES ]]]'
