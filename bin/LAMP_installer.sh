@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.112_000'
+VERSION='0.113_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -339,6 +339,10 @@ if [ $MENU_CHOICE -le 0 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
+# START HERE: add non-fully-qualified hostname to 127.0.1.1 entry in /etc/hosts, to allow for gogetspace forcing overwrite of /etc/hostname
+# START HERE: add non-fully-qualified hostname to 127.0.1.1 entry in /etc/hosts, to allow for gogetspace forcing overwrite of /etc/hostname
+# START HERE: add non-fully-qualified hostname to 127.0.1.1 entry in /etc/hosts, to allow for gogetspace forcing overwrite of /etc/hostname
+
 if [ $MENU_CHOICE -le 1 ]; then
     echo '1. [[[ LINUX, CONFIGURE CLOUD NETWORKING ]]]'
     echo
@@ -438,6 +442,8 @@ if [ $MENU_CHOICE -le 4 ]; then
     fi
     CURRENT_SECTION_COMPLETE
 fi
+
+# START HERE: ensure "CODENAME-updates" (ex. "xenial-updates") entries exist in /etc/apt/sources.list
 
 if [ $MENU_CHOICE -le 5 ]; then
     echo '5. [[[ UBUNTU LINUX, UPGRADE ENTIRE OPERATING SYSTEM OR ALL PACKAGES ]]]'
@@ -608,6 +614,8 @@ if [ $MENU_CHOICE -le 12 ]; then
     if [ $MACHINE_CHOICE -eq 0 ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
+        D $UBUNTU_RELEASE_NAME 'Ubuntu release name (trusty, xenial, etc.)' 'trusty'
+        UBUNTU_RELEASE_NAME=$USER_INPUT
         echo '[ Check Install, Confirm No Errors ]'
         S apt-get update
         S apt-get -f install
@@ -616,6 +624,8 @@ if [ $MENU_CHOICE -le 12 ]; then
         echo '[ General Tools: gkrellm hexchat firefox chromium-browser update-manager indicator-multiload unetbootin ]'
         S apt-get install xterm xfce4-terminal x11-apps gkrellm hexchat firefox chromium-browser update-manager indicator-multiload unetbootin
         echo '[ OPTIONAL: Adobe Pepper Flash Plugin, Must Manually Enable Canonical Partner Repository, Then Disable When Done ]'
+        echo '[ Copy Data From The Following Lines, Then Paste Into The Apt Config File /etc/apt/sources.list, OR Uncomment Equivalent Existing Lines ]'
+        echo "deb http://archive.canonical.com/ubuntu $UBUNTU_RELEASE_NAME partner     # needed for Adobe Pepper Flash Plugin"
         S $EDITOR /etc/apt/sources.list
         S apt-get update
         S apt-get install adobe-flashplugin
@@ -2394,6 +2404,15 @@ S apt-get install cpanm
 
 S apt-get install libapreq2-3
 S a2enmod apreq2
+
+
+
+# NEED MOVE UP INTO SECTION 5
+# BUG https://bugs.launchpad.net/bugs/1613949
+vi /etc/apt/sources.list
+    copy all "xenial" lines, paste as new "xenial-update" lines
+apt-get update
+apt-get install vim-gtk3  # example affected by 16.04.1 apt-get upgrade
 
 
 
