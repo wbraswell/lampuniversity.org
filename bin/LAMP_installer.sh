@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.115_000'
+VERSION='0.116_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -2704,6 +2704,20 @@ B cpanm Term::VT102
 B cpanm Term::VT102::Boundless
 B cpanm Term::VT102::Incremental
 
+# SECURITY: mysql root password stored in DB.pm.new, must delete!!!
+# update database schema
+B bin/dev-tools/regenerate-dbic-modules
+B rm lib/ShinyCMS/Model/DB.pm.new
+
+# phpmyadmin increase timeout
+# NEED FIX: DOES NOT APPEAR TO WORK?!?
+S vi /etc/phpmyadmin/config.inc.php
+   # $cfg['LoginCookieValidity'] = 14400;
+   # ini_set('session.gc_maxlifetime', 14400);
+S service apache2 reload
+
+# DEV NOTE, CORRELATION #cff01: screen logfile max path length is 70, must use OS symlink to shorten path
+S ln -s /home/wbraswell/github_repos/cloudforfree.org-latest/root/user_jobs /srv/cloudff_user_jobs
 
 echo
 echo '[[[ ALL DONE!!! ]]]'
