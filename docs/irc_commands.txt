@@ -1,0 +1,9 @@
+/join #some_channel
+/part #some_channel
+
+/msg ChanServ REGISTER #some_channel some_pass
+/msg ChanServ SET #some_channel TOPICLOCK ON
+/msg ChanServ SET #some_channel TOPIC some multi-word topic goes here
+
+/whois some_user
+/whowas some_user
