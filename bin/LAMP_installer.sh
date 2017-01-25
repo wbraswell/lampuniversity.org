@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.116_000'
+VERSION='0.117_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -2663,6 +2663,128 @@ S gdb /usr/sbin/apache2
 
 #(gdb) print PL_check[17]
 #$1 = (Perl_check_t) 0x7fffef697bd8
+
+
+
+
+#[[[ BEGIN GDB SESSION ]]]
+
+#user@cloud-comp0-00:/$ sudo -i
+#...
+#root@cloud-comp0-00:~# source /etc/apache2/envvars
+#root@cloud-comp0-00:~# gdb /usr/sbin/apache2
+#...
+#Reading symbols from /usr/sbin/apache2...(no debugging symbols found)...done.
+
+#(gdb) run -k start -X
+#Starting program: /usr/sbin/apache2 -k start -X
+#[Thread debugging using libthread_db enabled]
+#Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+#<<< DEBUG >>>: top of ShinyCMS.pm
+#<<< DEBUG >>>: in ShinyCMS.pm, about to use Moose
+#<<< DEBUG >>>: in ShinyCMS.pm, about to use Catalyst::Runtime
+#<<< DEBUG >>>: in ShinyCMS.pm, about to use Catalyst
+#<<< DEBUG >>>: in ShinyCMS.pm, about to use CatalystX::RoleApplicator
+#<<< DEBUG >>>: in ShinyCMS.pm, about to use Method::Signatures::Simple
+#<<< DEBUG >>>: in ShinyCMS.pm, about to call config()
+#<<< DEBUG >>>: in ShinyCMS.pm, have __PACKAGE__ = ShinyCMS
+#<<< DEBUG >>>: in ShinyCMS.pm, about to call setup()...
+#<<< DEBUG >>>: in ShinyCMS.pm, returned from setup()
+#<<< DEBUG >>>: in ShinyCMS.pm, about to return 1
+
+#Program received signal SIGSEGV, Segmentation fault.
+#0x00007fffebabcb10 in ?? ()
+#(gdb) bt
+#0 0x00007fffebabcb10 in ?? ()
+#1 0x00007ffff3e5302b in Perl_newUNOP (my_perl=my_perl@entry=0x5555577ddde0, type=type@entry=17, flags=<optimized out>, flags@entry=8192, first=0x5555562141b8) at op.c:4811
+#2 0x00007ffff3e54a1d in Perl_newCVREF (my_perl=my_perl@entry=0x5555577ddde0, flags=flags@entry=8192, o=<optimized out>) at op.c:9367
+#3 0x00007ffff3e8b686 in Perl_yylex (my_perl=my_perl@entry=0x5555577ddde0) at toke.c:6693
+#4 0x00007ffff3e97228 in Perl_yyparse (my_perl=my_perl@entry=0x5555577ddde0, gramtype=gramtype@entry=258) at perly.c:322
+#...
+#44 0x000055555558709f in main ()
+
+#(gdb) start
+#The program being debugged has been started already.
+#Start it from the beginning? (y or n) y
+#Temporary breakpoint 1 at 0x5555555867b0
+#Starting program: /usr/sbin/apache2 -k start -X
+#[Thread debugging using libthread_db enabled]
+#Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+#Temporary breakpoint 1, 0x00005555555867b0 in main ()
+
+#(gdb) break perl_parse
+#Function "perl_parse" not defined.
+#Make breakpoint pending on future shared library load? (y or [n]) y
+#Breakpoint 2 (perl_parse) pending.
+
+#(gdb) continue
+#Continuing.
+
+#Breakpoint 2, perl_parse (my_perl=0x55555581ae50, xsinit=0x7ffff420a280, argc=2, argv=0x7ffff7f88070, env=0x0) at perl.c:1473
+#1473    perl.c: No such file or directory.
+
+#(gdb) watch -l PL_check[17]
+#Hardware watchpoint 3: -location PL_check[17]
+
+#(gdb) continue
+#Continuing.
+
+#Hardware watchpoint 3: -location PL_check[17]
+
+#Old value = (OP *(*)(PerlInterpreter *, OP *)) 0x7ffff3e4d9e0 <Perl_ck_rvconst>
+#New value = (OP *(*)(PerlInterpreter *, OP *)) 0x7fffebabcb10 <check_cb>
+#0x00007fffebabcd0e in hook_op_check (type=type@entry=OP_RV2CV, cb=cb@entry=0x7fffeb8b6d30 <dd_ck_rv2cv>, user_data=user_data@entry=0x0) at Check.xs:66
+#66  PL_check[type] = check_cb;
+
+#(gdb) info threads
+#Id Target Id Frame 
+#* 1 Thread 0x7ffff7fe2780 (LWP 6196) "/usr/sbin/apach" 0x00007fffebabcd0e in hook_op_check (type=type@entry=OP_RV2CV, cb=cb@entry=0x7fffeb8b6d30 <dd_ck_rv2cv>, user_data=user_data@entry=0x0)
+#at Check.xs:66
+
+#(gdb) info source
+#Current source file is Check.xs
+#Compilation directory is /home/wbraswell/.cpanm/work/1479735542.24787/B-Hooks-OP-Check-0.19
+#Located in /home/wbraswell/.cpanm/work/1479735542.24787/B-Hooks-OP-Check-0.19/Check.xs
+#Contains 106 lines.
+#Source language is c.
+#Producer is GNU C11 5.4.0 20160609 -mtune=generic -march=x86-64 -g -O2 -fwrapv -fno-strict-aliasing -fPIC -fstack-protector-strong.
+#Compiled with DWARF 2 debugging format.
+#Does not include preprocessor macro info.
+
+#(gdb) continue
+#Continuing.
+#<<< DEBUG >>>: top of ShinyCMS.pm
+#<<< DEBUG >>>: in ShinyCMS.pm, about to use Moose
+#<<< DEBUG >>>: in ShinyCMS.pm, about to use Catalyst::Runtime
+#<<< DEBUG >>>: in ShinyCMS.pm, about to use Catalyst
+#<<< DEBUG >>>: in ShinyCMS.pm, about to use CatalystX::RoleApplicator
+#<<< DEBUG >>>: in ShinyCMS.pm, about to use Method::Signatures::Simple
+#<<< DEBUG >>>: in ShinyCMS.pm, about to call config()
+#<<< DEBUG >>>: in ShinyCMS.pm, have __PACKAGE__ = ShinyCMS
+#<<< DEBUG >>>: in ShinyCMS.pm, about to call setup()...
+#<<< DEBUG >>>: in ShinyCMS.pm, returned from setup()
+#<<< DEBUG >>>: in ShinyCMS.pm, about to return 1
+
+#...
+
+#Program received signal SIGSEGV, Segmentation fault.
+#0x00007fffebabcb10 in ?? ()
+#(gdb) bt
+#0 0x00007fffebabcb10 in ?? ()
+#1 0x00007ffff3e5302b in Perl_newUNOP (my_perl=my_perl@entry=0x555559dd8ed0, type=type@entry=17, flags=<optimized out>, flags@entry=8192, first=0x55555824eb98) at op.c:4811
+#2 0x00007ffff3e54a1d in Perl_newCVREF (my_perl=my_perl@entry=0x555559dd8ed0, flags=flags@entry=8192, o=<optimized out>) at op.c:9367
+#...
+#44 0x000055555558709f in main ()
+
+#(gdb) print PL_check[17]
+#$1 = (Perl_check_t) 0x7fffebabcb10
+
+#(gdb) quit
+
+#[[[ END GDB SESSION ]]]
+
+
 
 
 
