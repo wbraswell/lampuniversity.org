@@ -1,14 +1,14 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.20.0.
 
-VERSION=0.025_000
+VERSION=0.027_000
 
 echo "[[[ USAGE EXAMPLES ]]]"
 echo "1. Replace All Occurrences Of 'FOO' With 'BAR'"
 echo "$ find_replace_recurse.sh 'FOO' 'BAR' ./"
 echo "2. Replace All Occurrences Of '[ ANYTHING GOES HERE 123 #@$ ]' With '< ANYTHING GOES HERE 123 #@$ >'"
-echo "Run More Than Once To Allow Multiple Valid Regular Expression Matches, Continue Until 'sed: no input files'"
 echo "$ find_replace_recurse.sh '\[(.*)\]' '<\1>' ./"
+echo 'NOTE: all regular expressions are currently greedy, beware of using (.*) when one line contains multiple matches'
 echo "3. Replace All Occurrences Of \"FOO\" With \"'FOO'\" (In Other Words, Wrap FOO In Single Quotes)"
 echo "$ find_replace_recurse.sh 'FOO' \"'FOO'\" ./"
 echo "[[[ CHARACTER ESCAPE RULES ]]]"
