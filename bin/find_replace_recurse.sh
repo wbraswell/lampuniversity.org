@@ -1,8 +1,9 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.20.0.
 
-VERSION=0.027_000
+VERSION=0.027_100
 
+echo "This program currently uses grep for searching and sed for replacement."
 echo "[[[ USAGE EXAMPLES ]]]"
 echo "1. Replace All Occurrences Of 'FOO' With 'BAR'"
 echo "$ find_replace_recurse.sh 'FOO' 'BAR' ./"
