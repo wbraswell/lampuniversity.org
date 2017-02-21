@@ -1,5 +1,5 @@
-Git Notes 20160801 2016.214
-Copyright (c) 2014, 2015, 2016 William N. Braswell, Jr.
+Git Notes 20170215 2017.046
+Copyright (c) 2014, 2015, 2016, 2017 William N. Braswell, Jr.
 
 # [[[ INDIVIDUAL COMMANDS ]]]
 # [[[ INDIVIDUAL COMMANDS ]]]
@@ -165,3 +165,7 @@ $ git push origin master
 # [[[ FIX LATEST COMMIT MESSAGE AFTER PUSH TO REMOTE GITHUB ]]]
 $ git commit --amend
 $ git push --force origin master
+
+
+# [[[ UNDO GIT ADD & UNDO GIT COMMIT ]]]
+$ git reset HEAD~

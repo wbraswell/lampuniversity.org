@@ -1,7 +1,7 @@
 #!/bin/bash
-# Copyright © 2014, 2015, 2016, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
+# Copyright © 2014, 2015, 2016, 2017, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.117_000'
+VERSION='0.118_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -662,6 +662,10 @@ if [ $MENU_CHOICE -le 13 ]; then
         S apt-get install eclipse-cdt
         echo '[ Eclipse EPIC Perl Plugin ]'
         echo '[ DIRECTIONS: Run Eclipse -> Help -> Install New Software -> Add -> http://www.epic-ide.org/updates -> Install ]'
+        echo
+        echo '[ Eclipse WTP Web Tools HTML / CSS / JavaScript Plugin ]'
+        echo '[ DIRECTIONS: Run Eclipse -> Help -> Install New Software -> Add -> http://download.eclipse.org/webtools/repository/juno/ -> Install ]'
+        echo '[ Select Only Eclipse Web Developer Tools, JavaScript Development Tools, Web Page Editor ]'
         echo
         echo '[ Eclipse vi Plugin ]'
         S 'wget http://www.viplugin.com/files/viPlugin_1.20.3.zip; unzip viPlugin_1.20.3.zip; mv features/* ~/.eclipse/org.eclipse.*/features/; mv plugins/* ~/.eclipse/org.eclipse.*/plugins; rm -Rf features plugins'
