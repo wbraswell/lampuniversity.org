@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.118_000'
+VERSION='0.120_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -2388,6 +2388,7 @@ if [ $MENU_CHOICE -le 51 ]; then
         D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
 
+# [[[ PERL CLOUDFORFREE, PREREQUISITES ]]]
 
 S apt-get install aptitude
 S aptitude install apache2-dev
@@ -2413,6 +2414,7 @@ S apt-get install libapreq2-3
 S a2enmod apreq2
 
 
+# [[[ GVIM, FIX ]]]
 
 # NEED MOVE UP INTO SECTION 5
 # BUG https://bugs.launchpad.net/bugs/1613949
@@ -2422,6 +2424,7 @@ apt-get update
 apt-get install vim-gtk3  # example affected by 16.04.1 apt-get upgrade
 
 
+# [[[ PERL CLOUDFORFREE, PREREQUISITES, APACHE2::FILEMANAGER, PREREQUISITES ]]]
 
 # NON-CRITICAL BUG: Apache2::Request & Apache2::Upload, part of libapreq2
 #In this file:
@@ -2441,6 +2444,7 @@ apt-get install vim-gtk3  # example affected by 16.04.1 apt-get upgrade
 #Include /etc/apache2/mods-enabled/mpm*.conf
 
 
+# [[[ PERL CLOUDFORFREE, PREREQUISITES, APACHE2::FILEMANAGER ]]]
 
 #S cpanm Apache2::Request  # unnecessary, dependency of A2::FM below
 S cpanm Apache2::FileManager
@@ -2455,6 +2459,7 @@ S cpanm Apache2::FileManager
 #use Apache2::FileManager;
 
 
+# [[[ PERL CLOUDFORFREE, APACHE CONFIG ]]]
 
 S ln -s /home/wbraswell/public_html/cloudforfree.org-latest/modified/user_files /srv/www/starman.autoparallel.com/public_html/user_files
 
@@ -2479,7 +2484,7 @@ S chmod g+rX /home/wbraswell/
 
 
 
-
+# [[[ PERL CLOUDFORFREE, PREREQUISITES, SYNTAX HIGHLIGHTERS ]]]
 
 # ALL SYNTAX HIGHLIGHTERS
 S apt-get install npm nodejs-legacy
@@ -2524,8 +2529,7 @@ B git clone https://github.com/ajaxorg/ace-builds/ ace-builds-latest
 # browse to kitchen-sink.html
 
 
-
-
+# [[[ PERL CLOUDFORFREE, PREREQUISITES, APACHE2::FILEMANAGER, COMPILE PERL & MODPERL ]]]
 
 # non-threaded Perl, libperl.a
 # B wget NEED_URL
@@ -2640,12 +2644,7 @@ B make test
 B make install
 
 
-
-
-
-# START HERE: recreate on cloud-comp0-00; install github B::Hooks::OP::Check; setup ssh; file mod_perl bug report; file Check.xs bug report; file Data::Alias bug report
-
-
+# [[[ PERL CLOUDFORFREE, PREREQUISITES, APACHE2::FILEMANAGER, DEBUG MODPERL SEGFAULT ]]]
 
 S gdb /usr/sbin/apache2
 #(gdb) break perl_parse
@@ -2789,9 +2788,8 @@ S gdb /usr/sbin/apache2
 #[[[ END GDB SESSION ]]]
 
 
-
-
-
+# [[[ PERL CLOUDFORFREE, RUN PLACK SERVER ]]]
+ 
 # run plack manually
 source /home/wbraswell/.bashrc; 
 export PATH=/home/wbraswell/github_repos/rperl-latest/script/:$PATH; 
@@ -2825,15 +2823,26 @@ cpanm Starman
 fi
 
 
+# [[[ PERL CLOUDFORFREE, PREREQUISITES, TERMINAL EMULATION ]]]
+
 # terminal emulation
 B cpanm Term::VT102
 B cpanm Term::VT102::Boundless
 B cpanm Term::VT102::Incremental
 
+# DEV NOTE, CORRELATION #cff01: screen logfile max path length is 70, must use OS symlink to shorten path
+S ln -s /home/wbraswell/github_repos/cloudforfree.org-latest/root/user_jobs /srv/cloudff_user_jobs
+
+
+# [[[ SECURITY!  MYSQL, REMOVE ROOT PASSWORD ]]]
+
 # SECURITY: mysql root password stored in DB.pm.new, must delete!!!
 # update database schema
 B bin/dev-tools/regenerate-dbic-modules
 B rm lib/ShinyCMS/Model/DB.pm.new
+
+
+# [[[ PHPMYADMIN, INCREASE TIMEOUT ]]]
 
 # phpmyadmin increase timeout
 # NEED FIX: DOES NOT APPEAR TO WORK?!?
@@ -2842,8 +2851,6 @@ S vi /etc/phpmyadmin/config.inc.php
    # ini_set('session.gc_maxlifetime', 14400);
 S service apache2 reload
 
-# DEV NOTE, CORRELATION #cff01: screen logfile max path length is 70, must use OS symlink to shorten path
-S ln -s /home/wbraswell/github_repos/cloudforfree.org-latest/root/user_jobs /srv/cloudff_user_jobs
 
 echo
 echo '[[[ ALL DONE!!! ]]]'
