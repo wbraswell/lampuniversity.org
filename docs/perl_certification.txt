@@ -7,8 +7,8 @@ Austin Perl Mongers
 ... presents ...
 
 LAMP University
-Perl Certification & Rank & Degree Requirements
-Last Updated 20161121 2016.326
+Perl Certification & Degree Requirements
+Last Updated 20170318 2017.077
 
 
 LEVEL 1 CERTIFICATION COURSES:
@@ -30,22 +30,22 @@ http://shop.oreilly.com/product/0636920018469.do
 Learning RPerl
 http://www.rperl.org/learning_rperl.html
 
-LEVEL 1A, PERL WHITE BELT:
-    Go from zero to Perl & earn your white belt by getting Perl installed on your own laptop & writing your first Perl programs.
+LEVEL 1A CERTIFICATION:
+    Go from zero to Perl & earn your first certification by getting Perl installed on your own laptop & writing your first Perl programs.
     Topics: Linux & Perl Installation, Scalar Data, Array Data, Subroutines
     Chapters 1 - 4
     24 credit hours
     $650 per student
 
-LEVEL 1B, PERL YELLOW BELT:
-    Earn your second rank belt by writing more complex Perl programs & increasing your confidence as an aspiring software developer.
+LEVEL 1B CERTIFICATION:
+    Earn your second certificate by writing more complex Perl programs & increasing your confidence as an aspiring software developer.
     Topics: File Operations, Hash Data, Regular Expressions, Additional Control Structures
     Chapters 5 - 10
     40 credit hours
     $950 per student
 
-LEVEL 1C, PERL ORANGE BELT:
-    Earn your full level 1 certification & advance to the rank of orange belt by completing all textbook exercises & launching a real-life web app.
+LEVEL 1C CERTIFICATION:
+    Earn your full level 1 certification by completing all textbook exercises & launching a real-life web app.
     Topics: Object-Oriented Programming, Operating System Processes, Dynamic Web Development, Additional Advanced Techniques
     Real-Life Web Application Project & Follow-Up Sessions
     Chapters 11 - 17
@@ -53,7 +53,7 @@ LEVEL 1C, PERL ORANGE BELT:
     $1,250 per student
 
 LEVEL 1 BUNDLE, LEVELS 1A + 1B + 1C:
-    Save money & earn all 3 rank belts for full level 1 certification!
+    Save money & earn all 3 for full level 1 certification!
     $350 discount
     $2,500 per student
 
