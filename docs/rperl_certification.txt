@@ -1,0 +1,30 @@
+Auto-Parallel Technologies, Inc.
+
+... in cooperation with ...
+
+Austin Perl Mongers
+
+... presents ...
+
+LAMP University
+RPerl Certification & Rank Advancement Requirements
+Last Updated 20170319 2017.078
+
+
+LEVEL 1 CERTIFICATION COURSES:
+
+Students in each certification course must pass a formal examination.
+Graduates of each course will receive a framed certificate & 1 year of Perl career mentorship.
+Students must provide a laptop which can be totally wiped clean for fresh Perl installation.
+
+Curriculum Textbooks:
+
+Learning RPerl
+http://www.rperl.org/learning_rperl.html
+
+RPERL WHITE BELT:
+	FOO
+    Topics: FOO
+    Chapters FOO - BAR
+    XYZ credit hours
+
