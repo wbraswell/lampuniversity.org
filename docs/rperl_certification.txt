@@ -8,23 +8,111 @@ Austin Perl Mongers
 
 LAMP University
 RPerl Certification & Rank Advancement Requirements
-Last Updated 20170319 2017.078
+Last Updated 20170320 2017.079
 
-
-LEVEL 1 CERTIFICATION COURSES:
+OVERVIEW:
 
 Students in each certification course must pass a formal examination.
-Graduates of each course will receive a framed certificate & 1 year of Perl career mentorship.
+Graduates of each course will receive a framed certificate & 90 days of RPerl career mentorship.
 Students must provide a laptop which can be totally wiped clean for fresh Perl installation.
 
-Curriculum Textbooks:
+CURRICULUM TEXTBOOKS:
 
 Learning RPerl
 http://www.rperl.org/learning_rperl.html
 
+Intermediate RPerl (COMING SOON)
+Programming RPerl (COMING SOON)
+Mastering RPerl (COMING SOON)
+
 RPERL WHITE BELT:
-	FOO
-    Topics: FOO
-    Chapters FOO - BAR
+	During the tutorial, we will cover all of chapter 1 and participants will write their first RPerl programs.
+	Participants will gain an understanding of how to install and run the RPerl compiler.
+	CHAPTER 1: INTRODUCTION
+		* What Is RPerl?
+		* Installing RPerl
+		* Running RPerl
+		* RPerl Program Files
+		* Exercise: Hello World
+		* Exercise: RPerl Commands
+		* Exercise: Foo Bar Arithmetic
     XYZ credit hours
+
+RPERL YELLOW BELT:
+	This course is a continuation of the RPerl White Belt, and will provide hands-on guidance to lead students through RPerl's scalar data literals & types, scalar operators, constants, basic input & output, conditional statements, and loop control structures.
+	We will implement solutions to the exercises in chapter 2 of the course textbook, Learning RPerl.
+	CHAPTER 2: SCALAR VALUES & VARIABLES (NUMBERS & TEXT)
+		* 5 Numeric Data Types
+		* 6 Numeric Operator Categories
+		* 2 Text Data Types
+		* 7 Text Operator Categories
+		* Scalar Variables
+		* Constants
+		* Screen Output Using Stdout & print
+		* Keyboard Input Using Stdin
+		* if() & while() Control Stuctures
+    XYZ credit hours
+
+RPERL ORANGE BELT:
+	This course is a continuation of the RPerl Yellow Belt, and will provide hands-on guidance to lead students through RPerl's lists, array data types & variables, array operators, for() & foreach() loops, punctuation variables & magic, etc.
+	We will implement solutions to the exercises in chapter 3 of the course textbook, Learning RPerl.
+	CHAPTER 3: ARRAY VALUES & VARIABLES
+		* Lists vs Arrays
+		* Array Data Types
+		* Array Reference Variables
+		* 1-D Arrays & 2-D Arrays
+		* 3 Styles Of for() & foreach() Loops
+		* Basic Array Operators
+		* Punctuation Variables & Magic
+		* Scalar & Array Contexts
+		* STDIN & Arrays
+    XYZ credit hours
+
+RPERL GREEN BELT:
+	FOO
+	CHAPTER 4: ORGANIZING BY SUBROUTINES
+    	* Subroutine Declaration Syntax
+	    * Subroutine Return Types
+	    * Subroutine Argument Types
+	CHAPTER 6: HASH VALUES & VARIABLES
+    	* Hash Data Types
+	    * Hash Reference Variables
+	    * Basic Hash Operators
+    XYZ credit hours
+
+RPERL BLUE BELT:
+	FOO
+	CHAPTER 5: READING & WRITING FILES
+	CHAPTER 10: ADDITIONAL CONTROL STRUCTURES
+    XYZ credit hours
+
+RPERL PURPLE BELT:
+	FOO
+	CHAPTER 11: CLASSES, PACKAGES, MODULES, LIBRARIES
+	    * Module Files
+	    * Package Namespaces
+	    * Object-Oriented Classes, Properties & Methods
+    XYZ credit hours
+
+RPERL RED BELT:
+	FOO
+	CHAPTER 7: THE REGULAR EXPRESSION SUB-LANGUAGE
+	CHAPTER 8: MATCHING BY REGULAR EXPRESSIONS
+	CHAPTER 9: PROCESSING BY REGULAR EXPRESSIONS
+    XYZ credit hours
+
+RPERL BROWN BELT:
+	FOO
+	CHAPTER 12: FILE TEST OPERATORS
+	CHAPTER 13: DIRECTORY OPERATORS
+	CHAPTER 14: SORTING TEXT VALUES
+    XYZ credit hours
+
+RPERL BLACK BELT:
+	FOO
+	CHAPTER 15: ADDITIONAL SPECIAL OPERATORS
+	CHAPTER 16: MANAGING OPERATING SYSTEM PROCESSES
+	CHAPTER 17: ADDITIONAL ADVANCED TECHNIQUES
+    XYZ credit hours
+
 
