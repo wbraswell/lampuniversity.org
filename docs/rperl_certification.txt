@@ -8,7 +8,7 @@ Austin Perl Mongers
 
 LAMP University
 RPerl Certification & Rank Advancement Requirements
-Last Updated 20170320 2017.079
+Last Updated 20170325 2017.084
 
 OVERVIEW:
 
@@ -33,9 +33,8 @@ RPERL WHITE BELT:
 		* Installing RPerl
 		* Running RPerl
 		* RPerl Program Files
-		* Exercise: Hello World
-		* Exercise: RPerl Commands
-		* Exercise: Foo Bar Arithmetic
+		* RPerl Commands
+		* Your First Perl Program, Hello World
     XYZ credit hours
 
 RPERL YELLOW BELT:
@@ -65,54 +64,27 @@ RPERL ORANGE BELT:
 		* Basic Array Operators
 		* Punctuation Variables & Magic
 		* Scalar & Array Contexts
-		* STDIN & Arrays
+		* Stdin & Arrays
     XYZ credit hours
 
 RPERL GREEN BELT:
 	FOO
 	CHAPTER 4: ORGANIZING BY SUBROUTINES
-    	* Subroutine Declaration Syntax
-	    * Subroutine Return Types
-	    * Subroutine Argument Types
+		* Subroutine Definitions & Calls
+		* Parentheses Suffix & Ampersand Sigil Prefix
+		* Subroutine Return Values & return Operator
+		* Multiple Return Values
+		* Subroutine Arguments & Variadic Subroutines
+		* Subroutine Variables, Variable Scope & Persistence
+		* my Intermittent Variables
+		* Persistent State, Pseudo-State Variables
+		* use strict; use warnings; Pragmas & Magic
 	CHAPTER 6: HASH VALUES & VARIABLES
-    	* Hash Data Types
+    	* Hashes vs Arrays
+		* Hash Data Types
 	    * Hash Reference Variables
+		* 1-D Hashes & 2-D Hashes
 	    * Basic Hash Operators
+		* Hash Context
+		* Environmental Variables & %ENV Hash
     XYZ credit hours
-
-RPERL BLUE BELT:
-	FOO
-	CHAPTER 5: READING & WRITING FILES
-	CHAPTER 10: ADDITIONAL CONTROL STRUCTURES
-    XYZ credit hours
-
-RPERL PURPLE BELT:
-	FOO
-	CHAPTER 11: CLASSES, PACKAGES, MODULES, LIBRARIES
-	    * Module Files
-	    * Package Namespaces
-	    * Object-Oriented Classes, Properties & Methods
-    XYZ credit hours
-
-RPERL RED BELT:
-	FOO
-	CHAPTER 7: THE REGULAR EXPRESSION SUB-LANGUAGE
-	CHAPTER 8: MATCHING BY REGULAR EXPRESSIONS
-	CHAPTER 9: PROCESSING BY REGULAR EXPRESSIONS
-    XYZ credit hours
-
-RPERL BROWN BELT:
-	FOO
-	CHAPTER 12: FILE TEST OPERATORS
-	CHAPTER 13: DIRECTORY OPERATORS
-	CHAPTER 14: SORTING TEXT VALUES
-    XYZ credit hours
-
-RPERL BLACK BELT:
-	FOO
-	CHAPTER 15: ADDITIONAL SPECIAL OPERATORS
-	CHAPTER 16: MANAGING OPERATING SYSTEM PROCESSES
-	CHAPTER 17: ADDITIONAL ADVANCED TECHNIQUES
-    XYZ credit hours
-
-
