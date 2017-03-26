@@ -88,3 +88,92 @@ RPERL GREEN BELT:
 		* Hash Context
 		* Environmental Variables & %ENV Hash
     XYZ credit hours
+
+RPERL BLUE BELT:
+	FOO
+	CHAPTER 5: READING & WRITING FILES
+		* Filehandle Data Type
+		* Opening A Filehandle For Reading
+		* Opening A Filehandle For Writing
+		* Closing A Filehandle
+		* Operating System Errors
+		* printf Operator
+		* diamond Operator
+	CHAPTER 10: ADDITIONAL CONTROL STRUCTURES
+		* unless & until Control Structures
+		* Postfix Control Structures
+		* Stand-Alone Code Block
+		* Ternary Operator
+		* Short-Circuits Via Logical Operators
+		* Partial Evaluation Via Logical & Ternary Operators
+	CHAPTER 11: CLASSES, PACKAGES, MODULES, LIBRARIES
+		* Core Modules
+		* File::Basename & File:Spec Modules
+		* CPAN Module Distributions
+		* Manually Building Module Distributions
+	    * Creating Modules
+	    * Package Namespaces
+	    * Object-Oriented Classes, Properties & Methods
+		* Creating CPAN Module Distributions
+    XYZ credit hours
+
+RPERL PURPLE BELT:
+	FOO
+	CHAPTER 7: THE REGULAR EXPRESSION SUB-LANGUAGE
+		* Binding Operator & Matching Literals
+		* Metacharacters
+		* Repetition Quantifiers
+		* Parentheses Grouping
+		* Logical Alternatives
+		* Character Classes & Shortcuts
+	CHAPTER 8: MORE MATCHING BY REGULAR EXPRESSIONS
+		* Pattern Delimiters
+		* Flags AKA Option Modifers
+		* Beginning & End Anchors
+		* Word Boundary Anchors
+		* Variable Interpolation
+		* Stored Matches
+		* Parentheses Without Capturing
+		* Capturing With Names
+		* More Punctuation Variables & Magic
+		* Numeric Repetition Quantifiers
+		* Pattern Operator Precedence
+	CHAPTER 9: MORE PROCESSING BY REGULAR EXPRESSIONS
+		* Substitutions AKA Search & Replace
+		* Pattern Delimiters Revisited
+		* Uppercase vs Lowercase
+		* split & join Operators
+		* Matching In Array Context
+		* Greedy vs Non-Greedy Quantifiers
+		* Matching Across Multiple Lines
+		* In-Place File Editing
+    XYZ credit hours
+
+RPERL RED BELT:
+	FOO
+	CHAPTER 12: TESTING FILES & DIRECTORIES
+		* File Test Operators
+		* Combining Tests Via Logical Operators
+		* Combining Tests Via Stacking
+		* stat & lstat & localtime Operators
+		* Managing Mode Bits Via Bitwise Operators
+	CHAPTER 13: MANIPULATING FILES & DIRECTORIES
+	CHAPTER 14: SORTING TEXT VALUES
+    XYZ credit hours
+
+RPERL BROWN BELT:
+	FOO
+	CHAPTER 15: ADDITIONAL SPECIAL OPERATORS
+	CHAPTER 16: MANAGING OPERATING SYSTEM PROCESSES
+    XYZ credit hours
+
+RPERL BLACK BELT:
+	FOO
+	CHAPTER 17: ADDITIONAL ADVANCED TECHNIQUES
+		Database Access Via DBI & DBIx::Class
+		Web Programming Via CGI
+		More Web Programming Via MVC & Catalyst & Shiny
+	APPENDIX: RPERL GRAMMAR
+    XYZ credit hours
+
+
