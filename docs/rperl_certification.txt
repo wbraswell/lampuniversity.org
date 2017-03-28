@@ -8,7 +8,7 @@ Austin Perl Mongers
 
 LAMP University
 RPerl Certification & Rank Advancement Requirements
-Last Updated 20170327 2017.086
+Last Updated 20170328 2017.087
 
 OVERVIEW:
 
@@ -170,6 +170,11 @@ RPERL RED BELT:
 		* Changing File Permissions & Ownership
 		* File Timestamps
 	CHAPTER 14: SORTING TEXT VALUES
+		* Locating & Manipulating Substrings
+		* Formatting Data Into A String
+		* Sort Subroutines
+		* Sort Subroutine Comparison Operators
+		* Compound Sort Subroutines
     XYZ credit hours
 
 RPERL BROWN BELT:
