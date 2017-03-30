@@ -8,7 +8,7 @@ Austin Perl Mongers
 
 LAMP University
 RPerl Certification & Rank Advancement Requirements
-Last Updated 20170328 2017.087
+Last Updated 20170329 2017.088
 
 OVERVIEW:
 
@@ -180,6 +180,7 @@ RPERL RED BELT:
 RPERL BROWN BELT:
 	FOO
 	CHAPTER 15: ADDITIONAL SPECIAL OPERATORS
+		* Experimental Smart Match Operator
 	CHAPTER 16: MANAGING OPERATING SYSTEM PROCESSES
     XYZ credit hours
 
