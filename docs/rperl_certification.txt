@@ -8,7 +8,7 @@ Austin Perl Mongers
 
 LAMP University
 RPerl Certification & Rank Advancement Requirements
-Last Updated 20170329 2017.088
+Last Updated 20170331 2017.090
 
 OVERVIEW:
 
@@ -180,7 +180,10 @@ RPERL RED BELT:
 RPERL BROWN BELT:
 	FOO
 	CHAPTER 15: ADDITIONAL SPECIAL OPERATORS
-		* Experimental Smart Match Operator
+		* Smart Match Operator
+		* given() - when() Control Structure
+		* Combining Smart Matching & given() - when()
+		* Combining foreach() Loops & given() - when()
 	CHAPTER 16: MANAGING OPERATING SYSTEM PROCESSES
     XYZ credit hours
 
