@@ -8,7 +8,7 @@ Austin Perl Mongers
 
 LAMP University
 Perl Certification & Degree Requirements
-Last Updated 20170318 2017.077
+Last Updated 20170401 2017.091
 
 
 LEVEL 1 CERTIFICATION COURSES:
@@ -67,6 +67,7 @@ Perl Pocket Reference, 5th Edition
 http://shop.oreilly.com/product/0636920018476.do
 
 
+60 CREDIT HOURS, CUMULATIVE TOTAL
 <<< ASSOCIATE DEGREE IN PERL >>>
 
 
@@ -85,6 +86,7 @@ Intermediate RPerl
 http://www.rperl.org
 
 
+120 CREDIT HOURS, CUMULATIVE TOTAL
 <<< BACHELOR'S DEGREE IN PERL >>>
 
 
@@ -100,6 +102,7 @@ Advanced Perl Programming, 2nd Edition
 http://shop.oreilly.com/product/9780596004569.do
 
 
+150 CREDIT HOURS, CUMULATIVE TOTAL
 <<< MASTER'S DEGREE IN PERL >>>
 
 
@@ -122,6 +125,7 @@ LEVEL 9 CERTIFICATION COURSES:
 Real-life thesis project, to be selected with the assistance of the LAMP University professor.
 
 
+180 CREDIT HOURS, CUMULATIVE TOTAL
 <<< DOCTORATE DEGREE IN PERL >>>
 
 
@@ -132,6 +136,6 @@ http://shop.oreilly.com/category/browse-subjects/programming/perl.do
 
 Real-life thesis project, to be selected with the assistance of the LAMP University professor.
 
-
+OVER 180 CREDIT HOURS, CUMULATIVE TOTAL
 <<< POSTDOCTORAL FELLOWSHIP IN PERL >>>
 
