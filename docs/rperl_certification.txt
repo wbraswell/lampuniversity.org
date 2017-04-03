@@ -8,15 +8,15 @@ Austin Perl Mongers
 
 LAMP University
 RPerl Certification & Rank Advancement Requirements
-Last Updated 20170401 2017.091
+Last Updated 20170402 2017.092
 
 [[[ PROGRAM OVERVIEW ]]]
 
-This training program presents a series of interactive classroom courses, and provides official certification and ranking for the RPerl high-performance software platform.
+This training program is comprised of a series of interactive classroom courses, and provides official certification and ranking for the RPerl high-performance software platform.
 Courses must be taken sequentially and in order; each course serves as a prerequisite for all following courses.
 Students in each course must pass a formal examination before graduating and becoming elegible to begin the next course.
 Graduates of each course will receive a framed certificate and 90 days of RPerl career mentorship.
-Students must provide a laptop which can be totally wiped clean for fresh Perl installation.
+Students must provide a laptop which can be totally wiped clean for fresh Linux and Perl installation.
 
 [[[ CURRICULUM TEXTBOOKS ]]]
 
@@ -34,14 +34,15 @@ SIXTH AND SEVENTH DEGREE BLACK BELTS:
 Programming RPerl (COMING SOON)
 
 EIGHTH AND NINTH DEGREE BLACK BELTS:
-Write Your Own
+Write Your Own RPerl Textbooks
 
 [[[ RPERL WHITE BELT ]]]
-	During the tutorial, we will cover all of chapter 1 and participants will write their first RPerl programs.
-	Participants will gain an understanding of how to install and run Linux and the RPerl compiler.
+	This is the first tutorial course in the training series, and must be completed before any others.
+	This course covers the material and exercises in Learning RPerl chapter 1.
 	CHAPTER 1: INTRODUCTION
 		* What Is RPerl?
-		* Installing Linux & RPerl
+		* Installing Linux & Perl
+		* Installing RPerl
 		* Running RPerl
 		* RPerl Program Files
 		* RPerl Commands
@@ -50,8 +51,8 @@ Write Your Own
     0.5 credit    hours
 
 [[[ RPERL YELLOW BELT ]]]
-	This course is a continuation of the RPerl White Belt, and will provide hands-on guidance to lead students through RPerl's scalar data literals & types, scalar operators, constants, basic input & output, conditional statements, and loop control structures.
-	We will implement solutions to the exercises in chapter 2 of the course textbook, Learning RPerl.
+	This is the second tutorial course and is a continuation of the RPerl White Belt training certification.
+	This course covers the material and exercises in Learning RPerl chapter 2.
 	CHAPTER 2: SCALAR VALUES & VARIABLES (NUMBERS & TEXT)
 		* 5 Numeric Data Types
 		* 6 Numeric Operator Categories
@@ -63,11 +64,11 @@ Write Your Own
 		* Keyboard Input Using Stdin
 		* if() & while() Control Stuctures
     16.0 classroom hours
-     1.0 credit    hours
+     1.0 credit    hour
 
 [[[ RPERL ORANGE BELT ]]]
-	This course is a continuation of the RPerl Yellow Belt, and will provide hands-on guidance to lead students through RPerl's lists, array data types & variables, array operators, for() & foreach() loops, punctuation variables & magic, etc.
-	We will implement solutions to the exercises in chapter 3 of the course textbook, Learning RPerl.
+	This is the third tutorial course and is a continuation of the RPerl Yellow Belt training certification.
+	This course covers the material and exercises in Learning RPerl chapter 3.
 	CHAPTER 3: ARRAY VALUES & VARIABLES
 		* Lists vs Arrays
 		* Array Data Types
@@ -79,7 +80,7 @@ Write Your Own
 		* Scalar & Array Contexts
 		* Stdin & Arrays
     16.0 classroom hours
-	 1.0 credit    hours
+	 1.0 credit    hour
 
 [[[ RPERL GREEN BELT ]]]
 	FOO
