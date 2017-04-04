@@ -8,7 +8,7 @@ Austin Perl Mongers
 
 LAMP University
 RPerl Certification & Rank Advancement Requirements
-Last Updated 20170402 2017.092
+Last Updated 20170403 2017.093
 
 [[[ PROGRAM OVERVIEW ]]]
 
@@ -51,7 +51,7 @@ Write Your Own RPerl Textbooks
     0.5 credit    hours
 
 [[[ RPERL YELLOW BELT ]]]
-	This is the second tutorial course and is a continuation of the RPerl White Belt training certification.
+	This is the second tutorial course, and is a continuation of the RPerl White Belt training certification.
 	This course covers the material and exercises in Learning RPerl chapter 2.
 	CHAPTER 2: SCALAR VALUES & VARIABLES (NUMBERS & TEXT)
 		* 5 Numeric Data Types
@@ -67,7 +67,7 @@ Write Your Own RPerl Textbooks
      1.0 credit    hour
 
 [[[ RPERL ORANGE BELT ]]]
-	This is the third tutorial course and is a continuation of the RPerl Yellow Belt training certification.
+	This is the third tutorial course, and is a continuation of the RPerl Yellow Belt training certification.
 	This course covers the material and exercises in Learning RPerl chapter 3.
 	CHAPTER 3: ARRAY VALUES & VARIABLES
 		* Lists vs Arrays
@@ -83,7 +83,9 @@ Write Your Own RPerl Textbooks
 	 1.0 credit    hour
 
 [[[ RPERL GREEN BELT ]]]
-	FOO
+	This is the fourth tutorial course, and is a continuation of the RPerl Orange Belt training certification.
+	This course covers the material and exercises in Learning RPerl chapter 4 and 6.
+	(Chapter 5 will be covered in the following course.)
 	CHAPTER 4: ORGANIZING BY SUBROUTINES
 		* Subroutine Definitions & Calls
 		* Parentheses Suffix & Ampersand Sigil Prefix
