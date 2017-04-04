@@ -8,7 +8,7 @@ Austin Perl Mongers
 
 LAMP University
 RPerl Certification & Rank Advancement Requirements
-Last Updated 20170403 2017.093
+Last Updated 20170404 2017.094
 
 [[[ PROGRAM OVERVIEW ]]]
 
@@ -109,7 +109,9 @@ Write Your Own RPerl Textbooks
 	 1.5 credit    hours
 
 [[[ RPERL BLUE BELT ]]]
-	FOO
+	This is the fifth tutorial course, and is a continuation of the RPerl Green Belt training certification.
+	This course covers the material and exercises in Learning RPerl chapter 5, 10, and 11.
+	(Chapters 7, 8, and 9 will be covered in the following course.)
 	CHAPTER 5: READING & WRITING FILES
 		* Filehandle Data Type
 		* Opening A Filehandle For Reading
@@ -138,7 +140,8 @@ Write Your Own RPerl Textbooks
 	 1.5 credit    hours
 
 [[[ RPERL PURPLE BELT ]]]
-	FOO
+	This is the sixth tutorial course, and is a continuation of the RPerl Blue Belt training certification.
+	This course covers the material and exercises in Learning RPerl chapter 7, 8, and 9.
 	CHAPTER 7: THE REGULAR EXPRESSION SUB-LANGUAGE
 		* Binding Operator & Matching Literals
 		* Metacharacters
@@ -171,7 +174,8 @@ Write Your Own RPerl Textbooks
 	 1.5 credit    hours
 
 [[[ RPERL RED BELT ]]]
-	FOO
+	This is the seventh tutorial course, and is a continuation of the RPerl Purple Belt training certification.
+	This course covers the material and exercises in Learning RPerl chapter 12, 13, and 14.
 	CHAPTER 12: TESTING FILES & DIRECTORIES
 		* File Test Operators
 		* Combining Tests Via Logical Operators
@@ -200,7 +204,8 @@ Write Your Own RPerl Textbooks
 	 1.5 credit    hours
 
 [[[ RPERL BROWN BELT ]]]
-	FOO
+	This is the eighth tutorial course, and is a continuation of the RPerl Red Belt training certification.
+	This course covers the material and exercises in Learning RPerl chapter 15, 16, and 17.
 	CHAPTER 15: ADDITIONAL SPECIAL OPERATORS
 		* Smart Match Operator
 		* given-when() Control Structure
@@ -225,7 +230,8 @@ Write Your Own RPerl Textbooks
 	 1.5 credit    hours
 
 [[[ RPERL BLACK BELT, FIRST DEGREE ]]]
-	FOO
+	This is the seventh tutorial course, and is a continuation of the RPerl Brown Belt training certification.
+	This course covers the material and exercises in Learning RPerl chapter 18, 19, and 20.
 	CHAPTER 18: GRAPHICS & DATABASE & WEB PROGRAMMING
 		* SDL Graphics
 		* MySQL Database
