@@ -230,7 +230,7 @@ Write Your Own RPerl Textbooks
 	 1.5 credit    hours
 
 [[[ RPERL BLACK BELT, FIRST DEGREE ]]]
-	This is the seventh tutorial course, and is a continuation of the RPerl Brown Belt training certification.
+	This is the ninth tutorial course, and is a continuation of the RPerl Brown Belt training certification.
 	This course covers the material and exercises in Learning RPerl chapter 18, 19, and 20.
 	CHAPTER 18: GRAPHICS & DATABASE & WEB PROGRAMMING
 		* SDL Graphics
