@@ -8,15 +8,15 @@ Austin Perl Mongers
 
 LAMP University
 RPerl Certification & Rank Advancement Requirements
-Last Updated 20170404 2017.094
+Last Updated 20170418 2017.108
 
 [[[ PROGRAM OVERVIEW ]]]
 
 This training program is comprised of a series of interactive classroom courses, and provides official certification and ranking for the RPerl high-performance software platform.
 Courses must be taken sequentially and in order; each course serves as a prerequisite for all following courses.
-Students in each course must pass a formal examination before graduating and becoming elegible to begin the next course.
+A formal examination is administered at the end of each RPerl training course, and each student must successfully receive a passing grade of 70% before graduating and becoming eligible to begin the next course.
 Graduates of each course will receive a framed certificate and 90 days of RPerl career mentorship.
-Students must provide a laptop which can be totally wiped clean for fresh Linux and Perl installation.
+Students must bring their own laptop which can be totally wiped clean for fresh Linux and Perl installation.
 
 [[[ CURRICULUM TEXTBOOKS ]]]
 
