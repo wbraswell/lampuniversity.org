@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.121_000'
+VERSION='0.122_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -2815,6 +2815,24 @@ plackup --port 3000 app.psgi  # A2::FM
 
 cpanm Starman
 ./script/shinycms_server.pl -p 80 --fork
+
+cpanm Starman PORT FORWARDING
+./script/shinycms_server.pl -p 800 --fork
+a2enmod proxy
+a2enmod proxy_http
+vi /etc/apache2/sites-available/cloudforfree.org.conf
+    <VirtualHost *:80>
+        ServerAdmin william.braswell@NOSPAM.autoparallel.com
+        DocumentRoot /srv/www/cloudforfree.org/public_html
+        ServerName cloudforfree.org
+        ErrorLog /srv/www/cloudforfree.org/logs/error.log
+        CustomLog /srv/www/cloudforfree.org/logs/custom.log common
+
+        ProxyPreserveHost On
+        ProxyPass / http://0:800/
+        ProxyPassReverse / http://0:800/
+    </VirtualHost>
+
 
 
     elif [ $MACHINE_CHOICE -eq 1 ]; then
