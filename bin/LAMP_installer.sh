@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.122_000'
+VERSION='0.123_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -251,11 +251,13 @@ echo  '50. [[[ PERL SHINYCMS,  CONFIGURE SHINY ]]]'
 echo
 echo  '51. [[[ PERL CLOUDFORFREE, FOOOOOO ]]]'
 echo
+echo  '60. [[[ UBUNTU LINUX,   INSTALL MONGODB ]]]'
+echo
 
 while true; do
     read -p 'Please type your chosen main menu section number, or press <ENTER> for 0... ' MENU_CHOICE
     case $MENU_CHOICE in
-        [0123456789]|[1234][0123456789]|5[01] ) echo; break;;
+        [0123456789]|[1234][0123456789]|5[01]|60 ) echo; break;;
         '' ) echo; MENU_CHOICE=0; break;;
         * ) echo 'Please choose a section number from the menu!'; echo;;
     esac
@@ -2869,6 +2871,56 @@ S vi /etc/phpmyadmin/config.inc.php
    # $cfg['LoginCookieValidity'] = 14400;
    # ini_set('session.gc_maxlifetime', 14400);
 S service apache2 reload
+
+
+
+
+
+
+if [ $MENU_CHOICE -le 60 ]; then
+    echo '60. [[[ UBUNTU LINUX, INSTALL MONGODB ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+
+        clear
+        echo 'Installing MongoDB Enterprise Edition on Ubuntu 16.04 Xenial'
+
+        # source website for this installer:
+        # https://docs.mongodb.com/manual/tutorial/install-mongodb-enterprise-on-ubuntu/
+
+        echo 'Import The Public Key Used By The Package Management System'
+        S apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0C49F3730359A14518585931BC711F9BA15703C6
+
+        echo 'Create APT Source Entry For Downloading & Installing MongoDB'
+        S echo "deb [ arch=amd64,arm64,ppc64el,s390x ] http://repo.mongodb.com/apt/ubuntu xenial/mongodb-enterprise/3.4 multiverse" > /etc/apt/sources.list.d/mongodb-enterprise.list
+
+        echo 'Reload Local Package Database'
+        S apt-get update
+
+        echo 'Install MongoDB Enterprise Edition'
+        S apt-get install mongodb-enterprise
+
+        echo 'Start MongoDB Enterprise Service'
+        echo "Starting MongoDB..."
+        S service mongod start
+
+        echo 'Verify That MongoDB Has Started Successfully By Checking The Contents Of The Log File'
+        echo 'At /var/log/mongodb/mongod.log for a line (TYPICALLY THE LAST LINE) reading:'
+        echo '    [initandlisten] waiting for connections on port <port>'
+        echo 'Where <port> Is The Port Configured In /etc/mongod.conf, 27017 By Default.'
+        B less /var/log/mongodb/mongod.log
+
+        # Stop MongoDB
+        #   S service mongod stop
+
+        # Restart MongoDB
+        #   S service mongod restart
+
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+    fi
+#   CURRENT_SECTION_COMPLETE  # NEED UN-COMMENT WHEN THIS IS NO LONGER THE FINAL SECTION
+fi
 
 
 echo
