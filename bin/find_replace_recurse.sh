@@ -62,7 +62,7 @@ then
 #    perl -pi -e "s/$1/$2/gxms" $(grep -Pzlr --binary-files=without-match "$1" "$3")
 
 # does support multi-line search & replace
-    perl -e "foreach \$arg (@ARGV) { next if not -f \$arg; print \"opening \$arg...\\n\"; (open my \$FH, \"<\", \$arg) or die \$!; my \$s = q{}; while (<\$FH>) { \$s .= \$_; } \$s =~ s/$1/$2/gxms; (close \$FH) or die \$!; (open \$FH, \">\", \$arg) or die \$!; print {\$FH} \$s; (close \$FH) or die \$!; }" $(grep -Pzlr --binary-files=without-match "$1" "$3")
+    perl -e "foreach \$arg (@ARGV) { next if not -f \$arg; print \"opening \$arg...\\n\"; (open my \$FH, \"<\", \$arg) or die \$!; my \$s = q{}; while (<\$FH>) { \$s .= \$_; } \$s =~ s/$1/$2/gxms; (close \$FH) or die \$!; (open \$FH, \">\", \$arg) or die \$!; print {\$FH} \$s; (close \$FH) or die \$!; }" $(grep -Pzlr --binary-files=without-match "$1" "$3" | sort)
 # original Perl one-liner code, without additional backslashes:
 #perl -e 'foreach $arg (@ARGV) { next if not -f $arg; print "opening $arg...\n"; (open my $FH, "<", $arg) or die $!; my $s = q{}; while (<$FH>) { $s .= $_; } $s =~ s/FOO/BAR/gxms; (close $FH) or die $!; (open $FH, ">", $arg) or die $!; print {$FH} $s; (close $FH) or die $!; }' ./*
 
