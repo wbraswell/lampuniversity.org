@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.20.0.
 
-VERSION=0.121_000
+VERSION=0.122_000
 
 if [[ $4 =~ ^NO_HELP$ ]] || [[ $5 =~ ^NO_HELP$ ]]
 then
@@ -73,9 +73,9 @@ then
 #    perl -e "foreach \$arg (@ARGV) { next if not -f \$arg; print \"opening \$arg...\\n\"; (open my \$FH, \"<\", \$arg) or die \$!; my \$s = q{}; while (<\$FH>) { \$s .= \$_; } \$s =~ s/$1/$2/gxms; (close \$FH) or die \$!; (open \$FH, \">\", \$arg) or die \$!; print {\$FH} \$s; (close \$FH) or die \$!; }" $(grep -Pzlr --binary-files=without-match "$1" "$3" | sort)
 
 # does support multi-line search & replace, multiple replacements per file
-    perl -e "foreach \$arg (@ARGV) { next if not -f \$arg; print \"    opening \$arg... \"; (open my \$FH, \"<\", \$arg) or die \$!; my \$s = q{}; while (<\$FH>) { \$s .= \$_; } print \"replacing\"; while (\$s =~ s/$1/$2/gxms) { print \".\"; } print \"\\n\"; (close \$FH) or die \$!; (open \$FH, \">\", \$arg) or die \$!; print {\$FH} \$s; (close \$FH) or die \$!; }" $(grep -Pzlr --binary-files=without-match "$1" "$3" | sort)
+    perl -e "foreach \$arg (@ARGV) { next if not -f \$arg; print \"    opening \$arg ... \"; (open my \$FH, \"<\", \$arg) or die \$!; my \$s = q{}; while (<\$FH>) { \$s .= \$_; } print \"replacing\"; while (\$s =~ s/$1/$2/gxms) { print \".\"; } print \"\\n\"; (close \$FH) or die \$!; (open \$FH, \">\", \$arg) or die \$!; print {\$FH} \$s; (close \$FH) or die \$!; }" $(grep -Pzlr --binary-files=without-match "$1" "$3" | sort)
 # original Perl one-liner code, without additional backslashes:
-#perl -e 'foreach $arg (@ARGV) { next if not -f $arg; print "    opening $arg... "; (open my $FH, "<", $arg) or die $!; my $s = q{}; while (<$FH>) { $s .= $_; } print "replacing"; while ($s =~ s/$1/$2/gxms) { print "."; } print "\n"; (close $FH) or die $!; (open $FH, ">", $arg) or die $!; print {$FH} $s; (close $FH) or die $!; }' ./*
+#perl -e 'foreach $arg (@ARGV) { next if not -f $arg; print "    opening $arg ... "; (open my $FH, "<", $arg) or die $!; my $s = q{}; while (<$FH>) { $s .= $_; } print "replacing"; while ($s =~ s/$1/$2/gxms) { print "."; } print "\n"; (close $FH) or die $!; (open $FH, ">", $arg) or die $!; print {$FH} $s; (close $FH) or die $!; }' ./*
 
     echo 'DONE!'
 fi
