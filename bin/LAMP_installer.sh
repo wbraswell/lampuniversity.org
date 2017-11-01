@@ -2792,8 +2792,21 @@ S gdb /usr/sbin/apache2
 
 
 # [[[ PERL CLOUDFORFREE, RUN PLACK SERVER ]]]
+
+# === BEGIN CURRENT STEPS ===
+screen -R;
+sudo -i;
+source /home/wbraswell/.bashrc; 
+export PATH=/home/wbraswell/github_repos/rperl-latest/script/:$PATH; 
+export PERL5LIB=/home/wbraswell/github_repos/apache2filemanager-latest/lib/:/home/wbraswell/github_repos/rperl-latest/lib/:/home/wbraswell/perl5:/home/wbraswell/perl5/lib/perl5:$PERL5LIB; 
+set | grep PERL
+cd /home/wbraswell/github_repos/cloudforfree.org-latest/;
+./script/shinycms_server.pl -p 800 --fork
+# === END CURRENT STEPS ===
  
 # run plack manually
+screen -R;
+sudo -i;
 source /home/wbraswell/.bashrc; 
 export PATH=/home/wbraswell/github_repos/rperl-latest/script/:$PATH; 
 export PERL5LIB=/home/wbraswell/github_repos/apache2filemanager-latest/lib/:/home/wbraswell/github_repos/rperl-latest/lib/:/home/wbraswell/perl5:/home/wbraswell/perl5/lib/perl5:$PERL5LIB; 
