@@ -1,5 +1,6 @@
 " see .bashrc for opening files in new tab of existing gvim, alias gvim="gvim --remote-tab-silent"
 
+" DEV NOTE, CORRELATION #lu001: some systems require 4-space-tab config code to be at the top of this file, some at the bottom
 " always use 4 space characters instead of 1 tab character
 :set smartindent
 :set tabstop=4
@@ -17,4 +18,11 @@ behave mswin
 
 " enable <CTRL>-arrow keybindings to jump words instead of delete lines
 :set term=xterm
+
+" DEV NOTE, CORRELATION #lu001: some systems require 4-space-tab config code to be at the top of this file, some at the bottom
+" always use 4 space characters instead of 1 tab character
+:set smartindent
+:set tabstop=4
+:set shiftwidth=4
+:set expandtab
 
