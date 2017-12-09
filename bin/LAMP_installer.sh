@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.124_000'
+VERSION='0.125_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -891,13 +891,17 @@ if [ $MENU_CHOICE -le 20 ]; then
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo '[ Overview Of Perl Dependencies In This Section ]'
         echo '[ Git: Source Code Version Control, Required To Install Latest Development & Unstable Software ]'
+        echo '[ Make: Program Builder, Required To Build ExtUtils::MakeMaker ]'
         echo '[ cURL: Downloader, Required To Install cpanminus & Perlbrew & Perl-Build ]'
         echo '[ ExtUtils::MakeMaker: Source Code Builder, Required To Build Many Perl Software Suites ]'
         echo '[ Perl Debug: Symbols For The Perl Interpreter, Optional For Perl Core & XS & RPerl Debugging ]'
         echo
         echo '[ Install git ]'
         S apt-get install git
-        
+
+        echo '[ Install make ]'
+        S apt-get install make
+
         echo '[ Install cURL ]'
         S apt-get install curl
         echo '[ Check cURL Installation ]'
@@ -1082,6 +1086,12 @@ if [ $MENU_CHOICE -le 25 ]; then
         echo '[ Pluto polyCC: polycc Required For Parallel Compiling, Depends On texinfo flex bison ]'
         echo '[ AStyle: Artistic Style C++ Formatter, Required By RPerl Test Suite ]'
         echo
+        echo '[ UBUNTU OPTION ONLY: Add Non-Base APT Repositories ]'
+        S add-apt-repository \"deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main universe restricted multiverse\"
+
+        echo '[ UBUNTU OPTION ONLY: Update APT Repositories ]'
+        S apt-get update
+
         echo '[ UBUNTU OPTION ONLY: Install RPerl Dependencies ]'
         S apt-get install g++ libc6-dev libperl-dev zlib1g-dev libgmp-dev libgsl0-dev texinfo flex bison astyle
 
