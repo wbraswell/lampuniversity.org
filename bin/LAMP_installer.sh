@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.200_000'
+VERSION='0.210_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -564,9 +564,9 @@ if [ $MENU_CHOICE -le 6 ]; then
             echo '[ UBUNTU ONLY: Check Install, Confirm No Errors ]'
             S apt-get update
             S apt-get -f install
-            echo '[ UBUNTU ONLY: General Tools: g++ make ssh perl perl-doc vim git htop linuxlogo lynx traceroute screen ]'
+            echo '[ UBUNTU ONLY: General Tools: g++ make ssh perl cpan perl-doc vim git htop linuxlogo lynx traceroute screen ifconfig ]'
             echo '[ UBUNTU ONLY: LAMP University Tools Requirements: zip unzip ]'
-            S apt-get install g++ make ssh perl perl-doc vim git htop linuxlogo lynx traceroute screen zip unzip
+            S apt-get install g++ make ssh perl perl-doc vim git htop linuxlogo lynx traceroute screen net-tools zip unzip
             echo '[ UBUNTU ONLY: Check Install, Confirm No Errors ]'
             S apt-get -f install
         # OR
@@ -574,9 +574,9 @@ if [ $MENU_CHOICE -le 6 ]; then
             VERIFY_CENTOS
             echo '[ CENTOS ONLY: Check Install, Confirm No Errors; WARNING! MAKE TAKE HOURS TO RUN! ]'
             S yum check
-            echo '[ CENTOS ONLY: General Tools: g++ make ssh perl perl-doc vim git htop linuxlogo lynx traceroute screen ]'
+            echo '[ CENTOS ONLY: General Tools: g++ make ssh perl cpan perl-doc vim git htop linuxlogo lynx traceroute screen ifconfig ]'
             echo '[ CENTOS ONLY: LAMP University Tools Requirements: zip unzip ]'
-            S yum install gcc-c++ make openssh openssh-clients perl perl-Pod-Perldoc vim-enhanced git lynx traceroute screen zip unzip
+            S yum install gcc-c++ make openssh openssh-clients perl perl-core perl-CPAN perl-Pod-Perldoc vim-enhanced git lynx traceroute screen net-tools zip unzip
             S yum install epel-release
             S yum install htop linux_logo
             echo '[ CENTOS ONLY: Check Install, Confirm No Errors; WARNING! MAKE TAKE HOURS TO RUN! ]'
@@ -998,6 +998,7 @@ if [ $MENU_CHOICE -le 20 ]; then
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         echo '[ Overview Of Perl Dependencies In This Section ]'
+        echo '[ CPAN: The Comprehensive Perl Archive Network, Required For Installing Perl Software ]'
         echo '[ Perl Debug: Symbols For The Perl Interpreter, Optional For Perl Core & XS & RPerl Debugging ]'
         echo '[ Git: Source Code Version Control, Required To Install Latest Development & Unstable Software ]'
         echo '[ Make: Program Builder, Required To Build ExtUtils::MakeMaker ]'
@@ -1020,6 +1021,8 @@ if [ $MENU_CHOICE -le 20 ]; then
         # OR
         elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
             VERIFY_CENTOS
+            echo '[ CENTOS ONLY: Install CPAN ]'
+            S yum install perl-core perl-CPAN
             echo '[ CENTOS ONLY: Install Perl Debugging Symbols System-Wide ]'
             echo '[ NOT CURRENTLY AVAILABLE FOR CENTOS ]'
             echo '[ CENTOS ONLY: Install git ]'
@@ -1051,7 +1054,7 @@ if [ $MENU_CHOICE -le 20 ]; then
         S 'perl -MExtUtils::MakeMaker\ 999'  # system-wide v7.04 or newer required by Inline::C & possibly others
         echo '[ Install ExtUtils::MakeMaker System-Wide ]'
         echo '[ NOTE: You MUST Have v7.04 Or Newer Installed System-Wide (And Also Single-User) For RPerl ]'
-        echo '[ Choose Yes For Automatic Configuration & Also Yes For Automatic CPAN Mirror Selection ]'
+        echo '[ Choose "yes" For Automatic Configuration & Also "yes" For Automatic CPAN Mirror Selection & "sudo" For Installation Approach ]'
         S cpan ExtUtils::MakeMaker
         echo '[ Install ExtUtils::MakeMaker System-Wide, Check Updated Version, Must Be v7.04 Or Newer ]'
         S 'perl -MExtUtils::MakeMaker\ 999'
@@ -1128,7 +1131,7 @@ if [ $MENU_CHOICE -le 22 ]; then
             C 'Please read the warning above.  Seriously.'
 
             echo '[ CENTOS & CPAN ONLY: Install Perl & CPAN ]'
-            S yum install perl perl-CPAN perl-CPAN-Meta
+            S yum install perl perl-core perl-CPAN perl-CPAN-Meta
             echo '[ CENTOS & CPAN ONLY: Install CPANM ]'
             S cpan App::cpanminus
             echo '[ CENTOS & CPAN ONLY: Install Perlbrew ]'
@@ -1235,7 +1238,7 @@ if [ $MENU_CHOICE -le 24 ]; then
         elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
             VERIFY_CENTOS 
             echo '[ CENTOS ONLY: Install Perl & CPANM Dependencies ]'
-            S yum install perl-libs perl-devel perl-CPAN curl
+            S yum install perl-core perl-libs perl-devel perl-CPAN curl
             echo '[ CENTOS ONLY: Install CPANM System-Wide ]'
             S 'curl -L http://cpanmin.us | perl - --sudo App::cpanminus'
             echo '[ CENTOS ONLY: Check Install, Confirm No Errors; WARNING! MAKE TAKE HOURS TO RUN! ]'
@@ -1256,6 +1259,7 @@ if [ $MENU_CHOICE -le 25 ]; then
         echo '[ GCC: gcc & g++ Required For Compiling ]'
         echo '[ libc: libcrypt.(a|so) Required For Compiling ]'
         echo '[ libperl: libperl.(a|so) & perl.h etc, Required For Compiling ]'
+        echo '[ openssl: err.h Required By RPerl Subdependency Net::SSLeay From IO::Socket::SSL ]'
         echo '[ zlib: zlib.h Required By SDL.pm, Which Is Required For Graphics ]'
         echo '[ GMP: GNU Multiple-Precision Arithmetic Library Required For Math ]'
         echo '[ GSL: GNU Scientific Library Required For Math ]'
@@ -1277,7 +1281,7 @@ if [ $MENU_CHOICE -le 25 ]; then
             echo '[ UBUNTU ONLY: Update APT Repositories ]'
             S apt-get update
             echo '[ UBUNTU ONLY: Install RPerl Dependencies ]'
-            S apt-get install g++ libc6-dev libperl-dev zlib1g-dev libgmp-dev libgsl0-dev texinfo flex bison astyle pkg-config
+            S apt-get install g++ libc6-dev libperl-dev libssl-dev zlib1g-dev libgmp-dev libgsl0-dev texinfo flex bison astyle pkg-config
             echo '[ UBUNTU ONLY: Check Install, Confirm No Errors ]'
             S apt-get -f install
         # OR
@@ -1285,7 +1289,7 @@ if [ $MENU_CHOICE -le 25 ]; then
             VERIFY_CENTOS
 
             echo '[ CENTOS ONLY: Install RPerl Dependencies ]'
-            S yum install gcc-c++ make glibc-devel perl-libs perl-devel zlib zlib-static zlib-devel gmp gmp-static gmp-devel gsl gsl-devel texinfo flex bison pkgconfig
+            S yum install gcc-c++ make glibc-devel perl-core perl-libs perl-devel openssl-devel zlib zlib-static zlib-devel gmp gmp-static gmp-devel gsl gsl-devel texinfo flex bison pkgconfig
             echo '[ CENTOS ONLY: Download & Install RPerl Dependency AStyle ]'
             B wget https://github.com/wbraswell/astyle-mirror/raw/master/backup/astyle-2.05.1-1.el7.centos.x86_64.rpm
             S rpm -v -i ./astyle-2.05.1-1.el7.centos.x86_64.rpm
@@ -1311,8 +1315,10 @@ if [ $MENU_CHOICE -le 25 ]; then
         S 'cd gcc-5.2.0; make install'
         echo '[ MANUAL BUILD ONLY: Install RPerl Dependency GMP, Visit The Following URL For Installation Instructions ]'
         echo 'https://gmplib.org'
+        echo
         echo '[ MANUAL BUILD ONLY: Install RPerl Dependency AStyle, Visit The Following URL For Installation Instructions ]'
         echo 'http://astyle.sourceforge.net'
+        echo
 
         echo '[ Install RPerl Dependency Pluto PolyCC, Download ]'
         # B 'wget https://github.com/wbraswell/pluto-mirror/raw/master/backup/pluto-0.11.4.tar.gz; tar -xzvf pluto-0.11.4.tar.gz'  # prefer official repo below
@@ -1340,9 +1346,13 @@ if [ $MENU_CHOICE -le 26 ]; then
         echo '[ You Should Use Single-User Instead Of System-Wide Below, Unless local::lib Or Perlbrew Is Not Installed Or You Have No Choice ]'
         echo '[ WARNING: Use Only ONE Of The Following Two Options, EITHER Single-User OR System-Wide, But NOT Both! ]'
         C 'Please read the warning above.  Seriously.'
+        echo '[ SINGLE-USER ONLY: Install Problematic RPerl Dependency IO::Socket::SSL, Skip Tests ]'
+        B cpanm -v --notest IO::Socket::SSL
         echo '[ SINGLE-USER ONLY: Install RPerl ]'
         B cpanm -v RPerl
         # OR
+        echo '[ SYSTEM-WIDE ONLY: Install Problematic RPerl Dependency IO::Socket::SSL, Skip Tests ]'
+        S cpanm -v --notest IO::Socket::SSL
         echo '[ SYSTEM-WIDE ONLY: Install RPerl ]'
         S cpanm -v RPerl
 
@@ -1451,6 +1461,8 @@ if [ $MENU_CHOICE -le 27 ]; then
         echo '[ PUBLIC ZIP ONLY: Download RPerl Repository Onto New Machine ]'
         B 'wget https://github.com/wbraswell/rperl/archive/master.zip; unzip master.zip; mv rperl-master $RPERL_REPO_DIRECTORY; rm master.zip'
 
+        echo '[ ALL OPTIONS: Install Problematic RPerl Dependency IO::Socket::SSL, Skip Tests ]'
+        B cpanm -v --notest IO::Socket::SSL
         echo '[ ALL OPTIONS: Install RPerl Dependencies Via CPAN ]'
         CD $RPERL_REPO_DIRECTORY
         B 'perl Makefile.PL; cpanm --installdeps .'
