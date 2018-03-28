@@ -1266,11 +1266,12 @@ if [ $MENU_CHOICE -le 25 ]; then
         echo '[ Pluto polyCC: polycc Required For Parallel Compiling, Depends On texinfo flex bison ]'
         echo '[ AStyle: Artistic Style C++ Formatter, Required By RPerl Test Suite ]'
         echo '[ pkg-config: Compilation Library Detection Tool, Required By RPerl Support For MongoDB ]'
+        echo '[ MongoDB Drivers: Both C & C++, Required By RPerl Support For MongoDB ]'
         echo
 
+        # DEV NOTE: libperl packages in Ubuntu vs CentOS
         # Ubuntu, libperl-dev,  /usr/lib/x86_64-linux-gnu/libperl.so SYMLINK    /usr/lib/x86_64-linux-gnu/libperl.a REAL FILE
         # Ubuntu, libperl5.XX,  /usr/lib/x86_64-linux-gnu/libperl.so.5.XX.Y REAL FILE    /usr/lib/x86_64-linux-gnu/perl/5.26.0/CORE/perl.h  and other *.h *.so *.pm *.ph files
-
         # CentOS 7, perl-libs,  /usr/lib64/perl5/CORE/libperl.so
         # CentOS 7, perl-devel, /usr/lib64/perl5/CORE/perl.h     /usr/bin/h2xs  and other *.h files
 
@@ -1281,7 +1282,9 @@ if [ $MENU_CHOICE -le 25 ]; then
             echo '[ UBUNTU ONLY: Update APT Repositories ]'
             S apt-get update
             echo '[ UBUNTU ONLY: Install RPerl Dependencies ]'
-            S apt-get install g++ libc6-dev libperl-dev libssl-dev zlib1g-dev libgmp-dev libgsl0-dev texinfo flex bison astyle pkg-config
+            S apt-get install g++ libc6-dev libperl-dev libssl-dev zlib1g-dev libgmp-dev libgsl0-dev texinfo flex bison astyle
+            echo '[ UBUNTU ONLY: Install RPerl Dependencies, MongoDB C Driver ]'
+            S apt-get install pkg-config libmongoc-1.0-0
             echo '[ UBUNTU ONLY: Check Install, Confirm No Errors ]'
             S apt-get -f install
         # OR
@@ -1289,10 +1292,114 @@ if [ $MENU_CHOICE -le 25 ]; then
             VERIFY_CENTOS
 
             echo '[ CENTOS ONLY: Install RPerl Dependencies ]'
-            S yum install gcc-c++ make glibc-devel perl-core perl-libs perl-devel openssl-devel zlib zlib-static zlib-devel gmp gmp-static gmp-devel gsl gsl-devel texinfo flex bison pkgconfig
+            S yum install gcc-c++ make glibc-devel perl-core perl-libs perl-devel openssl-devel zlib zlib-static zlib-devel gmp gmp-static gmp-devel gsl gsl-devel texinfo flex bison
             echo '[ CENTOS ONLY: Download & Install RPerl Dependency AStyle ]'
             B wget https://github.com/wbraswell/astyle-mirror/raw/master/backup/astyle-2.05.1-1.el7.centos.x86_64.rpm
             S rpm -v -i ./astyle-2.05.1-1.el7.centos.x86_64.rpm
+            echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C Driver ]'
+            S yum install pkgconfig mongo-c-driver
+
+
+
+
+            # perl-interpreter is a dummy package for CentOS 7 compatibility with Fedora source packages libbson & mongo-c-driver
+            S yum install rpm-build libtool cyrus-sasl-lib cyrus-sasl-devel snappy-devel perl-interpreter python-sphinx
+
+***         wget http://dl.fedoraproject.org/pub/fedora/linux/updates/27/SRPMS/Packages/l/libbson-1.9.3-1.fc27.src.rpm
+            rpm -i -vv ./libbson-1.9.3-1.fc27.src.rpm
+***         vi /root/rpmbuild/SPECS/libbson.spec
+                ## WBRASWELL 20180315 2018.074: add libbson provides to satisfy mongodb-c-driver requirements
+                #Provides:       libbson-1.0.so.0(LIBBSON_1.0)(64bit)
+                #Provides:       libbson-1.0.so.0(LIBBSON_1.1)(64bit)
+                #...
+                ## WBRASWELL 20180315 2018.074: NEED FIX, change --enable-man-pages to --disable-man-pages, due to malformed sphinx commands
+                #--disable-man-pages \
+                #...
+                ##%{_mandir}/man3/*  # WBRASWELL 20180315 2018.074: NEED FIX, comment out man3 directory, due to malformed sphinx commands
+            rpmbuild -ba /root/rpmbuild/SPECS/libbson.spec
+***         rpm -i -vv /root/rpmbuild/RPMS/x86_64/libbson-1.9.3-1.el7.centos.x86_64.rpm
+***         rpm -i -vv /root/rpmbuild/RPMS/x86_64/libbson-devel-1.9.3-1.el7.centos.x86_64.rpm  # provides pkgconfig(libbson-1.0) to satisfy mongodb-c-driver requirements
+            # OR
+            B wget NEED_URL/libbson-1.9.3-1.el7.centos.x86_64.rpm
+            B wget NEED_URL/libbson-devel-1.9.3-1.el7.centos.x86_64.rpm
+            S rpm -i -vv ./libbson-1.9.3-1.el7.centos.x86_64.rpm
+            S rpm -i -vv ./libbson-devel-1.9.3-1.el7.centos.x86_64.rpm  # provides pkgconfig(libbson-1.0) to satisfy mongodb-c-driver requirements
+            B rm ./libbson-1.9.3-1.el7.centos.x86_64.rpm
+            B rm ./libbson-devel-1.9.3-1.el7.centos.x86_64.rpm  
+            
+
+
+***         wget http://dl.fedoraproject.org/pub/fedora/linux/updates/27/SRPMS/Packages/m/mongo-c-driver-1.9.3-1.fc27.src.rpm
+            rpm -i -vv mongo-c-driver-1.9.3-1.fc27.src.rpm
+***         vi /root/rpmbuild/SPECS/mongo-c-driver.spec
+                ## WBRASWELL 20180315 2018.074: replace mongodb-server with mongodb-org-server
+                ##BuildRequires: mongodb-server
+                #BuildRequires: mongodb-org-server
+                #...
+                ## WBRASWELL 20180315 2018.074: NEED FIX, change --enable-man-pages to --disable-man-pages, due to malformed sphinx commands
+                #--disable-man-pages
+                #...
+                ## WBRASWELL 20180315 2018.074: NEED FIX, comment out man3 make targer, due to malformed sphinx commands
+                ##make %{?_smp_mflags} doc/man V=1
+                #...
+                ##%{_mandir}/man3/mongoc*  # WBRASWELL 20180315 2018.074: NEED FIX, comment out man3 directory, due to malformed sphinx commands
+            systemctl stop mongodb.service
+            rpmbuild -ba /root/rpmbuild/SPECS/mongo-c-driver.spec
+***         rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-c-driver-libs-1.9.3-1.el7.centos.x86_64.rpm
+***         rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-c-driver-1.9.3-1.el7.centos.x86_64.rpm
+***         rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-c-driver-devel-1.9.3-1.el7.centos.x86_64.rpm
+            systemctl start mongodb.service
+            # OR
+            B wget NEED_URL/mongo-c-driver-libs-1.9.3-1.el7.centos.x86_64.rpm
+            B wget NEED_URL/mongo-c-driver-1.9.3-1.el7.centos.x86_64.rpm
+            B wget NEED_URL/mongo-c-driver-devel-1.9.3-1.el7.centos.x86_64.rpm
+            S rpm -i -vv ./mongo-c-driver-libs-1.9.3-1.el7.centos.x86_64.rpm
+            S rpm -i -vv ./mongo-c-driver-1.9.3-1.el7.centos.x86_64.rpm
+            S rpm -i -vv ./mongo-c-driver-devel-1.9.3-1.el7.centos.x86_64.rpm
+            B rm ./mongo-c-driver-libs-1.9.3-1.el7.centos.x86_64.rpm
+            B rm ./mongo-c-driver-1.9.3-1.el7.centos.x86_64.rpm
+            B rm ./mongo-c-driver-devel-1.9.3-1.el7.centos.x86_64.rpm
+
+
+            # NEED ANSWER: include --enable-static in configure for both libbson & mongo-c-driver above???
+            # NEED ANSWER: include --enable-static in configure for both libbson & mongo-c-driver above???
+            # NEED ANSWER: include --enable-static in configure for both libbson & mongo-c-driver above???
+
+            # CMake Error at /lib64/cmake/libbson-1.0/libbson-1.0-config.cmake:28 (message): File or directory //include/libbson-1.0 referenced by variable BSON_INCLUDE_DIRS does not exist !
+***         vi /lib64/cmake/libbson-1.0/libbson-1.0-config.cmake
+                ## WBRASWELL 20180315 2018.074: manually set PACKAGE_PREFIX_DIR due to "does not exist" failures
+                #set (PACKAGE_PREFIX_DIR /usr)
+            # CMake Error at /lib64/cmake/libmongoc-1.0/libmongoc-1.0-config.cmake:30 (message): File or directory //include/libmongoc-1.0 referenced by variable MONGOC_INCLUDE_DIRS does not exist !
+***         vi /lib64/cmake/libmongoc-1.0/libmongoc-1.0-config.cmake
+                ## WBRASWELL 20180315 2018.074: manually set PACKAGE_PREFIX_DIR due to "does not exist" failures
+                #set (PACKAGE_PREFIX_DIR /usr)
+
+
+            yum install cmake3
+            wget https://github.com/mongodb/mongo-cxx-driver/archive/r3.2.0.tar.gz
+            mv r3.2.0.tar.gz /root/rpmbuild/SOURCES/mongo-cxx-driver-3.2.0.tar.gz
+            tar -xzvf mongo-cxx-driver-3.2.0.tar.gz
+            mv mongo-cxx-driver-r3.2.0 mongo-cxx-driver-3.2.0
+            rm mongo-cxx-driver-3.2.0.tar.gz
+***         tar -czvf mongo-cxx-driver-3.2.0.tar.gz ./mongo-cxx-driver-3.2.0
+***         vi /root/rpmbuild/SPECS/mongo-cxx-driver.spec
+                # ...
+            rpmbuild -ba /root/rpmbuild/SPECS/mongo-cxx-driver.spec
+***         rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-cxx-driver-libs-3.2.0-1.el7.centos.x86_64.rpm
+***         rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-cxx-driver-3.2.0-1.el7.centos.x86_64.rpm
+***         rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-cxx-driver-devel-3.2.0-1.el7.centos.x86_64.rpm
+            # OR
+            B wget NEED_URL/mongo-cxx-driver-libs-3.2.0-1.el7.centos.x86_64.rpm
+            B wget NEED_URL/mongo-cxx-driver-3.2.0-1.el7.centos.x86_64.rpm
+            B wget NEED_URL/mongo-cxx-driver-devel-3.2.0-1.el7.centos.x86_64.rpm
+            S rpm -i -vv ./mongo-cxx-driver-libs-3.2.0-1.el7.centos.x86_64.rpm
+            S rpm -i -vv ./mongo-cxx-driver-3.2.0-1.el7.centos.x86_64.rpm
+            S rpm -i -vv ./mongo-cxx-driver-devel-3.2.0-1.el7.centos.x86_64.rpm
+            B rm ./mongo-cxx-driver-libs-3.2.0-1.el7.centos.x86_64.rpm
+            B rm ./mongo-cxx-driver-3.2.0-1.el7.centos.x86_64.rpm
+            B rm ./mongo-cxx-driver-devel-3.2.0-1.el7.centos.x86_64.rpm
+
+
 
             echo '[ CENTOS ONLY: Check Install, Confirm No Errors; WARNING! MAKE TAKE HOURS TO RUN! ]'
             S yum check
@@ -1319,6 +1426,16 @@ if [ $MENU_CHOICE -le 25 ]; then
         echo '[ MANUAL BUILD ONLY: Install RPerl Dependency AStyle, Visit The Following URL For Installation Instructions ]'
         echo 'http://astyle.sourceforge.net'
         echo
+
+
+
+
+        echo '[ Install RPerl Dependency MongoDB C++ Driver, Download ]'
+
+
+
+
+
 
         echo '[ Install RPerl Dependency Pluto PolyCC, Download ]'
         # B 'wget https://github.com/wbraswell/pluto-mirror/raw/master/backup/pluto-0.11.4.tar.gz; tar -xzvf pluto-0.11.4.tar.gz'  # prefer official repo below
