@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.212_000'
+VERSION='0.213_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -1054,7 +1054,10 @@ if [ $MENU_CHOICE -le 20 ]; then
         S 'perl -MExtUtils::MakeMaker\ 999'  # system-wide v7.04 or newer required by Inline::C & possibly others
         echo '[ Install ExtUtils::MakeMaker System-Wide ]'
         echo '[ NOTE: You MUST Have v7.04 Or Newer Installed System-Wide (And Also Single-User) For RPerl ]'
-        echo '[ Choose "yes" For Automatic Configuration & Also "yes" For Automatic CPAN Mirror Selection & "sudo" For Installation Approach ]'
+        echo '[ Ensure Perl Library Directories Exist ]'
+        S "perl -e 'use Config; foreach my $dir_key (qw(installprivlib installarchlib installsitelib installsitearch)) { if (not -e $Config{$dir_key}) { my $success = mkdir $Config{$dir_key}; if ($success) { print q{Created directory: }, $Config{$dir_key}, qq{\n}; } else { print q{Error, could no create directory: }, $Config{$dir_key}, qq{\n}, $!, qq{\n}; } } else { print q{Directory already exists: }, $Config{$dir_key}, qq{\n}; } }'"
+        echo '[ Choose "yes" For Automatic Configuration & Also "yes" For Automatic CPAN Mirror Selection ]'
+        echo '[ Choose "sudo" For Installation Approach If Previous Command Does Not Solve "Warning: You do not have write permission for Perl library directories." ]'
         S cpan ExtUtils::MakeMaker
         echo '[ Install ExtUtils::MakeMaker System-Wide, Check Updated Version, Must Be v7.04 Or Newer ]'
         S 'perl -MExtUtils::MakeMaker\ 999'
@@ -1132,6 +1135,8 @@ if [ $MENU_CHOICE -le 22 ]; then
 
             echo '[ CENTOS & CPAN ONLY: Install Perl & CPAN ]'
             S yum install perl perl-core perl-CPAN perl-CPAN-Meta
+            echo '[ CENTOS & CPAN ONLY: Ensure Perl Library Directories Exist ]'
+            S "perl -e 'use Config; foreach my $dir_key (qw(installprivlib installarchlib installsitelib installsitearch)) { if (not -e $Config{$dir_key}) { my $success = mkdir $Config{$dir_key}; if ($success) { print q{Created directory: }, $Config{$dir_key}, qq{\n}; } else { print q{Error, could no create directory: }, $Config{$dir_key}, qq{\n}, $!, qq{\n}; } } else { print q{Directory already exists: }, $Config{$dir_key}, qq{\n}; } }'"
             echo '[ CENTOS & CPAN ONLY: Install CPANM ]'
             S cpan App::cpanminus
             echo '[ CENTOS & CPAN ONLY: Install Perlbrew ]'
