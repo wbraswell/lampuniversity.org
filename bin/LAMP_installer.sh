@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.214_000'
+VERSION='0.215_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -1054,6 +1054,7 @@ if [ $MENU_CHOICE -le 20 ]; then
         S 'perl -MExtUtils::MakeMaker\ 999'  # system-wide v7.04 or newer required by Inline::C & possibly others
         echo '[ Install ExtUtils::MakeMaker System-Wide ]'
         echo '[ NOTE: You MUST Have v7.04 Or Newer Installed System-Wide (And Also Single-User) For RPerl ]'
+        # DEV NOTE: create Perl lib dirs due to CentOS bug, dirs should already exist but do not, checked by CPAN::FirstTime::_can_write_to_libdirs()
         echo '[ Ensure Perl Library Directories Exist ]'
         S "perl -e 'use Config; foreach my \$dir_key (qw(installprivlib installarchlib installsitelib installsitearch)) { if (not -e \$Config{\$dir_key}) { my \$success = mkdir \$Config{\$dir_key}; if (\$success) { print q{Created directory: }, \$Config{\$dir_key}, qq{\\n}; } else { print q{Error, could no create directory: }, \$Config{\$dir_key}, qq{\\n}, \$!, qq{\\n}; } } else { print q{Directory already exists: }, \$Config{\$dir_key}, qq{\\n}; } }'"
         echo '[ Choose "yes" For Automatic Configuration & Also "yes" For Automatic CPAN Mirror Selection ]'
@@ -1135,6 +1136,7 @@ if [ $MENU_CHOICE -le 22 ]; then
 
             echo '[ CENTOS & CPAN ONLY: Install Perl & CPAN ]'
             S yum install perl perl-core perl-CPAN perl-CPAN-Meta
+            # DEV NOTE: create Perl lib dirs due to CentOS bug, dirs should already exist but do not, checked by CPAN::FirstTime::_can_write_to_libdirs()
             echo '[ CENTOS & CPAN ONLY: Ensure Perl Library Directories Exist ]'
             S "perl -e 'use Config; foreach my \$dir_key (qw(installprivlib installarchlib installsitelib installsitearch)) { if (not -e \$Config{\$dir_key}) { my \$success = mkdir \$Config{\$dir_key}; if (\$success) { print q{Created directory: }, \$Config{\$dir_key}, qq{\\n}; } else { print q{Error, could no create directory: }, \$Config{\$dir_key}, qq{\\n}, \$!, qq{\\n}; } } else { print q{Directory already exists: }, \$Config{\$dir_key}, qq{\\n}; } }'"
             echo '[ CENTOS & CPAN ONLY: Install CPANM ]'
@@ -1304,130 +1306,112 @@ if [ $MENU_CHOICE -le 25 ]; then
             echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, pkg-config ]'
             S yum install pkgconfig
 
-
-            # NEED ANSWER: presumably mongo-c-driver cannot be installed via yum, which is why we have to build it all manually below?!?
-            # NEED ANSWER: presumably mongo-c-driver cannot be installed via yum, which is why we have to build it all manually below?!?
-            # NEED ANSWER: presumably mongo-c-driver cannot be installed via yum, which is why we have to build it all manually below?!?
-
-            echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver, PRESUMABLY NOT WORKING?!? ]'
-            S yum install pkgconfig mongo-c-driver
-
-
+            # OLD VERSIONS, DO NOT USE!  libbson v1.3.5-5.el7, mongo-c-driver-libs v1.3.6-1.el7, mongo-c-driver v1.3.6-1.el7
+            # must have new versions for MongoDB C++ driver compatibility
+            # "For mongocxx-3.2.x, libmongoc 1.8.2 or later is required."    https://mongodb.github.io/mongo-cxx-driver/mongocxx-v3/installation/
+#            echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, MongoDB C Driver ]'
+#            S yum install pkgconfig mongo-c-driver
 
             echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, libbson ]'
 
             # perl-interpreter is a dummy package for CentOS 7 compatibility with Fedora source packages libbson & mongo-c-driver
             S yum install rpm-build libtool cyrus-sasl-lib cyrus-sasl-devel snappy-devel perl-interpreter python-sphinx
 
-            B wget http://dl.fedoraproject.org/pub/fedora/linux/updates/27/SRPMS/Packages/l/libbson-1.9.3-1.fc27.src.rpm
-            S rpm -i -vv ./libbson-1.9.3-1.fc27.src.rpm
-
-            # NEED ADD WGET FOR COMPLETED SPEC FILE INSTEAD OF VI MANUAL EDIT BELOW
-            # NEED ADD WGET FOR COMPLETED SPEC FILE INSTEAD OF VI MANUAL EDIT BELOW
-            # NEED ADD WGET FOR COMPLETED SPEC FILE INSTEAD OF VI MANUAL EDIT BELOW
-
-            S vi /root/rpmbuild/SPECS/libbson.spec
-                ## WBRASWELL 20180315 2018.074: add libbson provides to satisfy mongodb-c-driver requirements
-                #Provides:       libbson-1.0.so.0(LIBBSON_1.0)(64bit)
-                #Provides:       libbson-1.0.so.0(LIBBSON_1.1)(64bit)
-                #...
-                ## WBRASWELL 20180315 2018.074: NEED FIX, change --enable-man-pages to --disable-man-pages, due to malformed sphinx commands
-                #--disable-man-pages \
-                #...
-                ##%{_mandir}/man3/*  # WBRASWELL 20180315 2018.074: NEED FIX, comment out man3 directory, due to malformed sphinx commands
-            S rpmbuild -ba /root/rpmbuild/SPECS/libbson.spec
-            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/libbson-1.9.3-1.el7.centos.x86_64.rpm
-            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/libbson-devel-1.9.3-1.el7.centos.x86_64.rpm  # provides pkgconfig(libbson-1.0) to satisfy mongodb-c-driver requirements
-            # OR
-            B wget NEED_URL/libbson-1.9.3-1.el7.centos.x86_64.rpm
-            B wget NEED_URL/libbson-devel-1.9.3-1.el7.centos.x86_64.rpm
+#            # DEV NOTE: prefer pre-built RPMs below
+##            B wget http://dl.fedoraproject.org/pub/fedora/linux/updates/27/SRPMS/Packages/l/libbson-1.9.3-1.fc27.src.rpm  # DEV NOTE: prefer GitHub mirror below
+#            B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson-1.9.3-1.fc27.src.rpm  # DEV NOTE: prefer our own GitHub mirror for uniformity
+#            B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson-1.9.3-1.el7.centos.src.rpm  # DEV NOTE: prefer our own re-built source RPMs for uniformity
+#            S rpm -i -vv ./libbson-1.9.3-1.fc27.src.rpm
+#            B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson.spec
+#            S mv ./libbson.spec /root/rpmbuild/SPECS/libbson.spec
+#            S rpmbuild -ba /root/rpmbuild/SPECS/libbson.spec
+#            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/libbson-1.9.3-1.el7.centos.x86_64.rpm
+#            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/libbson-devel-1.9.3-1.el7.centos.x86_64.rpm  # provides pkgconfig(libbson-1.0) to satisfy mongodb-c-driver requirements
+#            # OR
+            # DEV NOTE: prefer our own pre-built RPMs from GitHub mirror, for speed & reliability & convenience
+            B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson-1.9.3-1.el7.centos.x86_64.rpm
+            B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson-devel-1.9.3-1.el7.centos.x86_64.rpm
             S rpm -i -vv ./libbson-1.9.3-1.el7.centos.x86_64.rpm
             S rpm -i -vv ./libbson-devel-1.9.3-1.el7.centos.x86_64.rpm  # provides pkgconfig(libbson-1.0) to satisfy mongodb-c-driver requirements
             B rm ./libbson-1.9.3-1.el7.centos.x86_64.rpm
             B rm ./libbson-devel-1.9.3-1.el7.centos.x86_64.rpm  
-            
 
             echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, MongoDB C Driver ]'
 
-            B wget http://dl.fedoraproject.org/pub/fedora/linux/updates/27/SRPMS/Packages/m/mongo-c-driver-1.9.3-1.fc27.src.rpm
-            S rpm -i -vv mongo-c-driver-1.9.3-1.fc27.src.rpm
-
-            # NEED ADD WGET FOR COMPLETED SPEC FILE INSTEAD OF VI MANUAL EDIT BELOW
-            # NEED ADD WGET FOR COMPLETED SPEC FILE INSTEAD OF VI MANUAL EDIT BELOW
-            # NEED ADD WGET FOR COMPLETED SPEC FILE INSTEAD OF VI MANUAL EDIT BELOW
-
-            S vi /root/rpmbuild/SPECS/mongo-c-driver.spec
-                ## WBRASWELL 20180315 2018.074: replace mongodb-server with mongodb-org-server
-                ##BuildRequires: mongodb-server
-                #BuildRequires: mongodb-org-server
-                #...
-                ## WBRASWELL 20180315 2018.074: NEED FIX, change --enable-man-pages to --disable-man-pages, due to malformed sphinx commands
-                #--disable-man-pages
-                #...
-                ## WBRASWELL 20180315 2018.074: NEED FIX, comment out man3 make targer, due to malformed sphinx commands
-                ##make %{?_smp_mflags} doc/man V=1
-                #...
-                ##%{_mandir}/man3/mongoc*  # WBRASWELL 20180315 2018.074: NEED FIX, comment out man3 directory, due to malformed sphinx commands
+#            # DEV NOTE: prefer pre-built RPMs below
+##            B wget http://dl.fedoraproject.org/pub/fedora/linux/updates/27/SRPMS/Packages/m/mongo-c-driver-1.9.3-1.fc27.src.rpm  # DEV NOTE: prefer GitHub mirror below
+##            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver-1.9.3-1.fc27.src.rpm  # DEV NOTE: prefer our own GitHub mirror for uniformity
+#            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver-1.9.3-1.el7.centos.src.rpm  # DEV NOTE: prefer our own re-built source RPMs for uniformity
+#            S rpm -i -vv mongo-c-driver-1.9.3-1.fc27.src.rpm
+#            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver.spec
+#            S mv ./mongo-c-driver.spec /root/rpmbuild/SPECS/mongo-c-driver.spec
+#            S systemctl stop mongodb.service
+#            S rpmbuild -ba /root/rpmbuild/SPECS/mongo-c-driver.spec
+#            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-c-driver-libs-1.9.3-1.el7.centos.x86_64.rpm
+#            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-c-driver-1.9.3-1.el7.centos.x86_64.rpm
+#            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-c-driver-devel-1.9.3-1.el7.centos.x86_64.rpm
+#            S systemctl start mongodb.service
+#            # OR
+            # DEV NOTE: prefer our own pre-built RPMs from GitHub mirror, for speed & reliability & convenience
+            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver-libs-1.9.3-1.el7.centos.x86_64.rpm
+            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver-1.9.3-1.el7.centos.x86_64.rpm
+            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver-devel-1.9.3-1.el7.centos.x86_64.rpm
             S systemctl stop mongodb.service
-            S rpmbuild -ba /root/rpmbuild/SPECS/mongo-c-driver.spec
-            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-c-driver-libs-1.9.3-1.el7.centos.x86_64.rpm
-            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-c-driver-1.9.3-1.el7.centos.x86_64.rpm
-            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-c-driver-devel-1.9.3-1.el7.centos.x86_64.rpm
-            S systemctl start mongodb.service
-            # OR
-            B wget NEED_URL/mongo-c-driver-libs-1.9.3-1.el7.centos.x86_64.rpm
-            B wget NEED_URL/mongo-c-driver-1.9.3-1.el7.centos.x86_64.rpm
-            B wget NEED_URL/mongo-c-driver-devel-1.9.3-1.el7.centos.x86_64.rpm
             S rpm -i -vv ./mongo-c-driver-libs-1.9.3-1.el7.centos.x86_64.rpm
             S rpm -i -vv ./mongo-c-driver-1.9.3-1.el7.centos.x86_64.rpm
             S rpm -i -vv ./mongo-c-driver-devel-1.9.3-1.el7.centos.x86_64.rpm
+            S systemctl start mongodb.service
             B rm ./mongo-c-driver-libs-1.9.3-1.el7.centos.x86_64.rpm
             B rm ./mongo-c-driver-1.9.3-1.el7.centos.x86_64.rpm
             B rm ./mongo-c-driver-devel-1.9.3-1.el7.centos.x86_64.rpm
 
-
-            # NEED ANSWER: include --enable-static in configure for both libbson & mongo-c-driver above???
-            # NEED ANSWER: include --enable-static in configure for both libbson & mongo-c-driver above???
-            # NEED ANSWER: include --enable-static in configure for both libbson & mongo-c-driver above???
+            echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, Fix Broken CMake Files ]'
+ 
+            # NEED ANSWER: can we fix this CMake permanently by including --enable-static in configure for both libbson & mongo-c-driver above???
+            # NEED ANSWER: can we fix this CMake permanently by including --enable-static in configure for both libbson & mongo-c-driver above???
+            # NEED ANSWER: can we fix this CMake permanently by including --enable-static in configure for both libbson & mongo-c-driver above???
 
             # CMake Error at /lib64/cmake/libbson-1.0/libbson-1.0-config.cmake:28 (message): File or directory //include/libbson-1.0 referenced by variable BSON_INCLUDE_DIRS does not exist !
-            S vi /lib64/cmake/libbson-1.0/libbson-1.0-config.cmake
-                ## WBRASWELL 20180315 2018.074: manually set PACKAGE_PREFIX_DIR due to "does not exist" failures
-                #set (PACKAGE_PREFIX_DIR /usr)
-            # CMake Error at /lib64/cmake/libmongoc-1.0/libmongoc-1.0-config.cmake:30 (message): File or directory //include/libmongoc-1.0 referenced by variable MONGOC_INCLUDE_DIRS does not exist !
-            S vi /lib64/cmake/libmongoc-1.0/libmongoc-1.0-config.cmake
-                ## WBRASWELL 20180315 2018.074: manually set PACKAGE_PREFIX_DIR due to "does not exist" failures
-                #set (PACKAGE_PREFIX_DIR /usr)
+            B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson-1.0-config.cmake
+            S mv ./libbson-1.0-config.cmake /lib64/cmake/libbson-1.0/libbson-1.0-config.cmake
 
+            # CMake Error at /lib64/cmake/libmongoc-1.0/libmongoc-1.0-config.cmake:30 (message): File or directory //include/libmongoc-1.0 referenced by variable MONGOC_INCLUDE_DIRS does not exist !
+            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/libmongoc-1.0-config.cmake
+            S mv ./libmongoc-1.0-config.cmake /lib64/cmake/libmongoc-1.0/libmongoc-1.0-config.cmake
 
             echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver ]'
 
             S yum install cmake3
-            B wget https://github.com/mongodb/mongo-cxx-driver/archive/r3.2.0.tar.gz
-            S mv ./r3.2.0.tar.gz /root/rpmbuild/SOURCES/mongo-cxx-driver-3.2.0.tar.gz
-            CD /root/rpmbuild/SOURCES
-            S tar -xzvf mongo-cxx-driver-3.2.0.tar.gz
-            S mv mongo-cxx-driver-r3.2.0 mongo-cxx-driver-3.2.0
-            S rm mongo-cxx-driver-3.2.0.tar.gz
-            S tar -czvf mongo-cxx-driver-3.2.0.tar.gz ./mongo-cxx-driver-3.2.0
-            CD /root/rpmbuild/SPECS
-            S wget https://raw.githubusercontent.com/wbraswell/mongo-cxx-driver-mirror/master/mongo-cxx-driver.spec
-            S rpmbuild -ba /root/rpmbuild/SPECS/mongo-cxx-driver.spec
-            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-cxx-driver-libs-3.2.0-1.el7.centos.x86_64.rpm
-            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-cxx-driver-3.2.0-1.el7.centos.x86_64.rpm
-            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-cxx-driver-devel-3.2.0-1.el7.centos.x86_64.rpm
-            # OR
-            B wget NEED_URL/mongo-cxx-driver-libs-3.2.0-1.el7.centos.x86_64.rpm
-            B wget NEED_URL/mongo-cxx-driver-3.2.0-1.el7.centos.x86_64.rpm
-            B wget NEED_URL/mongo-cxx-driver-devel-3.2.0-1.el7.centos.x86_64.rpm
+
+#            # DEV NOTE: prefer pre-built RPMs below
+##            # DEV NOTE: prefer already-fixed tarball below
+##            B wget https://github.com/mongodb/mongo-cxx-driver/archive/r3.2.0.tar.gz
+##            S mv ./r3.2.0.tar.gz /root/rpmbuild/SOURCES/mongo-cxx-driver-3.2.0.tar.gz
+##            CD /root/rpmbuild/SOURCES
+##            S tar -xzvf mongo-cxx-driver-3.2.0.tar.gz
+##            S mv mongo-cxx-driver-r3.2.0 mongo-cxx-driver-3.2.0
+##            S rm mongo-cxx-driver-3.2.0.tar.gz
+##            S tar -czvf mongo-cxx-driver-3.2.0.tar.gz ./mongo-cxx-driver-3.2.0
+#            # DEV NOTE: prefer our own already-fixed tarball below, for convenience
+#            B wget https://github.com/wbraswell/mongo-cxx-driver-mirror/raw/master/mongo-cxx-driver-3.2.0.tar.gz
+#            S mv ./mongo-cxx-driver-3.2.0.tar.gz /root/rpmbuild/SOURCES/mongo-cxx-driver-3.2.0.tar.gz
+#            CD /root/rpmbuild/SPECS
+#            S wget https://raw.githubusercontent.com/wbraswell/mongo-cxx-driver-mirror/master/mongo-cxx-driver.spec
+#            S rpmbuild -ba /root/rpmbuild/SPECS/mongo-cxx-driver.spec
+#            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-cxx-driver-libs-3.2.0-1.el7.centos.x86_64.rpm
+#            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-cxx-driver-3.2.0-1.el7.centos.x86_64.rpm
+#            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-cxx-driver-devel-3.2.0-1.el7.centos.x86_64.rpm
+#            # OR
+            # DEV NOTE: prefer our own pre-built RPMs from GitHub mirror, for speed & reliability & convenience
+            B wget https://github.com/wbraswell/mongo-cxx-driver-mirror/raw/master/mongo-cxx-driver-libs-3.2.0-1.el7.centos.x86_64.rpm
+            B wget https://github.com/wbraswell/mongo-cxx-driver-mirror/raw/master/mongo-cxx-driver-3.2.0-1.el7.centos.x86_64.rpm
+            B wget https://github.com/wbraswell/mongo-cxx-driver-mirror/raw/master/mongo-cxx-driver-devel-3.2.0-1.el7.centos.x86_64.rpm
             S rpm -i -vv ./mongo-cxx-driver-libs-3.2.0-1.el7.centos.x86_64.rpm
             S rpm -i -vv ./mongo-cxx-driver-3.2.0-1.el7.centos.x86_64.rpm
             S rpm -i -vv ./mongo-cxx-driver-devel-3.2.0-1.el7.centos.x86_64.rpm
             B rm ./mongo-cxx-driver-libs-3.2.0-1.el7.centos.x86_64.rpm
             B rm ./mongo-cxx-driver-3.2.0-1.el7.centos.x86_64.rpm
             B rm ./mongo-cxx-driver-devel-3.2.0-1.el7.centos.x86_64.rpm
-
-
 
             echo '[ CENTOS ONLY: Check Install, Confirm No Errors; WARNING! MAKE TAKE HOURS TO RUN! ]'
             S yum check
@@ -1457,9 +1441,9 @@ if [ $MENU_CHOICE -le 25 ]; then
 
 
 
-        # NEED ADD NON-CENTOS INSTALL OF MONGODB C++ DRIVER
-        # NEED ADD NON-CENTOS INSTALL OF MONGODB C++ DRIVER
-        # NEED ADD NON-CENTOS INSTALL OF MONGODB C++ DRIVER
+        # START HERE: need add non-centos install of mongodb c++ driver
+        # START HERE: need add non-centos install of mongodb c++ driver
+        # START HERE: need add non-centos install of mongodb c++ driver
 
         echo '[ Install RPerl Dependency MongoDB C++ Driver, Download/Build/Install, NOT YET ENABLED!!! ]'
         
