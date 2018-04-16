@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.215_000'
+VERSION='0.216_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -1365,19 +1365,15 @@ if [ $MENU_CHOICE -le 25 ]; then
             B rm ./mongo-c-driver-1.9.3-1.el7.centos.x86_64.rpm
             B rm ./mongo-c-driver-devel-1.9.3-1.el7.centos.x86_64.rpm
 
-            echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, Fix Broken CMake Files ]'
- 
-            # NEED ANSWER: can we fix this CMake permanently by including --enable-static in configure for both libbson & mongo-c-driver above???
-            # NEED ANSWER: can we fix this CMake permanently by including --enable-static in configure for both libbson & mongo-c-driver above???
-            # NEED ANSWER: can we fix this CMake permanently by including --enable-static in configure for both libbson & mongo-c-driver above???
-
-            # CMake Error at /lib64/cmake/libbson-1.0/libbson-1.0-config.cmake:28 (message): File or directory //include/libbson-1.0 referenced by variable BSON_INCLUDE_DIRS does not exist !
-            B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson-1.0-config.cmake
-            S mv ./libbson-1.0-config.cmake /lib64/cmake/libbson-1.0/libbson-1.0-config.cmake
-
-            # CMake Error at /lib64/cmake/libmongoc-1.0/libmongoc-1.0-config.cmake:30 (message): File or directory //include/libmongoc-1.0 referenced by variable MONGOC_INCLUDE_DIRS does not exist !
-            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/libmongoc-1.0-config.cmake
-            S mv ./libmongoc-1.0-config.cmake /lib64/cmake/libmongoc-1.0/libmongoc-1.0-config.cmake
+#            # DEV NOTE: prefer pre-built RPMs below
+#            echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, Fix Broken CMake Files ]'
+#            # NEED ANSWER: can we fix this CMake error permanently by including --enable-static in configure for both libbson & mongo-c-driver above???
+#            # CMake Error at /lib64/cmake/libbson-1.0/libbson-1.0-config.cmake:28 (message): File or directory //include/libbson-1.0 referenced by variable BSON_INCLUDE_DIRS does not exist !
+#            B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson-1.0-config.cmake
+#            S mv ./libbson-1.0-config.cmake /lib64/cmake/libbson-1.0/libbson-1.0-config.cmake
+#            # CMake Error at /lib64/cmake/libmongoc-1.0/libmongoc-1.0-config.cmake:30 (message): File or directory //include/libmongoc-1.0 referenced by variable MONGOC_INCLUDE_DIRS does not exist !
+#            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/libmongoc-1.0-config.cmake
+#            S mv ./libmongoc-1.0-config.cmake /lib64/cmake/libmongoc-1.0/libmongoc-1.0-config.cmake
 
             echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver ]'
 
@@ -1441,15 +1437,11 @@ if [ $MENU_CHOICE -le 25 ]; then
 
 
 
-        # START HERE: need add non-centos install of mongodb c++ driver
-        # START HERE: need add non-centos install of mongodb c++ driver
-        # START HERE: need add non-centos install of mongodb c++ driver
+        # START HERE: need add non-centos install of mongodb c++ driver; correlate with Section 60 below
+        # START HERE: need add non-centos install of mongodb c++ driver; correlate with Section 60 below
+        # START HERE: need add non-centos install of mongodb c++ driver; correlate with Section 60 below
 
         echo '[ Install RPerl Dependency MongoDB C++ Driver, Download/Build/Install, NOT YET ENABLED!!! ]'
-        
-
-
-
 
 
 
@@ -1592,7 +1584,7 @@ if [ $MENU_CHOICE -le 27 ]; then
         B git clone https://github.com/wbraswell/rperl.git $RPERL_REPO_DIRECTORY
         # OR
         echo '[ PUBLIC ZIP ONLY: Download RPerl Repository Onto New Machine ]'
-        B 'wget https://github.com/wbraswell/rperl/archive/master.zip; unzip master.zip; mv rperl-master $RPERL_REPO_DIRECTORY; rm master.zip'
+        B "wget https://github.com/wbraswell/rperl/archive/master.zip; unzip master.zip; mv rperl-master $RPERL_REPO_DIRECTORY; rm master.zip"
 
         echo '[ ALL OPTIONS: Install Problematic RPerl Dependency IO::Socket::SSL, Skip Tests ]'
         B cpanm -v --notest IO::Socket::SSL
