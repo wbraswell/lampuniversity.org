@@ -3,6 +3,12 @@
 # LAMP Installer Script
 VERSION='0.216_000'
 
+
+# START HERE: ensure install works, update RPerl installer
+# START HERE: ensure install works, update RPerl installer
+# START HERE: ensure install works, update RPerl installer
+
+
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -627,7 +633,7 @@ if [ $MENU_CHOICE -le 8 ]; then
         B cp lampuniversity.org-master/bin/* ~/bin
         B rm -Rf lampuniversity.org*
         B hash -r
-        C 'Please Log Out And Log Back In, Which Should Reset The $PATH Environmental Variable To Include The Newly-Created /home/bin Directory, Then Come Back To This Point.'
+        C 'Please Log Out And Log Back In, Which Should Reset The $PATH Environmental Variable To Include The Newly-Created ~/bin Directory, Then Come Back To This Point.'
         echo '[ Test LAMP University Tools, Top Memory Script ]'
         B topmem.sh
     elif [ $MACHINE_CHOICE -eq 1 ]; then
@@ -1092,6 +1098,19 @@ if [ $MENU_CHOICE -le 21 ]; then
         # DEV NOTE: pre-munged command for comparison
 #       if [ -d $HOME/perl5/lib/perl5 ]; then
 #           eval $(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)
+
+# START HERE: need add following 6 lines to munged echo statement below...
+# START HERE: need add following 6 lines to munged echo statement below...
+# START HERE: need add following   lines to munged echo statement below...
+
+#           if ! [[ ":$PERL5LIB:" == *":$HOME/perl5/lib/perl5:"* ]]; then
+#               export PERL5LIB=$HOME/perl5/lib/perl5:$PERL5LIB
+#           fi
+#           if ! [[ ":$PERL5LIB:" == *":$HOME/perl5/lib/perl5/x86_64-linux:"* ]]; then
+#               export PERL5LIB=$HOME/perl5/lib/perl5/x86_64-linux:$PERL5LIB
+#           fi
+
+
 #       fi
         B echo -e '"# enable local::lib, do NOT mix with Perlbrew\nif [ -d"' '\$HOME/perl5/lib/perl5 ]\; then' '"\n  "' "'" eval '$(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)' "'" '"\nfi\n"' '>> ~/.bashrc'
         SOURCE ~/.bashrc
@@ -1300,6 +1319,9 @@ if [ $MENU_CHOICE -le 25 ]; then
 
             echo '[ CENTOS ONLY: Install RPerl Dependencies ]'
             S yum install gcc-c++ make glibc-devel perl-core perl-libs perl-devel openssl-devel zlib zlib-static zlib-devel gmp gmp-static gmp-devel gsl gsl-devel texinfo flex bison
+            echo '[ CENTOS ONLY: Install RPerl Dependencies, GCC/G++ GDB Debugging Symbols ]'
+#            S debuginfo-install cracklib-2.9.0-11.el7.x86_64 cyrus-sasl-lib-2.1.26-21.el7.x86_64 glibc-2.17-196.el7_4.2.x86_64 keyutils-libs-1.5.8-3.el7.x86_64 krb5-libs-1.15.1-8.el7.x86_64 libcom_err-1.42.9-10.el7.x86_64 libgcc-4.8.5-16.el7_4.2.x86_64 libselinux-2.5-11.el7.x86_64 libstdc++-4.8.5-16.el7_4.2.x86_64 nspr-4.13.1-1.0.el7_3.x86_64 nss-3.28.4-15.el7_4.x86_64 nss-softokn-freebl-3.28.3-8.el7_4.x86_64 nss-util-3.28.4-3.el7.x86_64 openldap-2.4.44-5.el7.x86_64 openssl-libs-1.0.2k-8.el7.x86_64 pcre-8.32-17.el7.x86_64 postgresql96-libs-9.6.8-1PGDG.rhel7.x86_64 zlib-1.2.7-17.el7.x86_64
+            S debuginfo-install cracklib cyrus-sasl-lib glibc keyutils-libs krb5-libs libcom_err libgcc libselinux libstdc++ nspr nss nss-softokn-freebl nss-util openldap openssl-libs pcre postgresql96-libs zlib
             echo '[ CENTOS ONLY: Download & Install RPerl Dependency AStyle ]'
             B wget https://github.com/wbraswell/astyle-mirror/raw/master/backup/astyle-2.05.1-1.el7.centos.x86_64.rpm
             S rpm -v -i ./astyle-2.05.1-1.el7.centos.x86_64.rpm
