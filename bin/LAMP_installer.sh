@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.216_000'
+VERSION='0.217_000'
 
 
 # START HERE: ensure install works, update RPerl installer
@@ -431,7 +431,7 @@ if [ $MENU_CHOICE -le 1 ]; then
         echo '[ Manually Modify Hosts File; Update localhost Entry, Disable Public Entry If Present ]'
         echo '[ Example File Content On The Following Lines ]'
         echo "127.0.1.1       $DOMAIN_NAME  # === EDIT THIS LINE TO BE YOUR LOCAL HOSTNAME AKA FULLY-QUALIFIED DOMAIN NAME, AS SHOWN HERE ==="
-        echo '# === COMMENT OR REMOVE LOCAL HOSTNAME IF APPEARING BELOW ==='
+        echo '# === COMMENT OR REMOVE LOCAL HOSTNAME(S) IF APPEARING BELOW ==='
         echo '...'
         echo '111.222.111.222 foo.com  # ignore this entry'
         echo "#123.123.123.123 $DOMAIN_NAME  # === THIS IS THE ENTRY WHICH NEEDS TO BE DISABLED, AS SHOWN HERE ==="
