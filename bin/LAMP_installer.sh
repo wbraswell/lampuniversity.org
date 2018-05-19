@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.217_000'
+VERSION='0.218_000'
 
 
 # START HERE: ensure install works, update RPerl installer
@@ -603,6 +603,9 @@ if [ $MENU_CHOICE -le 7 ]; then
         echo '[ NOTE: ClamAV should be skipped on low-memory systems. ]'
         C 'Please read the note above.'
         S apt-get install clamav clamav-daemon 
+        echo '[ If you see the error below, then freshclam is already running automatically ]'
+        echo '[ NOTE: Check For The Following Error When You Run The Next Command, If Present Then freshclam Is Already Running & You May Ignore Error... "ERROR: /var/log/clamav/freshclam.log is locked by another process" ]'
+        echo
         S freshclam
         S clamscan -r /home
         D $USERNAME "new machine's username" `whoami`
