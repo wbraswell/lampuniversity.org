@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.219_000'
+VERSION='0.220_000'
 
 
 # START HERE: ensure install works, update RPerl installer
@@ -1063,7 +1063,7 @@ if [ $MENU_CHOICE -le 20 ]; then
         echo '[ NOTE: You MUST Have v7.04 Or Newer Installed System-Wide (And Also Single-User) For RPerl ]'
         # DEV NOTE: create Perl lib dirs due to CentOS bug, dirs should already exist but do not, checked by CPAN::FirstTime::_can_write_to_libdirs()
         echo '[ Ensure Perl Library Directories Exist ]'
-        S "perl -e 'use Config; foreach my \$dir_key (qw(installprivlib installarchlib installsitelib installsitearch)) { if (not -e \$Config{\$dir_key}) { my \$success = mkdir \$Config{\$dir_key}; if (\$success) { print q{Created directory: }, \$Config{\$dir_key}, qq{\\n}; } else { print q{Error, could no create directory: }, \$Config{\$dir_key}, qq{\\n}, \$!, qq{\\n}; } } else { print q{Directory already exists: }, \$Config{\$dir_key}, qq{\\n}; } }'"
+        S "perl -e 'use Config; use File::Path qw(make_path); foreach my \$dir_key (qw(installprivlib installarchlib installsitelib installsitearch)) { if (not -e \$Config{\$dir_key}) { my \$success = make_path(\$Config{\$dir_key}); if (\$success) { print q{Created directory: }, \$Config{\$dir_key}, qq{\\n}; } else { print q{Error, could not create directory: }, \$Config{\$dir_key}, qq{\\n}, \$!, qq{\\n}; } } else { print q{Directory already exists: }, \$Config{\$dir_key}, qq{\\n}; } }'"
         echo '[ Choose "yes" For Automatic Configuration & Also "yes" For Automatic CPAN Mirror Selection ]'
         echo '[ Choose "sudo" For Installation Approach If Previous Command Does Not Solve "Warning: You do not have write permission for Perl library directories." ]'
         S cpan ExtUtils::MakeMaker
@@ -1158,7 +1158,7 @@ if [ $MENU_CHOICE -le 22 ]; then
             S yum install perl perl-core perl-CPAN perl-CPAN-Meta
             # DEV NOTE: create Perl lib dirs due to CentOS bug, dirs should already exist but do not, checked by CPAN::FirstTime::_can_write_to_libdirs()
             echo '[ CENTOS & CPAN ONLY: Ensure Perl Library Directories Exist ]'
-            S "perl -e 'use Config; foreach my \$dir_key (qw(installprivlib installarchlib installsitelib installsitearch)) { if (not -e \$Config{\$dir_key}) { my \$success = mkdir \$Config{\$dir_key}; if (\$success) { print q{Created directory: }, \$Config{\$dir_key}, qq{\\n}; } else { print q{Error, could no create directory: }, \$Config{\$dir_key}, qq{\\n}, \$!, qq{\\n}; } } else { print q{Directory already exists: }, \$Config{\$dir_key}, qq{\\n}; } }'"
+            S "perl -e 'use Config; use File::Path qw(make_path); foreach my \$dir_key (qw(installprivlib installarchlib installsitelib installsitearch)) { if (not -e \$Config{\$dir_key}) { my \$success = make_path(\$Config{\$dir_key}); if (\$success) { print q{Created directory: }, \$Config{\$dir_key}, qq{\\n}; } else { print q{Error, could not create directory: }, \$Config{\$dir_key}, qq{\\n}, \$!, qq{\\n}; } } else { print q{Directory already exists: }, \$Config{\$dir_key}, qq{\\n}; } }'"
             echo '[ CENTOS & CPAN ONLY: Install CPANM ]'
             S cpan App::cpanminus
             echo '[ CENTOS & CPAN ONLY: Install Perlbrew ]'
