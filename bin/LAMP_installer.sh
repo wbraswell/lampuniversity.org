@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.218_000'
+VERSION='0.219_000'
 
 
 # START HERE: ensure install works, update RPerl installer
@@ -240,10 +240,8 @@ echo "[[[<<< LAMP Installer Script v$VERSION >>>]]]"
 echo
 echo '  [[[<<< Tested Using Fresh Installs >>>]]]'
 echo
-echo ' Ubuntu v14.04   (Trusty Tahr) in Virtual Box'
-echo ' Ubuntu v14.04.1 (Trusty Tahr) on CloudAtCost.com'
 echo 'Xubuntu v14.04.2 (Trusty Tahr)'
-echo 'Xubuntu v16.04.1 (Xenial Xerus)'
+echo 'Xubuntu v16.04.4 (Xenial Xerus)'
 echo
 echo  '          [[[<<< Main Menu >>>]]]'
 echo
@@ -725,7 +723,7 @@ if [ $MENU_CHOICE -le 12 ]; then
     if [ $MACHINE_CHOICE -eq 0 ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
-        D $UBUNTU_RELEASE_NAME 'Ubuntu release name (trusty, xenial, etc.)' 'trusty'
+        D $UBUNTU_RELEASE_NAME 'Ubuntu release name (trusty, xenial, etc.)' 'xenial'
         UBUNTU_RELEASE_NAME=$USER_INPUT
         echo '[ Check Install, Confirm No Errors ]'
         S apt-get update
@@ -2279,7 +2277,7 @@ if [ $MENU_CHOICE -le 41 ]; then
     if [ $MACHINE_CHOICE -eq 0 ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
-        D $UBUNTU_RELEASE_NAME 'Ubuntu release name (trusty, xenial, etc.)' 'trusty'
+        D $UBUNTU_RELEASE_NAME 'Ubuntu release name (trusty, xenial, etc.)' 'xenial'
         UBUNTU_RELEASE_NAME=$USER_INPUT
         echo '[ WARNING: Prerequisite Dependencies Include Full LAMP Stack (Sections 0 - 11, 21 - 24); mod_perl (Section 31) OR mod_fastcgi (This Section); Postfix (Section 36); And Expat, etc (This Section). ]'
         C 'Please read the warning above.  Seriously.'
