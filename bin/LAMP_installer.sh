@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.220_000'
+VERSION='0.221_000'
 
 
 # START HERE: ensure install works, update RPerl installer
@@ -2722,6 +2722,7 @@ if [ $MENU_CHOICE -le 49 ]; then
         S chmod -R g+rwX /home/$USERNAME/public_html/$DOMAIN_NAME-latest/root/static/cms-uploads/
         S chmod -R g+rX /home/$USERNAME/public_html
         S chmod g+rX /home/$USERNAME/
+        S chmod -R o-rwx /home/$USERNAME/* /home/$USERNAME/.??*
 
 #        echo "[ Ensure Only User $USERNAME Can Read Files Which May Contain Passwords ]"
 #        B chmod -R go-rwx ~/.:100-fakexinerama ~/.bash_logout ~/bin ~/.config ~/.dbus ~/.gitconfig ~/LAMP_installer.sh ~/.local ~/perl5 ~/.viminfo ~/.Xauthority ~/.xsession-errors ~/.bash_history ~/.bashrc ~/.cache ~/.cpanm ~/.fakexinerama ~/.gkrellm2 ~/.lesshst ~/.mysql_history ~/.profile ~/.ssh ~/.vimrc ~/.xpra
