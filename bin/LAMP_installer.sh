@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.221_000'
+VERSION='0.222_000'
 
 
 # START HERE: ensure install works, update RPerl installer
@@ -304,9 +304,9 @@ echo  '48. [[[ PERL SHINYCMS,  CREATE    APACHE DIRECTORIES & ENABLE STATIC  PAG
 echo  '49. [[[ PERL SHINYCMS,  CONFIGURE APACHE PERMISSIONS & ENABLE DYNAMIC PAGES ]]]'
 echo  '50. [[[ PERL SHINYCMS,  CONFIGURE SHINY ]]]'
 echo
-echo  '51. [[[ PERL CLOUDFORFREE, FOOOOOO ]]]'
+echo  '60. [[[        LINUX,   INSTALL MONGODB ]]]'
 echo
-echo  '60. [[[ UBUNTU LINUX,   INSTALL MONGODB ]]]'
+echo  '70. [[[ PERL CLOUDFORFREE, FOOOOOO ]]]'
 echo
 
 while true; do
@@ -1309,9 +1309,20 @@ if [ $MENU_CHOICE -le 25 ]; then
             echo '[ UBUNTU ONLY: Update APT Repositories ]'
             S apt-get update
             echo '[ UBUNTU ONLY: Install RPerl Dependencies ]'
-            S apt-get install g++ libc6-dev libperl-dev libssl-dev zlib1g-dev libgmp-dev libgsl0-dev texinfo flex bison astyle
-            echo '[ UBUNTU ONLY: Install RPerl Dependencies, MongoDB C Driver ]'
-            S apt-get install pkg-config libmongoc-1.0-0
+            S apt-get install g++ libc6-dev libperl-dev libssl-dev zlib1g-dev libgmp-dev libgsl0-dev texinfo flex bison astyle pkg-config
+
+            echo "[ UBUNTU ONLY: Install RPerl Dependencies, MongoDB C & C++ Drivers; Must Use Latest libbson & libmongoc From Bionic v18.04 Repositories ]"
+            echo "[ UBUNTU ONLY: Install RPerl Dependencies, MongoDB C & C++ Drivers; In Xenial v16.04, Temporarily Replace All Occurrences Of 'xenial' With 'bionic' (Same For Other Non-Bionic Releases), Skip If Already Using Bionic Or Newer ]"
+            S $EDITOR /etc/apt/sources.list
+            echo "[ UBUNTU ONLY: Install RPerl Dependencies, MongoDB C & C++ Drivers; Update To Bionic v18.04 Repositories, Skip If Already Using Bionic Or Newer ]"
+            S apt-get update
+            echo "[ UBUNTU ONLY: Install RPerl Dependencies, MongoDB C & C++ Drivers; Install libbson & libmongoc From Bionic v18.04 Repositories ]"
+            S apt-get install libbson-1.0-0 libbson-dev libmongoc-1.0-0 libmongoc-dev
+            echo "[ UBUNTU ONLY: Install RPerl Dependencies, MongoDB C & C++ Drivers; In Xenial v16.04, Replace All Occurrences Of 'bionic' With Original 'xenial' (Same For Other Non-Bionic Releases), Skip If Already Using Bionic Or Newer ]"
+            S $EDITOR /etc/apt/sources.list
+            echo "[ UBUNTU ONLY: Install RPerl Dependencies, MongoDB C & C++ Drivers; Update To Original Non-Bionic Repositories, Skip If Already Using Bionic Or Newer ]"
+            S apt-get update
+
             echo '[ UBUNTU ONLY: Check Install, Confirm No Errors ]'
             S apt-get -f install
         # OR
@@ -1458,15 +1469,46 @@ if [ $MENU_CHOICE -le 25 ]; then
         echo 'http://astyle.sourceforge.net'
         echo
 
+        # BEGIN UBUNTU MANUAL BUILD, MONGOCXX C++ DRIVER
 
+        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Download & Uncompress ]'
+        B wget https://github.com/wbraswell/mongo-cxx-driver-mirror/raw/master/mongo-cxx-driver-3.2.0.tar.gz
+        B tar -xzvf mongo-cxx-driver-3.2.0.tar.gz && cd mongo-cxx-driver-3.2.0/build 
 
-        # START HERE: need add non-centos install of mongodb c++ driver; correlate with Section 60 below
-        # START HERE: need add non-centos install of mongodb c++ driver; correlate with Section 60 below
-        # START HERE: need add non-centos install of mongodb c++ driver; correlate with Section 60 below
+        # CMake Error at /usr/lib/x86_64-linux-gnu/cmake/libbson-1.0/libbson-1.0-config.cmake:28 (message): File or directory /usr/lib/include/libbson-1.0 referenced by variable BSON_INCLUDE_DIRS does not exist !
+        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Copy The Following Line ]'
+        echo "set (PACKAGE_PREFIX_DIR /usr)  # WBRASWELL 20180615 2018.166: manually set PACKAGE_PREFIX_DIR due to CMake 'does not exist' failures"
+        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Paste The Now-Copied Line Immediately BEFORE The Following Line ]'
+        echo "set_and_check (BSON_INCLUDE_DIRS \"${PACKAGE_PREFIX_DIR}/include/libbson-1.0\")"
+        S $EDITOR /usr/lib/x86_64-linux-gnu/cmake/libbson-1.0/libbson-1.0-config.cmake
+        # CMake Error at /usr/lib/x86_64-linux-gnu/cmake/libmongoc-1.0/libmongoc-1.0-config.cmake:31 (message): File or directory /usr/lib/include/libmongoc-1.0 referenced by variable MONGOC_INCLUDE_DIRS does not exist !
+        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Paste The Now-Copied Line AGAIN Immediately BEFORE The Following Line ]'
+        echo "set_and_check (MONGOC_INCLUDE_DIRS \"${PACKAGE_PREFIX_DIR}/include/libmongoc-1.0\")"
+        S $EDITOR /usr/lib/x86_64-linux-gnu/cmake/libmongoc-1.0/libmongoc-1.0-config.cmake
 
-        echo '[ Install RPerl Dependency MongoDB C++ Driver, Download/Build/Install, NOT YET ENABLED!!! ]'
+        # CMake Error: The following variables are used in this project, but they are set to NOTFOUND.  Please set them or make sure they are set and tested correctly in the CMake files: BSON_LIBRARY MONGOC_LIBRARY
+#        B cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/lib ..
+        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Configure The C++ Build Process ]'
+        B cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DMONGOC_LIBRARY=/usr/lib/x86_64-linux-gnu/libmongoc-1.0.so -DBSON_LIBRARY=/usr/lib/x86_64-linux-gnu/libbson-1.0.so ..
+        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Build & Install The Minimalistic Polyfill ]'
+        S make EP_mnmlstc_core
+        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Build ]'
+        B make
+        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Install ]'
+        S make install
+#        S ln -sf /usr/lib/pkgconfig/libmongocxx.pc /usr/share/pkgconfig/libmongocxx.pc  # NOT NECESSARY IN UBUNTU???
+#        S ln -sf /usr/lib/pkgconfig/libbsoncxx.pc /usr/share/pkgconfig/libbsoncxx.pc    # NOT NECESSARY IN UBUNTU???
+        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Before Running Optional Test Program, Please Install MongoDB Server Via Section 60 [[[ UBUNTU LINUX, INSTALL MONGODB ]]] ]'
+        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Save Test Program ]'
+        B printf "#include <iostream>\n#include <bsoncxx/builder/stream/document.hpp>\n#include <bsoncxx/json.hpp>\n#include <mongocxx/client.hpp>\n#include <mongocxx/instance.hpp>\nint main(int, char**) {\n    mongocxx::instance inst{};\n    mongocxx::client conn{mongocxx::uri{}};\n    bsoncxx::builder::stream::document document{};\n    auto collection = conn[\"testdb\"][\"testcollection\"];\n    document << \"hello\" << \"world\";\n    collection.insert_one(document.view());\n    auto cursor = collection.find({});\n    for (auto&& doc : cursor) {\n        std::cout << bsoncxx::to_json(doc) << std::endl;\n    }\n}" > ./mongocxx_test.cpp
+        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Compile Test Program ]'
+        B c++ --std=c++11 mongocxx_test.cpp -o mongocxx_test -I/usr/include/mongocxx/v_noabi -I/usr/include/bsoncxx/v_noabi/ -L/usr/lib -Wl,-rpath,/usr/lib -lmongocxx -lbsoncxx
+        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Run Test Program ]'
+        B ./mongocxx_test
+        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Delete Test Program ]'
+        B rm -Rf ./mongocxx_test*
 
-
+        # END UBUNTU MANUAL BUILD, MONGOCXX C++ DRIVER
 
         echo '[ Install RPerl Dependency Pluto PolyCC, Download ]'
         # B 'wget https://github.com/wbraswell/pluto-mirror/raw/master/backup/pluto-0.11.4.tar.gz; tar -xzvf pluto-0.11.4.tar.gz'  # prefer official repo below
@@ -2763,14 +2805,82 @@ if [ $MENU_CHOICE -le 50 ]; then
 #    CURRENT_SECTION_COMPLETE  # final section!
 fi
 
+if [ $MENU_CHOICE -le 60 ]; then
+    echo '60. [[[ LINUX, INSTALL MONGODB ]]]'
+    echo
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+
+        echo '[ Install MongoDB Enterprise Edition ]'
+
+        if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+            VERIFY_UBUNTU
+            
+            echo '[ UBUNTU ONLY: OFFICIAL MONGODB INSTALLATION DOCS    https://docs.mongodb.com/manual/tutorial/install-mongodb-enterprise-on-ubuntu/ ]'
+            echo '[ UBUNTU ONLY: Import The Public Key Used By The Package Management System ]'
+            S apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0C49F3730359A14518585931BC711F9BA15703C6
+
+            echo '[ UBUNTU ONLY: Create APT Source Entry For Downloading & Installing MongoDB ]'
+            S echo "deb [ arch=amd64,arm64,ppc64el,s390x ] http://repo.mongodb.com/apt/ubuntu xenial/mongodb-enterprise/3.4 multiverse" > /etc/apt/sources.list.d/mongodb-enterprise.list
+
+            echo '[ UBUNTU ONLY: Reload Local Package Database ]'
+            S apt-get update
+ 
+            echo '[ UBUNTU ONLY: Install MongoDB Enterprise Edition ]'
+            S apt-get install mongodb-enterprise
+
+            echo '[ UBUNTU ONLY: Start MongoDB Enterprise Service ]'
+            S service mongod start
+
+            echo '[ UBUNTU ONLY: Verify That MongoDB Has Started Successfully By Checking The Contents Of The Log File'
+            echo 'At /var/log/mongodb/mongod.log for a line (TYPICALLY THE LAST LINE) reading:'
+            echo '    [initandlisten] waiting for connections on port <port>'
+            echo 'Where <port> Is The Port Configured In /etc/mongod.conf, 27017 By Default ]'
+            B less /var/log/mongodb/mongod.log
+
+            echo '[ UBUNTU ONLY: Optional, Stop MongoDB Enterprise Service ]'
+            S service mongod stop
+        # OR
+        elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+            VERIFY_CENTOS
+
+            echo '[ CENTOS ONLY: OFFICIAL MONGODB INSTALLATION DOCS    https://docs.mongodb.com/manual/tutorial/install-mongodb-enterprise-on-red-hat/ ]'
+            echo '[ CENTOS ONLY: Create YUM Repo Entry For Downloading & Installing MongoDB ]'
+            S printf "[mongodb-enterprise]\nname=MongoDB Enterprise Repository\nbaseurl=https://repo.mongodb.com/yum/redhat/\$releasever/mongodb-enterprise/3.6/\$basearch/\ngpgcheck=1\nenabled=1\ngpgkey=https://www.mongodb.org/static/pgp/server-3.6.asc" > /etc/yum.repos.d/mongodb-enterprise.repo
+
+            echo '[ CENTOS ONLY: Install MongoDB Enterprise Edition ]'
+            S yum install -y mongodb-enterprise
+
+            echo '[ CENTOS ONLY: Pre-Configure MongoDB Enterprise Edition, Disable SELinux OR SEE OTHER INFO IN OFFICIAL MONGODB INSTALLATION DOCS ]'
+            echo 'SELINUX=disabled' >> /etc/selinux/config 
+
+            echo '[ CENTOS ONLY: Start MongoDB Enterprise Service ]'
+            S service mongod start
+
+            echo '[ CENTOS ONLY: Verify That MongoDB Has Started Successfully By Checking The Contents Of The Log File'
+            echo 'At /var/log/mongodb/mongod.log for a line (TYPICALLY THE LAST LINE) reading:'
+            echo '    [initandlisten] waiting for connections on port <port>'
+            echo 'Where <port> Is The Port Configured In /etc/mongod.conf, 27017 By Default ]'
+            B less /var/log/mongodb/mongod.log
+
+            echo '[ CENTOS ONLY: Optional, Stop MongoDB Enterprise Service ]'
+            S service mongod stop
+        fi
+        clear
+
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo "Nothing To Do On Existing Machine!"
+    fi
+#   CURRENT_SECTION_COMPLETE  # NEED UN-COMMENT WHEN THIS IS NO LONGER THE FINAL SECTION
+fi
 
 
 
 
 
 
-if [ $MENU_CHOICE -le 51 ]; then
-    echo  '51. [[[ PERL CLOUDFORFREE, FOOOOOO ]]]'
+
+if [ $MENU_CHOICE -le 70 ]; then
+    echo  '70. [[[ PERL CLOUDFORFREE, FOOOOOO ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
         D $USERNAME "new machine's username" `whoami`
@@ -3271,54 +3381,6 @@ S vi /etc/phpmyadmin/config.inc.php
 S service apache2 reload
 
 
-
-
-
-
-if [ $MENU_CHOICE -le 60 ]; then
-    echo '60. [[[ UBUNTU LINUX, INSTALL MONGODB ]]]'
-    echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
-
-        clear
-        echo 'Installing MongoDB Enterprise Edition on Ubuntu 16.04 Xenial'
-
-        # source website for this installer:
-        # https://docs.mongodb.com/manual/tutorial/install-mongodb-enterprise-on-ubuntu/
-
-        echo 'Import The Public Key Used By The Package Management System'
-        S apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0C49F3730359A14518585931BC711F9BA15703C6
-
-        echo 'Create APT Source Entry For Downloading & Installing MongoDB'
-        S echo "deb [ arch=amd64,arm64,ppc64el,s390x ] http://repo.mongodb.com/apt/ubuntu xenial/mongodb-enterprise/3.4 multiverse" > /etc/apt/sources.list.d/mongodb-enterprise.list
-
-        echo 'Reload Local Package Database'
-        S apt-get update
-
-        echo 'Install MongoDB Enterprise Edition'
-        S apt-get install mongodb-enterprise
-
-        echo 'Start MongoDB Enterprise Service'
-        echo "Starting MongoDB..."
-        S service mongod start
-
-        echo 'Verify That MongoDB Has Started Successfully By Checking The Contents Of The Log File'
-        echo 'At /var/log/mongodb/mongod.log for a line (TYPICALLY THE LAST LINE) reading:'
-        echo '    [initandlisten] waiting for connections on port <port>'
-        echo 'Where <port> Is The Port Configured In /etc/mongod.conf, 27017 By Default.'
-        B less /var/log/mongodb/mongod.log
-
-        # Stop MongoDB
-        #   S service mongod stop
-
-        # Restart MongoDB
-        #   S service mongod restart
-
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
-        echo "Nothing To Do On Existing Machine!"
-    fi
-#   CURRENT_SECTION_COMPLETE  # NEED UN-COMMENT WHEN THIS IS NO LONGER THE FINAL SECTION
-fi
 
 
 echo
