@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.222_000'
+VERSION='0.223_000'
 
 
 # START HERE: ensure install works, update RPerl installer
@@ -2820,7 +2820,8 @@ if [ $MENU_CHOICE -le 60 ]; then
             S apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0C49F3730359A14518585931BC711F9BA15703C6
 
             echo '[ UBUNTU ONLY: Create APT Source Entry For Downloading & Installing MongoDB ]'
-            S echo "deb [ arch=amd64,arm64,ppc64el,s390x ] http://repo.mongodb.com/apt/ubuntu xenial/mongodb-enterprise/3.4 multiverse" > /etc/apt/sources.list.d/mongodb-enterprise.list
+            # DEV NOTE: must wrap redirect in quotes
+            S "echo 'deb [ arch=amd64,arm64,ppc64el,s390x ] http://repo.mongodb.com/apt/ubuntu xenial/mongodb-enterprise/3.4 multiverse' > /etc/apt/sources.list.d/mongodb-enterprise.list"
 
             echo '[ UBUNTU ONLY: Reload Local Package Database ]'
             S apt-get update
@@ -2845,7 +2846,8 @@ if [ $MENU_CHOICE -le 60 ]; then
 
             echo '[ CENTOS ONLY: OFFICIAL MONGODB INSTALLATION DOCS    https://docs.mongodb.com/manual/tutorial/install-mongodb-enterprise-on-red-hat/ ]'
             echo '[ CENTOS ONLY: Create YUM Repo Entry For Downloading & Installing MongoDB ]'
-            S printf "[mongodb-enterprise]\nname=MongoDB Enterprise Repository\nbaseurl=https://repo.mongodb.com/yum/redhat/\$releasever/mongodb-enterprise/3.6/\$basearch/\ngpgcheck=1\nenabled=1\ngpgkey=https://www.mongodb.org/static/pgp/server-3.6.asc" > /etc/yum.repos.d/mongodb-enterprise.repo
+            # DEV NOTE: must wrap redirect in quotes
+            S 'printf "[mongodb-enterprise]\nname=MongoDB Enterprise Repository\nbaseurl=https://repo.mongodb.com/yum/redhat/\$releasever/mongodb-enterprise/3.6/\$basearch/\ngpgcheck=1\nenabled=1\ngpgkey=https://www.mongodb.org/static/pgp/server-3.6.asc" > /etc/yum.repos.d/mongodb-enterprise.repo'
 
             echo '[ CENTOS ONLY: Install MongoDB Enterprise Edition ]'
             S yum install -y mongodb-enterprise
