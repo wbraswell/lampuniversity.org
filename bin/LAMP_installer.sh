@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.223_000'
+VERSION='0.224_000'
 
 
 # START HERE: ensure install works, update RPerl installer
@@ -1498,7 +1498,7 @@ if [ $MENU_CHOICE -le 25 ]; then
         S make install
 #        S ln -sf /usr/lib/pkgconfig/libmongocxx.pc /usr/share/pkgconfig/libmongocxx.pc  # NOT NECESSARY IN UBUNTU???
 #        S ln -sf /usr/lib/pkgconfig/libbsoncxx.pc /usr/share/pkgconfig/libbsoncxx.pc    # NOT NECESSARY IN UBUNTU???
-        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Before Running Optional Test Program, Please Install MongoDB Server Via Section 60 [[[ UBUNTU LINUX, INSTALL MONGODB ]]] ]'
+        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Before Running Optional Test Program, Please Install MongoDB Server Via LAMP Installer SECTION 60 [[[ UBUNTU LINUX, INSTALL MONGODB ]]] ]'
         echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Save Test Program ]'
         B printf "#include <iostream>\n#include <bsoncxx/builder/stream/document.hpp>\n#include <bsoncxx/json.hpp>\n#include <mongocxx/client.hpp>\n#include <mongocxx/instance.hpp>\nint main(int, char**) {\n    mongocxx::instance inst{};\n    mongocxx::client conn{mongocxx::uri{}};\n    bsoncxx::builder::stream::document document{};\n    auto collection = conn[\"testdb\"][\"testcollection\"];\n    document << \"hello\" << \"world\";\n    collection.insert_one(document.view());\n    auto cursor = collection.find({});\n    for (auto&& doc : cursor) {\n        std::cout << bsoncxx::to_json(doc) << std::endl;\n    }\n}" > ./mongocxx_test.cpp
         echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Compile Test Program ]'
@@ -2826,8 +2826,11 @@ if [ $MENU_CHOICE -le 60 ]; then
             echo '[ UBUNTU ONLY: Reload Local Package Database ]'
             S apt-get update
  
-            echo '[ UBUNTU ONLY: Install MongoDB Enterprise Edition ]'
-            S apt-get install mongodb-enterprise
+            echo '[ UBUNTU ONLY: Install MongoDB Enterprise Edition, Allow aptitude To Downgrade libsnmp30 & snmpd If Necessary ]'
+            S aptitude install mongodb-enterprise
+                # The following packages have unmet dependencies: snmp : Depends: libsnmp30 (= 5.7.3+dfsg-1ubuntu4) but 5.7.3+dfsg-1ubuntu4.1 is installed.
+#            S apt-get install mongodb-enterprise
+                # The following packages have unmet dependencies: mongodb-enterprise : Depends: mongodb-enterprise-server but it is not going to be installed  (ALSO mongodb-enterprise-mongos & mongodb-enterprise-tools)
 
             echo '[ UBUNTU ONLY: Start MongoDB Enterprise Service ]'
             S service mongod start
