@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.224_100'
+VERSION='0.225_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -726,6 +726,13 @@ if [ $MENU_CHOICE -le 12 ]; then
         echo '[ Basic X-Windows Testing: x11-apps (contains xclock) ]'
         echo '[ General Tools: gkrellm hexchat firefox chromium-browser update-manager indicator-multiload unetbootin ]'
         S apt-get install xterm xfce4-terminal x11-apps gkrellm hexchat firefox chromium-browser update-manager indicator-multiload unetbootin
+
+        # BUG https://bugs.launchpad.net/bugs/1613949
+        echo '[ gVim Fix: Copy All "xenial" Lines, Paste As New "xenial-update" Lines ]'
+        S $EDITOR /etc/apt/sources.list
+        S apt-get update
+        S apt-get install vim-gtk3  # example affected by 16.04.1 apt-get upgrade
+
         echo '[ OPTIONAL: Adobe Pepper Flash Plugin, Must Manually Enable Canonical Partner Repository, Then Disable When Done ]'
         echo '[ Copy Data From The Following Lines, Then Paste Into The Apt Config File /etc/apt/sources.list, OR Uncomment Equivalent Existing Lines ]'
         echo "deb http://archive.canonical.com/ubuntu $UBUNTU_RELEASE_NAME partner     # needed for Adobe Pepper Flash Plugin"
@@ -2877,6 +2884,8 @@ fi
 
 
 
+# SECTION 70 VARIABLES
+LOCAL_HOSTNAME='__EMPTY__'
 
 if [ $MENU_CHOICE -le 70 ]; then
     echo  '70. [[[ PERL CLOUDFORFREE, FOOOOOO ]]]'
@@ -2885,14 +2894,17 @@ if [ $MENU_CHOICE -le 70 ]; then
         D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
 
+        P $LOCAL_HOSTNAME "Existing Machine's Local Hostname"
+        LOCAL_HOSTNAME=$USER_INPUT
+
 # [[[ PERL CLOUDFORFREE, PREREQUISITES ]]]
 
+echo '[ apache2-dev Package Contains /urs/bin/apxs Required By Apache2::Request & Apache2::Upload via libapreq2 via Apache2::FileManager ]'
 S apt-get install aptitude
 S aptitude install apache2-dev
     # accept solution w/ downgrades only
+echo '[ libapache2-mod-perl2-dev Package Contains /usr/include/apache2/modperl_perl_unembed.h Required By Apache2::Request & Apache2::Upload via libapreq2 via Apache2::FileManager ]'
 S apt-get install libapache2-mod-perl2-dev
-
-# download cloudforfree code
 
 # `unbuffer` required by cloudforfree.org Code.pm
 # Ubuntu v14.04
@@ -2904,24 +2916,13 @@ S apt-get install expect-dev
 # Ubuntu v16.04
 S apt-get install expect
 
+# must have system-wide install of `cpanm` for call to `S cpanm Apache2::FileManager` below
+S apt-get install cpanminus
 
-S apt-get install cpanm
+# [[[ PERL CLOUDFORFREE, PREREQUISITES, APACHE2::FILEMANAGER, PREREQUISITES ]]]
 
 S apt-get install libapreq2-3
 S a2enmod apreq2
-
-
-# [[[ GVIM, FIX ]]]
-
-# NEED MOVE UP INTO SECTION 5
-# BUG https://bugs.launchpad.net/bugs/1613949
-vi /etc/apt/sources.list
-    copy all "xenial" lines, paste as new "xenial-update" lines
-apt-get update
-apt-get install vim-gtk3  # example affected by 16.04.1 apt-get upgrade
-
-
-# [[[ PERL CLOUDFORFREE, PREREQUISITES, APACHE2::FILEMANAGER, PREREQUISITES ]]]
 
 # NON-CRITICAL BUG: Apache2::Request & Apache2::Upload, part of libapreq2
 #In this file:
@@ -2946,34 +2947,51 @@ apt-get install vim-gtk3  # example affected by 16.04.1 apt-get upgrade
 #S cpanm Apache2::Request  # unnecessary, dependency of A2::FM below
 S cpanm Apache2::FileManager
 # installs in /usr/local/lib/x86_64-linux-gnu/perl/5.22.1 among other places?
+#             /usr/local/share/perl/5.22.1/Apache2/FileManager.pm
 
-# CRITICAL BUG: Apache2::FileManager
-#In this file:
-#https://metacpan.org/source/DAVVID/Apache2-FileManager-0.21/test.pl
-#The line which currently reads:
-#use Apache::FileManager;
-#Should be changed to:
-#use Apache2::FileManager;
+# 2 CRITICAL BUGS: Apache2::FileManager
+# Can't locate Apache/FileManager.pm in @INC
+echo "[ Replace 1 Occurrence Of 'use Apache::FileManager;' With 'use Apache2::FileManager;' ]"
+S $EDITOR ~/.cpanm/work/*/Apache2-FileManager-0.21/test.pl
 
+# Can't load '/usr/local/lib/x86_64-linux-gnu/perl/5.22.1/auto/APR/Request/Apache2/Apache2.so' for module APR::Request::Apache2: 
+# /usr/local/lib/x86_64-linux-gnu/perl/5.22.1/auto/APR/Request/Apache2/Apache2.so: undefined symbol: apreq_handle_apache2 at
+# /usr/lib/x86_64-linux-gnu/perl/5.22/DynaLoader.pm line 187.
+echo "[ Replace 2 Occurrences Of 'PERL_DL_NONLAZY=1' With 'PERL_DL_NONLAZY=0' ]"
+S $EDITOR ~/.cpanm/latest-build/Apache2-FileManager-0.21/Makefile
+S cd ~/.cpanm/latest-build/Apache2-FileManager-0.21/ && make && make test && make install
+
+echo '[ Install CloudForFree.org CPAN Dependency, Doorman for Auth0 ]'
+B cpanm -v Plack::Middleware::DoormanAuth0
+echo '[ Install CloudForFree.org CPAN Dependency, Doorman for Auth0, Fix Incorrect $VERSION From "0.01" To "0.10" ]'
+B $EDITOR ./lib/perl5/Plack/Middleware/DoormanAuth0.pm
+
+echo '[ Download CloudForFree.org Source Code ]'
+B git clone https://github.com/wbraswell/cloudforfree.org.git ~/github_repos/cloudforfree.org-latest
+echo '[ Install CloudForFree.org CPAN Dependencies ]'
+B cd ~/github_repos/cloudforfree.org-latest && perl Makefile.PL && cpanm -v --installdeps .
 
 # [[[ PERL CLOUDFORFREE, APACHE CONFIG ]]]
 
-S ln -s /home/wbraswell/public_html/cloudforfree.org-latest/modified/user_files /srv/www/starman.autoparallel.com/public_html/user_files
+B mkdir -p ~/public_html
+B ln -s ~/github_repos/cloudforfree.org-latest/ ~/public_html/cloudforfree.org-latest
 
-S vi /etc/apache2/sites-enabled/FOO.conf
+S ln -s /home/wbraswell/public_html/cloudforfree.org-latest/modified/user_files /srv/www/$LOCAL_HOSTNAME/public_html/user_files
 
+# NEED ANSWER: is this for testing Apache2::FileManager only???
+# SECURITY THREAT!  all possibly-private github repos (and maybe other sensitive files) can be publicy read w/ this config!!!
+S vi /etc/apache2/sites-enabled/$LOCAL_HOSTNAME.conf
 #...
 #    DocumentRoot /home/wbraswell/public_html/cloudforfree.org-latest/root
 #...
-#<Location /FileManager>
-#    SetHandler           perl-script
-#    PerlHandler          Apache2::FileManager
-#    PerlSetVar           DOCUMENT_ROOT /home/wbraswell/public_html/cloudforfree.org-latest/root/user_files
-#</Location>
-
+#    <Location /FileManager>
+#        SetHandler           perl-script
+#        PerlHandler          Apache2::FileManager
+#        PerlSetVar           DOCUMENT_ROOT /home/wbraswell/public_html/cloudforfree.org-latest/root/user_files
+#    </Location>
 
 S service apache2 restart
-# http://starman.autoparallel.com/FileManager
+echo '[ Browse To http://$LOCAL_HOSTNAME/FileManager ]'
 
 S chgrp www-data /home/wbraswell/
 S chmod g+rX /home/wbraswell/
@@ -3026,263 +3044,9 @@ B git clone https://github.com/ajaxorg/ace-builds/ ace-builds-latest
 # browse to kitchen-sink.html
 
 
-# [[[ PERL CLOUDFORFREE, PREREQUISITES, APACHE2::FILEMANAGER, COMPILE PERL & MODPERL ]]]
+# MOVED TO ARCHIVE NOTES:  [[[ PERL CLOUDFORFREE, PREREQUISITES, APACHE2::FILEMANAGER, COMPILE PERL & MODPERL ]]]
 
-# non-threaded Perl, libperl.a
-# B wget NEED_URL
-# B NEED UNZIP COMMAND
-# CD NEED_DIRECTORY
-B "./Configure -des -Uusethreads -Doptimize='-g' -Dusedevel -Accflags=-fPIC"
-B make
-B make test
-S make install
-
-# non-threaded Perl, libperl.so
-B "./Configure -des -Uusethreads -Doptimize='-g' -Dusedevel -Duseshrplib"
-B make
-B make test
-S make install
-
-# MOD_PERL, SYSTEM TO BUILD, UNTHREADED
-# NEED DOWNLOAD & UNZIP
-B perl Makefile.PL MP_APXS=/usr/bin/apxs MP_NO_THREADS=1
-B make
-B make test
-S make install
-
-
-# PERL, BUILD TO SYSTEM
-S mv /usr/bin/perl /usr/bin/perl.BUILD_PERL_DISABLED
-S mv /usr/bin/perl.SYSTEM_PERL_DISABLED /usr/bin/perl
-
-# LIBPERL, BUILD TO SYSTEM
-S rm /usr/lib/x86_64-linux-gnu/libperl.a 
-S cp /home/wbraswell/perl_build/libperl.a.SYSTEM_PERL_DISABLED /usr/lib/x86_64-linux-gnu/libperl.a 
-S rm /usr/lib/x86_64-linux-gnu/libperl.so.5.22.1
-S cp /home/wbraswell/perl_build/libperl.so.5.22.1.SYSTEM_PERL_DISABLED /usr/lib/x86_64-linux-gnu/libperl.so.5.22.1
-
-# PERL INSTALL DIRS, NOT DISABLED
-# /usr/local/lib/x86_64-linux-gnu/perl/5.22.1  Apache2::FileManager, APR::Request, Apache2::Request, Apache2::Upload 
-
-# PERL INSTALL DIRS, BUILD TO SYSTEM
-S mv /usr/lib/x86_64-linux-gnu/perl5/5.22 /usr/lib/x86_64-linux-gnu/perl5/5.22.BUILD_PERL_DISABLED
-S mv /usr/lib/x86_64-linux-gnu/perl5/5.22.SYSTEM_PERL_DISABLED /usr/lib/x86_64-linux-gnu/perl5/5.22
-S mv /usr/lib/x86_64-linux-gnu/perl/5.22.1 /usr/lib/x86_64-linux-gnu/perl/5.22.1.BUILD_PERL_DISABLED
-S mv /usr/lib/x86_64-linux-gnu/perl/5.22.1.SYSTEM_PERL_DISABLED /usr/lib/x86_64-linux-gnu/perl/5.22.1
-S mv /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl-base.BUILD_PERL_DISABLED
-S mv /usr/lib/x86_64-linux-gnu/perl-base.SYSTEM_PERL_DISABLED /usr/lib/x86_64-linux-gnu/perl-base
-S mv /usr/local/lib/perl5/site_perl/5.22.1/x86_64-linux /usr/local/lib/perl5/site_perl/5.22.1/x86_64-linux.BUILD_PERL_DISABLED
-S mv /usr/local/lib/perl5/site_perl/5.22.1/x86_64-linux.SYSTEM_PERL_DISABLED /usr/local/lib/perl5/site_perl/5.22.1/x86_64-linux
-S mv /usr/local/lib/perl5/5.22.1 /usr/local/lib/perl5/5.22.1.BUILD_PERL_DISABLED
-S mv /usr/local/lib/perl5/5.22.1.SYSTEM_PERL_DISABLED /usr/local/lib/perl5/5.22.1
-
-S mv /home/$USERNAME/perl5 /home/$USERNAME/perl5.BUILD_PERL_DISABLED
-S mv /home/$USERNAME/perl5.SYSTEM_PERL_DISABLED /home/$USERNAME/perl5
-
-# PERL CODE, DISABLE BAD MODULE
-S mv /usr/lib/x86_64-linux-gnu/perl5/5.22/Data/Alias.pm /usr/lib/x86_64-linux-gnu/perl5/5.22/Data/Alias.pm.SEGFAULT_DISABLED
-
-
-# MOD_PERL, UBUNTU SYSTEM TO CPAN SYSTEM
-S apt-get remove libapache2-mod-perl2
-S apt-get install aptitude
-S aptitude install apache2-dev
-CD /usr/lib/x86_64-linux-gnu/
-S ln -s ./libgdbm.so.3 ./libgdbm.so
-source /etc/apache2/envvars
-S cpan mod_perl2
-
-
-
-# MOD_PERL, SYSTEM TO BUILD
-S apt-get remove libapache2-mod-perl2
-B wget https://cpan.metacpan.org/authors/id/P/PH/PHRED/mod_perl-2.0.5.tar.gz
-B tar -xzvf mod_perl-2.0.5.tar.gz
-CD mod_perl-2.0.5
-B perl Makefile.PL
-B make
-B make test
-B make install
-
-# MOD_PERL, BUILD TO SYSTEM
-S mod_perl_uninstall.sh
-S apt-get install libapache2-mod-perl2
-#S apt-get install libapache2-mod-perl2-dev  # UNNECESSARY
-
-
-# METHOD::SIGNATURES::SIMPLE & DEVEL::DECLARE & B::HOOKS::OP::CHECK, SYSTEM TO BUILD
-B method_signatures_simple_uninstall.sh
-B wget https://cpan.metacpan.org/authors/id/R/RH/RHESA/Method-Signatures-Simple-1.00.tar.gz
-B tar -xzvf Method-Signatures-Simple-1.00.tar.gz
-CD Method-Signatures-Simple-1.00
-B perl Makefile.PL
-B make
-B make test
-B make install
-
-B devel_declare_uninstall.sh
-B wget https://cpan.metacpan.org/authors/id/F/FL/FLORA/Devel-Declare-0.006006.tar.gz
-B tar -xzvf Devel-Declare-0.006006.tar.gz
-CD Devel-Declare-0.006006
-B perl Makefile.PL
-B make
-B make test
-B make install
-
-S mv /usr/lib/x86_64-linux-gnu/perl5/5.22/B /usr/lib/x86_64-linux-gnu/perl5/5.22/B.SYSTEM_PERL_DISABLED
-S mv /usr/lib/x86_64-linux-gnu/perl5/5.22/auto/B /usr/lib/x86_64-linux-gnu/perl5/5.22/auto/B.SYSTEM_PERL_DISABLED
-#B wget https://cpan.metacpan.org/authors/id/Z/ZE/ZEFRAM/B-Hooks-OP-Check-0.19.tar.gz
-B wget https://cpan.metacpan.org/authors/id/F/FL/FLORA/B-Hooks-OP-Check-0.18.tar.gz
-B tar -xzvf B-Hooks-OP-Check-0.18.tar.gz
-CD B-Hooks-OP-Check-0.18
-B perl Makefile.PL
-B make
-B make test
-B make install
-
-
-# [[[ PERL CLOUDFORFREE, PREREQUISITES, APACHE2::FILEMANAGER, DEBUG MODPERL SEGFAULT ]]]
-
-S gdb /usr/sbin/apache2
-#(gdb) break perl_parse
-#(gdb) run -k start -X
-# RUNNING...
-#<<< DEBUG >>>: in ShinyCMS.pm, returned from setup()
-#<<< DEBUG >>>: in ShinyCMS.pm, about to return 1
-#warning: Temporarily disabling breakpoints for unloaded shared library "/home/foo_user/perl5/lib/perl5/x86_64-linux/auto/B/Hooks/OP/Check/Check.so"
-#Program received signal SIGSEGV, Segmentation fault.
-#0x00007fffef697bd8 in ?? ()
-
-#(gdb) up
-##1  0x00007ffff400fc3f in Perl_newUNOP (type=17, flags=8192, first=0x55555cb18d38) at op.c:4811
-#4811        unop = (UNOP*) CHECKOP(type, unop);
-
-#(gdb) info threads
-#  Id   Target Id         Frame 
-#* 1    Thread 0x7ffff7fd1780 (LWP 10198) "/usr/sbin/apach" 0x00007ffff400fc3f in Perl_newUNOP (type=17, flags=8192, first=0x55555cb18d38) at op.c:4811
-
-#(gdb) print PL_check[17]
-#$1 = (Perl_check_t) 0x7fffef697bd8
-
-
-
-
-#[[[ BEGIN GDB SESSION ]]]
-
-#user@cloud-comp0-00:/$ sudo -i
-#...
-#root@cloud-comp0-00:~# source /etc/apache2/envvars
-#root@cloud-comp0-00:~# gdb /usr/sbin/apache2
-#...
-#Reading symbols from /usr/sbin/apache2...(no debugging symbols found)...done.
-
-#(gdb) run -k start -X
-#Starting program: /usr/sbin/apache2 -k start -X
-#[Thread debugging using libthread_db enabled]
-#Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
-#<<< DEBUG >>>: top of ShinyCMS.pm
-#<<< DEBUG >>>: in ShinyCMS.pm, about to use Moose
-#<<< DEBUG >>>: in ShinyCMS.pm, about to use Catalyst::Runtime
-#<<< DEBUG >>>: in ShinyCMS.pm, about to use Catalyst
-#<<< DEBUG >>>: in ShinyCMS.pm, about to use CatalystX::RoleApplicator
-#<<< DEBUG >>>: in ShinyCMS.pm, about to use Method::Signatures::Simple
-#<<< DEBUG >>>: in ShinyCMS.pm, about to call config()
-#<<< DEBUG >>>: in ShinyCMS.pm, have __PACKAGE__ = ShinyCMS
-#<<< DEBUG >>>: in ShinyCMS.pm, about to call setup()...
-#<<< DEBUG >>>: in ShinyCMS.pm, returned from setup()
-#<<< DEBUG >>>: in ShinyCMS.pm, about to return 1
-
-#Program received signal SIGSEGV, Segmentation fault.
-#0x00007fffebabcb10 in ?? ()
-#(gdb) bt
-#0 0x00007fffebabcb10 in ?? ()
-#1 0x00007ffff3e5302b in Perl_newUNOP (my_perl=my_perl@entry=0x5555577ddde0, type=type@entry=17, flags=<optimized out>, flags@entry=8192, first=0x5555562141b8) at op.c:4811
-#2 0x00007ffff3e54a1d in Perl_newCVREF (my_perl=my_perl@entry=0x5555577ddde0, flags=flags@entry=8192, o=<optimized out>) at op.c:9367
-#3 0x00007ffff3e8b686 in Perl_yylex (my_perl=my_perl@entry=0x5555577ddde0) at toke.c:6693
-#4 0x00007ffff3e97228 in Perl_yyparse (my_perl=my_perl@entry=0x5555577ddde0, gramtype=gramtype@entry=258) at perly.c:322
-#...
-#44 0x000055555558709f in main ()
-
-#(gdb) start
-#The program being debugged has been started already.
-#Start it from the beginning? (y or n) y
-#Temporary breakpoint 1 at 0x5555555867b0
-#Starting program: /usr/sbin/apache2 -k start -X
-#[Thread debugging using libthread_db enabled]
-#Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
-
-#Temporary breakpoint 1, 0x00005555555867b0 in main ()
-
-#(gdb) break perl_parse
-#Function "perl_parse" not defined.
-#Make breakpoint pending on future shared library load? (y or [n]) y
-#Breakpoint 2 (perl_parse) pending.
-
-#(gdb) continue
-#Continuing.
-
-#Breakpoint 2, perl_parse (my_perl=0x55555581ae50, xsinit=0x7ffff420a280, argc=2, argv=0x7ffff7f88070, env=0x0) at perl.c:1473
-#1473    perl.c: No such file or directory.
-
-#(gdb) watch -l PL_check[17]
-#Hardware watchpoint 3: -location PL_check[17]
-
-#(gdb) continue
-#Continuing.
-
-#Hardware watchpoint 3: -location PL_check[17]
-
-#Old value = (OP *(*)(PerlInterpreter *, OP *)) 0x7ffff3e4d9e0 <Perl_ck_rvconst>
-#New value = (OP *(*)(PerlInterpreter *, OP *)) 0x7fffebabcb10 <check_cb>
-#0x00007fffebabcd0e in hook_op_check (type=type@entry=OP_RV2CV, cb=cb@entry=0x7fffeb8b6d30 <dd_ck_rv2cv>, user_data=user_data@entry=0x0) at Check.xs:66
-#66  PL_check[type] = check_cb;
-
-#(gdb) info threads
-#Id Target Id Frame 
-#* 1 Thread 0x7ffff7fe2780 (LWP 6196) "/usr/sbin/apach" 0x00007fffebabcd0e in hook_op_check (type=type@entry=OP_RV2CV, cb=cb@entry=0x7fffeb8b6d30 <dd_ck_rv2cv>, user_data=user_data@entry=0x0)
-#at Check.xs:66
-
-#(gdb) info source
-#Current source file is Check.xs
-#Compilation directory is /home/wbraswell/.cpanm/work/1479735542.24787/B-Hooks-OP-Check-0.19
-#Located in /home/wbraswell/.cpanm/work/1479735542.24787/B-Hooks-OP-Check-0.19/Check.xs
-#Contains 106 lines.
-#Source language is c.
-#Producer is GNU C11 5.4.0 20160609 -mtune=generic -march=x86-64 -g -O2 -fwrapv -fno-strict-aliasing -fPIC -fstack-protector-strong.
-#Compiled with DWARF 2 debugging format.
-#Does not include preprocessor macro info.
-
-#(gdb) continue
-#Continuing.
-#<<< DEBUG >>>: top of ShinyCMS.pm
-#<<< DEBUG >>>: in ShinyCMS.pm, about to use Moose
-#<<< DEBUG >>>: in ShinyCMS.pm, about to use Catalyst::Runtime
-#<<< DEBUG >>>: in ShinyCMS.pm, about to use Catalyst
-#<<< DEBUG >>>: in ShinyCMS.pm, about to use CatalystX::RoleApplicator
-#<<< DEBUG >>>: in ShinyCMS.pm, about to use Method::Signatures::Simple
-#<<< DEBUG >>>: in ShinyCMS.pm, about to call config()
-#<<< DEBUG >>>: in ShinyCMS.pm, have __PACKAGE__ = ShinyCMS
-#<<< DEBUG >>>: in ShinyCMS.pm, about to call setup()...
-#<<< DEBUG >>>: in ShinyCMS.pm, returned from setup()
-#<<< DEBUG >>>: in ShinyCMS.pm, about to return 1
-
-#...
-
-#Program received signal SIGSEGV, Segmentation fault.
-#0x00007fffebabcb10 in ?? ()
-#(gdb) bt
-#0 0x00007fffebabcb10 in ?? ()
-#1 0x00007ffff3e5302b in Perl_newUNOP (my_perl=my_perl@entry=0x555559dd8ed0, type=type@entry=17, flags=<optimized out>, flags@entry=8192, first=0x55555824eb98) at op.c:4811
-#2 0x00007ffff3e54a1d in Perl_newCVREF (my_perl=my_perl@entry=0x555559dd8ed0, flags=flags@entry=8192, o=<optimized out>) at op.c:9367
-#...
-#44 0x000055555558709f in main ()
-
-#(gdb) print PL_check[17]
-#$1 = (Perl_check_t) 0x7fffebabcb10
-
-#(gdb) quit
-
-#[[[ END GDB SESSION ]]]
+# MOVED TO ARCHIVE NOTES:  [[[ PERL CLOUDFORFREE, PREREQUISITES, APACHE2::FILEMANAGER, DEBUG MODPERL SEGFAULT ]]]
 
 
 # [[[ PERL CLOUDFORFREE, RUN PLACK SERVER ]]]
