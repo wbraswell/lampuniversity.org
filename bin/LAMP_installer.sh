@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.225_000'
+VERSION='0.226_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -2897,6 +2897,8 @@ if [ $MENU_CHOICE -le 70 ]; then
         P $LOCAL_HOSTNAME "Existing Machine's Local Hostname"
         LOCAL_HOSTNAME=$USER_INPUT
 
+echo '[ MUST COMPLETE SECTION 32 FOR cloudforfree.org DOMAIN BEFORE RUNNING THIS SECTION 70!!! ]'
+
 # [[[ PERL CLOUDFORFREE, PREREQUISITES ]]]
 
 echo '[ apache2-dev Package Contains /urs/bin/apxs Required By Apache2::Request & Apache2::Upload via libapreq2 via Apache2::FileManager ]'
@@ -2942,36 +2944,47 @@ S a2enmod apreq2
 #Include /etc/apache2/mods-enabled/mpm*.conf
 
 
-# [[[ PERL CLOUDFORFREE, PREREQUISITES, APACHE2::FILEMANAGER ]]]
+# [[[ PERL CLOUDFORFREE, PREREQUISITES, Apache2::FileManager ]]]
 
-#S cpanm Apache2::Request  # unnecessary, dependency of A2::FM below
-S cpanm Apache2::FileManager
-# installs in /usr/local/lib/x86_64-linux-gnu/perl/5.22.1 among other places?
-#             /usr/local/share/perl/5.22.1/Apache2/FileManager.pm
+# NEED UPDATE: replace github code w/ CPAN v0.3 as soon as it has been created
+B git clone https://github.com/wbraswell/apache2-filemanager.git ~/github_repos/apache2-filemanager-latest
 
-# 2 CRITICAL BUGS: Apache2::FileManager
-# Can't locate Apache/FileManager.pm in @INC
-echo "[ Replace 1 Occurrence Of 'use Apache::FileManager;' With 'use Apache2::FileManager;' ]"
-S $EDITOR ~/.cpanm/work/*/Apache2-FileManager-0.21/test.pl
+# DISABLED: do not use CPAN v0.21 due to bugs
+##S cpanm Apache2::Request  # unnecessary, dependency of A2::FM below
+#S cpanm Apache2::FileManager
+## installs in /usr/local/lib/x86_64-linux-gnu/perl/5.22.1 among other places?
+##             /usr/local/share/perl/5.22.1/Apache2/FileManager.pm
 
-# Can't load '/usr/local/lib/x86_64-linux-gnu/perl/5.22.1/auto/APR/Request/Apache2/Apache2.so' for module APR::Request::Apache2: 
-# /usr/local/lib/x86_64-linux-gnu/perl/5.22.1/auto/APR/Request/Apache2/Apache2.so: undefined symbol: apreq_handle_apache2 at
-# /usr/lib/x86_64-linux-gnu/perl/5.22/DynaLoader.pm line 187.
-echo "[ Replace 2 Occurrences Of 'PERL_DL_NONLAZY=1' With 'PERL_DL_NONLAZY=0' ]"
-S $EDITOR ~/.cpanm/latest-build/Apache2-FileManager-0.21/Makefile
-S cd ~/.cpanm/latest-build/Apache2-FileManager-0.21/ && make && make test && make install
+## 2 CRITICAL BUGS: Apache2::FileManager
+## Can't locate Apache/FileManager.pm in @INC
+#echo "[ Replace 1 Occurrence Of 'use Apache::FileManager;' With 'use Apache2::FileManager;' ]"
+#S $EDITOR ~/.cpanm/work/*/Apache2-FileManager-0.21/test.pl
+
+## Can't load '/usr/local/lib/x86_64-linux-gnu/perl/5.22.1/auto/APR/Request/Apache2/Apache2.so' for module APR::Request::Apache2: 
+## /usr/local/lib/x86_64-linux-gnu/perl/5.22.1/auto/APR/Request/Apache2/Apache2.so: undefined symbol: apreq_handle_apache2 at
+## /usr/lib/x86_64-linux-gnu/perl/5.22/DynaLoader.pm line 187.
+#echo "[ Replace 2 Occurrences Of 'PERL_DL_NONLAZY=1' With 'PERL_DL_NONLAZY=0' ]"
+#S $EDITOR ~/.cpanm/latest-build/Apache2-FileManager-0.21/Makefile
+#S cd ~/.cpanm/latest-build/Apache2-FileManager-0.21/ && make && make test && make install
+
+
+# [[[ PERL CLOUDFORFREE, PREREQUISITES, Plack::Middleware::DoormanAuth0 ]]]
 
 echo '[ Install CloudForFree.org CPAN Dependency, Doorman for Auth0 ]'
 B cpanm -v Plack::Middleware::DoormanAuth0
 echo '[ Install CloudForFree.org CPAN Dependency, Doorman for Auth0, Fix Incorrect $VERSION From "0.01" To "0.10" ]'
 B $EDITOR ./lib/perl5/Plack/Middleware/DoormanAuth0.pm
 
+
+# [[[ PERL CLOUDFORFREE, PREREQUISITES, REMAINING CPAN DISTRIBUTIONS ]]]
+
 echo '[ Download CloudForFree.org Source Code ]'
 B git clone https://github.com/wbraswell/cloudforfree.org.git ~/github_repos/cloudforfree.org-latest
 echo '[ Install CloudForFree.org CPAN Dependencies ]'
 B cd ~/github_repos/cloudforfree.org-latest && perl Makefile.PL && cpanm -v --installdeps .
 
-# [[[ PERL CLOUDFORFREE, APACHE CONFIG ]]]
+
+# [[[ PERL CLOUDFORFREE, APACHE CONFIG, Apache2::FileManager ]]]
 
 B mkdir -p ~/public_html
 B ln -s ~/github_repos/cloudforfree.org-latest/ ~/public_html/cloudforfree.org-latest
@@ -2997,114 +3010,119 @@ S chgrp www-data /home/wbraswell/
 S chmod g+rX /home/wbraswell/
 
 
+# [[[ PERL CLOUDFORFREE, PLACK STARMAN TEST, Shiny & Apache2::FileManager ]]]
+
+echo '[ Test Apache2::FileManager via Plack `plackup` Server ]'
+B plackup --port 3000 app.psgi
+
+echo '[ Test ShinyCMS via Starman Plack Server ]'
+B cpanm Starman
+B ./script/shinycms_server.pl -p 80 -r
+B ./script/shinycms_server.pl -p 80 --fork
 
 
-# [[[ PERL CLOUDFORFREE, PREREQUISITES, SYNTAX HIGHLIGHTERS ]]]
+# [[[ PERL CLOUDFORFREE, PREREQUISITES, ACE EDITOR & SYNTAX HIGHLIGHTER ]]]
+# MOVED TO ARCHIVE NOTES, ACE CODE ALREADY PRESENT AT /cloudforfree.org-latest/modified/ace_edit/
 
-# ALL SYNTAX HIGHLIGHTERS
-S apt-get install npm nodejs-legacy
-
-# SyntaxHighlighter, Alex Gorbatchev
-# https://github.com/syntaxhighlighter/syntaxhighlighter/wiki/Building
-CD ~/github_repos
-B git clone https://github.com/syntaxhighlighter/syntaxhighlighter.git syntaxhighlighter-latest
-CD syntaxhighlighter-latest
-B npm install
-B ./node_modules/.bin/gulp setup-project
-B ./node_modules/.bin/gulp build --brushes=perl --theme=default
-
-
-# CodeMirror, Marijn Haverbeke
-CD ~/github_repos
-B git clone https://github.com/codemirror/CodeMirror.git codemirror-latest
-CD codemirror-latest
-B npm install
-B npm run build
-# browse to index.html
-B npm test
-
-
-# Ace, Ajax.org Cloud9 Editor
-# https://github.com/ajaxorg/ace
-B git clone https://github.com/ajaxorg/ace.git ace-latest
-CD ace-latest
-B node ./static.js
-# browse to http://localhost:8888/kitchen-sink.html
-# optional extra build
-B npm install
-B node ./Makefile.dryice.js
-# OR
-B node ./Makefile.dryice.js full --target ../ace-builds
-B node lib/ace/test/all.js
-# browse to http://localhost:8888/lib/ace/test/tests.html
-
-# Ace Builds
-B git clone https://github.com/ajaxorg/ace-builds/ ace-builds-latest
-# browse to editor.html
-# browse to kitchen-sink.html
-
-
-# MOVED TO ARCHIVE NOTES:  [[[ PERL CLOUDFORFREE, PREREQUISITES, APACHE2::FILEMANAGER, COMPILE PERL & MODPERL ]]]
+# [[[ PERL CLOUDFORFREE, PREREQUISITES, APACHE2::FILEMANAGER, COMPILE PERL & MODPERL ]]]
+# MOVED TO ARCHIVE NOTES, FASTCGI USED INSTEAD OF MODPERL
 
 # MOVED TO ARCHIVE NOTES:  [[[ PERL CLOUDFORFREE, PREREQUISITES, APACHE2::FILEMANAGER, DEBUG MODPERL SEGFAULT ]]]
+# MOVED TO ARCHIVE NOTES, MODPERL HAS UNFIXED BUG
 
 
-# [[[ PERL CLOUDFORFREE, RUN PLACK SERVER ]]]
+# [[[ PERL CLOUDFORFREE, RESTORE DATABASE & CONFIG FILE ]]]
+
+echo '[ Restore Database, Create Empty Database To Receive Restoration ]'
+echo '[ Copy Commands From The Following Lines ]'
+echo "mysql> CREATE DATABASE cloudforfree_org;"
+echo "mysql> CREATE USER 'cloudff_user'@'localhost' IDENTIFIED BY 'NEED_PASSWORD';"
+echo "mysql> GRANT ALL PRIVILEGES ON cloudforfree_org.* TO 'cloudff_user'@'localhost';"
+echo "mysql> QUIT"
+echo
+B mysql --user=root --password
+
+echo '[ Restore Database, DO Include ShinyCMS User & Password Data, Import Raw sql File ]'
+B "mysql --user=cloudff_user --password='NEED_PASSWORD' cloudforfree_org < wbraswell_20170315-cloudforfree_org.sql"
+
+B cp shinycms.conf.redacted shinycms.conf
+B $EDITOR shinycms.conf
+    # password   REDACTED
+
+
+# [[[ PERL CLOUDFORFREE, RESTORE USER FILES ]]]
+
+B cp -a ~/github_repos/rperl-latest/lib/RPerl/Learning ~/github_repos/cloudforfree.org-latest/root/user_files/wbraswell/LearningRPerl
+
+# DEV NOTE, CORRELATION #cff01: screen logfile max path length is 70, must use OS symlink to shorten path
+S ln -s /home/wbraswell/github_repos/cloudforfree.org-latest/root/user_jobs /srv/cloudff_user_jobs
+
+B mkdir -p ~/github_repos/cloudforfree.org-latest/modified/user_jobs/wbraswell
+
+# restore all profile pics from backup
+B mkdir -p ~/github_repos/cloudforfree.org-latest/modified/cms-uploads/user-profile-pics/
+B tar -xzvf FOO.tar.gz
+B ...
+
+# restore one profile pic at a time
+B mkdir -p ~/github_repos/cloudforfree.org-latest/modified/cms-uploads/user-profile-pics/wbraswell
+wget -O ~/github_repos/cloudforfree.org-latest/modified/cms-uploads/user-profile-pics/wbraswell/wbraswell_profile_github.jpg https://avatars0.githubusercontent.com/u/1772630?s=460&v=4
+
+
+# [[[ PERL CLOUDFORFREE, CONFIGURE APACHE PORT 80 FORWARDING FOR PLACK PORT 800 ]]]
+
+# PORT FORWARDING, allow Plack/Starman via script/shinycms_server.pl when Apache is also running on the same OS
+S a2enmod proxy
+S a2enmod proxy_http
+S vi /etc/apache2/sites-available/cloudforfree.org.conf
+echo "<VirtualHost *:80>"
+echo "    ServerAdmin william.braswell@NOSPAM.autoparallel.com"
+echo "    DocumentRoot /srv/www/cloudforfree.org/public_html"
+echo "    ServerName cloudforfree.org"
+echo "    ErrorLog /srv/www/cloudforfree.org/logs/error.log"
+echo "    CustomLog /srv/www/cloudforfree.org/logs/custom.log common"
+echo "    ProxyPreserveHost On"
+echo "    ProxyPass / http://0:800/"
+echo "    ProxyPassReverse / http://0:800/"
+echo "</VirtualHost>"
+S service apache2 restart
+
+
+# [[[ PERL CLOUDFORFREE, RUN PLACK SERVER MANUALLY, DO NOT MIX WITH APACHE2 FASTCGI BELOW ]]]
+
+B cpanm Starman
 
 # === BEGIN CURRENT STEPS ===
-screen -R;
+screen -S cloudforfree_plack;
+screen -R cloudforfree_plack;
 sudo -i;
 source /home/wbraswell/.bashrc; 
 export PATH=/home/wbraswell/github_repos/rperl-latest/script/:$PATH; 
-export PERL5LIB=/home/wbraswell/github_repos/apache2filemanager-latest/lib/:/home/wbraswell/github_repos/rperl-latest/lib/:/home/wbraswell/perl5:/home/wbraswell/perl5/lib/perl5:$PERL5LIB; 
+# NEED UPDATE: replace github code w/ CPAN v0.3 as soon as it has been created
+export PERL5LIB=/home/wbraswell/github_repos/apache2-filemanager-latest/lib/:/home/wbraswell/github_repos/rperl-latest/lib/:/home/wbraswell/perl5:/home/wbraswell/perl5/lib/perl5:$PERL5LIB; 
+# DISABLED: do not use CPAN v0.21 due to bugs
+#export PERL5LIB=/home/wbraswell/github_repos/rperl-latest/lib/:/home/wbraswell/perl5:/home/wbraswell/perl5/lib/perl5:$PERL5LIB; 
 set | grep PERL
 cd /home/wbraswell/github_repos/cloudforfree.org-latest/;
 ./script/shinycms_server.pl -p 800 --fork
 # === END CURRENT STEPS ===
  
-# run plack manually
-screen -R;
-sudo -i;
-source /home/wbraswell/.bashrc; 
-export PATH=/home/wbraswell/github_repos/rperl-latest/script/:$PATH; 
-export PERL5LIB=/home/wbraswell/github_repos/apache2filemanager-latest/lib/:/home/wbraswell/github_repos/rperl-latest/lib/:/home/wbraswell/perl5:/home/wbraswell/perl5/lib/perl5:$PERL5LIB; 
-set | grep PERL
 
-OR Apache2 FastCGI:
-paste above lines into cloudforfree.org-latest/modified/fastcgi_start__cloudforfree.org.sh
+# [[[ PERL CLOUDFORFREE, RUN APACHE2 FASTCGI, DO NOT MIX WITH PLACK SERVER ABOVE ]]]
 
+S ~/github_repos/cloudforfree.org-latest/modified/fastcgi_start__cloudforfree.org.sh
 
-vi /etc/apache2/sites-available/phpmyadmin.cloud-web2.autoparallel.com.conf
-    Listen 800
-    <VirtualHost *:800>
-        ...
-    </VirtualHost>
-a2dissite cloud-web2.autoparallel.com
-service apache2 reload
+echo "Listen 800"
+echo "<VirtualHost *:800>"
+echo "    ..."
+echo "</VirtualHost>"
+S $EDITOR /etc/apache2/sites-available/phpmyadmin.cloud-web2.autoparallel.com.conf
+S a2dissite cloud-web2.autoparallel.com
+S service apache2 reload
 
 
-./script/shinycms_server.pl -p 80 -r  # Shiny
-plackup --port 3000 app.psgi  # A2::FM
 
-cpanm Starman
-./script/shinycms_server.pl -p 80 --fork
 
-cpanm Starman PORT FORWARDING
-./script/shinycms_server.pl -p 800 --fork
-a2enmod proxy
-a2enmod proxy_http
-vi /etc/apache2/sites-available/cloudforfree.org.conf
-    <VirtualHost *:80>
-        ServerAdmin william.braswell@NOSPAM.autoparallel.com
-        DocumentRoot /srv/www/cloudforfree.org/public_html
-        ServerName cloudforfree.org
-        ErrorLog /srv/www/cloudforfree.org/logs/error.log
-        CustomLog /srv/www/cloudforfree.org/logs/custom.log common
-
-        ProxyPreserveHost On
-        ProxyPass / http://0:800/
-        ProxyPassReverse / http://0:800/
-    </VirtualHost>
 
 
 
@@ -3115,15 +3133,9 @@ vi /etc/apache2/sites-available/cloudforfree.org.conf
 fi
 
 
-# [[[ PERL CLOUDFORFREE, PREREQUISITES, TERMINAL EMULATION ]]]
-
-# terminal emulation
-B cpanm Term::VT102
-B cpanm Term::VT102::Boundless
-B cpanm Term::VT102::Incremental
-
-# DEV NOTE, CORRELATION #cff01: screen logfile max path length is 70, must use OS symlink to shorten path
-S ln -s /home/wbraswell/github_repos/cloudforfree.org-latest/root/user_jobs /srv/cloudff_user_jobs
+# CODE PAST THIS POINT IS A WORK IN PROGRESS
+# CODE PAST THIS POINT IS A WORK IN PROGRESS
+# CODE PAST THIS POINT IS A WORK IN PROGRESS
 
 
 # [[[ SECURITY!  MYSQL, REMOVE ROOT PASSWORD ]]]
