@@ -1596,11 +1596,13 @@ if [ $MENU_CHOICE -le 26 ]; then
 
         # [[[ fpm ]]]
         # GOOD, AS SOON AS WE FIX THE CONFIGURE_REQUIRES & @INC ISSUES FOR Alien::*
+        # fpm, DEPENDENCIES
         S yum install ruby-devel gcc make rpm-build rubygems
             # __OR__
         S apt-get install ruby ruby-dev rubygems build-essential
-        
         S cpan App::cpanminus
+        
+        # fpm, RELEASE VERSION
         S gem install --no-ri --no-rdoc fpm
         B fpm --verbose -t rpm -s cpan ExtUtils::MakeMaker  # good
         B fpm --no-cpan-test --verbose --debug-workspace --workdir /home/wbraswell/rperl_packager_tmp/ -t rpm -s cpan ExtUtils::MakeMaker  # good
