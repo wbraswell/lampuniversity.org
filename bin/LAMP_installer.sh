@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.226_000'
+VERSION='0.227_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -236,6 +236,7 @@ echo '  [[[<<< Tested Using Fresh Installs >>>]]]'
 echo
 echo 'Xubuntu v14.04.2 (Trusty Tahr)'
 echo 'Xubuntu v16.04.4 (Xenial Xerus)'
+echo 'CentOS  v7.4-1708'
 echo
 echo  '          [[[<<< Main Menu >>>]]]'
 echo
@@ -1529,6 +1530,120 @@ if [ $MENU_CHOICE -le 26 ]; then
     echo '26. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPAN ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
+
+
+
+
+
+
+
+
+
+
+        # [[[ cpanspec & rpmbuild ]]]
+        # NOT YET FULLY TESTED, DOES NOT HANDLE DEPENDENCIES
+        B vi ~/.rpmmacros
+            # %packager William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>
+            # %vendor Auto-Parallel Technologies, Inc.
+            # %_topdir %{getenv:HOME}/rpmbuild
+            # # disable grep through input Perl source code for "use Foo;" statements
+            # %__perl_requires %{nil}
+        S yum install cpanspec rpm-build
+        B mkdir -p ~/rpmbuild/SOURCES && cd ~/rpmbuild
+#        B cpanspec --packager="William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>" --old --follow --verbose ./SOURCES/RPerl-FOO.tar.gz
+        B cpanspec --old --follow --verbose RPerl
+        B mv *.gz SOURCES
+        B mv *.spec SPECS
+        B rpmbuild -bs --sign --verbose ./perl-RPerl.spec
+        # ...
+
+        # __OR__
+
+        # [[[ cpantorpm ]]]
+        # NOT GOOD, DOES NOT HANDLE DEPENDENCIES; also gives confusing error messages such as missing files when not actually missing
+        S yum install strace
+        S cpan App::CPANtoRPM
+        B cpantorpm --debug Foo::Bar
+
+        # __OR__
+        
+        # [[[ cpan2dist ]]]
+        # NOT GOOD, ENDLESS DEPENDENCY LOOP BETWEEN ExtUtils::MakeMaker AND Encode etc, PLUS OTHER ERRORS
+        S cpan CPANPLUS
+        S cpan CPANPLUS::Dist::Fedora
+        B cpan2dist --format CPANPLUS::Dist::Fedora --verbose --keepsource --force --nobuildprereq ExtUtils::MakeMaker
+        B cpan2dist --format CPANPLUS::Dist::Fedora --buildprereq --verbose --keepsource RPerl
+
+        # DEV VERSION OF CPANPLUS::Dist::Fedora
+        # prefer pre-built from CPAN below
+#        S yum install mercurial
+#        S cpan Dist::Zilla
+#        B mkdir ~/repos_bitbucket && cd ~/repos_bitbucket
+#        B hg clone https://wbraswell@bitbucket.org/shlomif/cpanplus-dist-backends cpanplus-dist-backends-latest
+        # prefer latest version from CPAN below
+#        S cpan SHLOMIF/CPANPLUS-Dist-Fedora-0.2.0.tar.gz
+        S cpan CPANPLUS::Dist::Fedora  # 0.2.0 now available
+ 
+        # cpan2dist, DEV VERSION
+        S apt-get install mercurial
+        B cpanm Dist::Zilla
+
+        # cpan2dist, DEBIAN SUPPORT
+        # NOT GOOD, BROKEN & WILL NOT INSTALL, NOT MAINTAINED SINCE 2009
+        B cpanm CPANPLUS::Dist::Deb
+
+        # __OR__
+
+        # [[[ fpm ]]]
+        # GOOD, AS SOON AS WE FIX THE CONFIGURE_REQUIRES & @INC ISSUES FOR Alien::*
+        S yum install ruby-devel gcc make rpm-build rubygems
+            # __OR__
+        S apt-get install ruby ruby-dev rubygems build-essential
+        
+        S cpan App::cpanminus
+        S gem install --no-ri --no-rdoc fpm
+        B fpm --verbose -t rpm -s cpan ExtUtils::MakeMaker  # good
+        B fpm --no-cpan-test --verbose --debug-workspace --workdir /home/wbraswell/rperl_packager_tmp/ -t rpm -s cpan ExtUtils::MakeMaker  # good
+        B reset; rm -Rf ./*.rpm ./rperl_packager_tmp/*; fpm --no-cpan-test --verbose --debug-workspace --workdir /home/wbraswell/rperl_packager_tmp/ -t rpm -s cpan Alien::Build::MM  # good
+        
+        # NEED FIX
+        B reset; rm -Rf ./*.rpm ./rperl_packager_tmp/*; fpm --no-cpan-test --verbose --debug-workspace --workdir /home/wbraswell/rperl_packager_tmp/ -t rpm -s cpan Alien::PCRE2
+
+        # fpm, DEV VERSION
+        S yum install bsdtar
+            # __OR__
+        S apt-get install bsdtar
+            # __OR__
+        S xcode-select --install  # Mac OS 10.9 (Mavericks)
+        
+        S gem install bundler
+        B mkdir -p ~/repos_github
+        B git clone git@github.com:jordansissel/fpm.git ~/repos_github/fpm-latest
+        CD ~/repos_github/fpm-latest
+        B bundle install
+            # OUTPUT: ... Using FOO (X.Y.Z)    Using fpm (X.Y.Z) from source at `.`    Using BAR (X.Y.Z) ...
+        B make
+        B which fpm
+        B fpm --version
+
+        # [[[ fpm & rperl_packager.pl ]]]
+        # GOOD, AS SOON AS WE FIX THE CONFIGURE_REQUIRES & @INC ISSUES FOR Alien::*
+        S cpan Module::CoreList
+        # NEED FIX, Alien and/or FPM bug!  provides Alien::Build::MM as required at configure time for Alien::JPCRE2, but not found by FPM
+        # Can't locate Alien/Build/MM.pm in @INC (@INC contains: /usr/local/lib64/perl5 /usr/local/share/perl5 /usr/lib64/perl5/vendor_perl /usr/share/perl5/vendor_perl /usr/lib64/perl5 /usr/share/perl5 .).
+        S cpan Alien::Build
+        B rm ./rperl_packager.pl ; vi ./rperl_packager.pl ; chmod a+x ./rperl_packager.pl
+        B reset; rm -Rf ./*.rpm ./rperl_packager_tmp/*; ./rperl_packager.pl ExtUtils::MakeMaker rpm  # good
+
+
+
+
+
+
+
+
+
+
         echo '[ You Should Use This Instead Of Unstable Via GitHub In Section 27, Unless You Are An RPerl System Developer ]'
         echo '[ This Option Will Install The Latest Stable Public Release Of RPerl ]'
         echo '[ WARNING: Do NOT Mix With Unstable Via GitHub In Section 27! ]'
