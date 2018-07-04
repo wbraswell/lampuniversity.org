@@ -1625,6 +1625,7 @@ if [ $MENU_CHOICE -le 26 ]; then
         B bundle install
             # OUTPUT: ... Using FOO (X.Y.Z)    Using fpm (X.Y.Z) from source at `.`    Using BAR (X.Y.Z) ...
         B make
+        B export PATH=~/repos_github/fpm-latest/bin:$PATH
         B which fpm
         B fpm --version
 
