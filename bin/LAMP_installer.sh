@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.227_000'
+VERSION='0.230_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -1595,50 +1595,132 @@ if [ $MENU_CHOICE -le 26 ]; then
         # __OR__
 
         # [[[ fpm ]]]
-        # GOOD, AS SOON AS WE FIX THE CONFIGURE_REQUIRES & @INC ISSUES FOR Alien::*
+        # GOOD, AS SOON AS WE FIX THE REMAINING ISSUES!
         # fpm, DEPENDENCIES
-        S yum install ruby-devel gcc make rpm-build rubygems
-            # __OR__
         S apt-get install ruby ruby-dev rubygems build-essential
+            # __OR__
+        S yum install ruby-devel gcc make rpm-build rubygems
+        S gem update --system  # must have RubyGems >= v2.7.5 to avoid "Errno::EPERM: Operation not permitted @ chown_internal" on `bundle install` for fpm dev version
         S cpan App::cpanminus
         
         # fpm, RELEASE VERSION
         S gem install --no-ri --no-rdoc fpm
-        B fpm --verbose -t rpm -s cpan ExtUtils::MakeMaker  # good
-        B fpm --no-cpan-test --verbose --debug-workspace --workdir /home/wbraswell/rperl_packager_tmp/ -t rpm -s cpan ExtUtils::MakeMaker  # good
-        B reset; rm -Rf ./*.rpm ./rperl_packager_tmp/*; fpm --no-cpan-test --verbose --debug-workspace --workdir /home/wbraswell/rperl_packager_tmp/ -t rpm -s cpan Alien::Build::MM  # good
-        
-        # NEED FIX
-        B reset; rm -Rf ./*.rpm ./rperl_packager_tmp/*; fpm --no-cpan-test --verbose --debug-workspace --workdir /home/wbraswell/rperl_packager_tmp/ -t rpm -s cpan Alien::PCRE2
+        B which fpm
+        B fpm --version
+        B fpm --verbose -s cpan -t rpm ExtUtils::MakeMaker
 
         # fpm, DEV VERSION
-        S yum install bsdtar
-            # __OR__
         S apt-get install bsdtar
+            # __OR__
+        S yum install bsdtar
             # __OR__
         S xcode-select --install  # Mac OS 10.9 (Mavericks)
         
         S gem install bundler
         B mkdir -p ~/repos_github
-        B git clone git@github.com:jordansissel/fpm.git ~/repos_github/fpm-latest
-        CD ~/repos_github/fpm-latest
-        B bundle install
+#        B git clone git@github.com:jordansissel/fpm.git ~/repos_github/fpm-latest
+        B git clone https://github.com/wbraswell/fpm.git ~/repos_github/fpm-fork-latest
+        CD ~/repos_github/fpm-fork-latest
+        S bundle install
             # OUTPUT: ... Using FOO (X.Y.Z)    Using fpm (X.Y.Z) from source at `.`    Using BAR (X.Y.Z) ...
         B make
-        B export PATH=~/repos_github/fpm-latest/bin:$PATH
+            # ERRORS MAY OCCUR, it should work anyway
+        B export PATH=~/repos_github/fpm-fork-latest/bin:$PATH
         B which fpm
         B fpm --version
 
-        # [[[ fpm & rperl_packager.pl ]]]
-        # GOOD, AS SOON AS WE FIX THE CONFIGURE_REQUIRES & @INC ISSUES FOR Alien::*
+        B reset; cd; rm -Rf ./*.deb ./cpantofpm_tmp/*; time fpm --no-cpan-test --cpan-verbose --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir /home/wbraswell/cpantofpm_tmp/ -s cpan -t deb RPerl
+            # __OR__
+        B reset; cd; rm -Rf ./*.rpm ./cpantofpm_tmp/*; time fpm --no-cpan-test --cpan-verbose --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir /home/wbraswell/cpantofpm_tmp/ -s cpan -t rpm RPerl
+
+        # [[[ fpm & cpantofpm ]]]
+        # GOOD, AS SOON AS WE FIX THE REMAINING ISSUES!
         S cpan Module::CoreList
-        # NEED FIX, Alien and/or FPM bug!  provides Alien::Build::MM as required at configure time for Alien::JPCRE2, but not found by FPM
-        # Can't locate Alien/Build/MM.pm in @INC (@INC contains: /usr/local/lib64/perl5 /usr/local/share/perl5 /usr/lib64/perl5/vendor_perl /usr/share/perl5/vendor_perl /usr/lib64/perl5 /usr/share/perl5 .).
+        S apt-get install expect  # for unbuffer
+            # __OR__
+        S yum install expect  # for unbuffer
         S cpan Alien::Build
-        B rm ./rperl_packager.pl ; vi ./rperl_packager.pl ; chmod a+x ./rperl_packager.pl
-        B reset; rm -Rf ./*.rpm ./rperl_packager_tmp/*; ./rperl_packager.pl ExtUtils::MakeMaker rpm  # good
 
 
+# START HERE: upgrade cpantofpm to save SPECS files, and to cause SRPMS to be built & saved
+# START HERE: upgrade cpantofpm to save SPECS files, and to cause SRPMS to be built & saved
+# START HERE: upgrade cpantofpm to save SPECS files, and to cause SRPMS to be built & saved
+
+# THEN START HERE: rebuild packages w/ proper hostname, transfer & sign new packages, re-create repo, test repo, update get_rperl.html w/ instructions
+# THEN START HERE: rebuild packages w/ proper hostname, transfer & sign new packages, re-create repo, test repo, update get_rperl.html w/ instructions
+# THEN START HERE: rebuild packages w/ proper hostname, transfer & sign new packages, re-create repo, test repo, update get_rperl.html w/ instructions
+
+
+        S vi /etc/hostname && hostname -F /etc/hostname && hostname  # packages.rperl.org
+        
+        B export PATH=~/repos_gitlab/app-cpantofpm-latest/bin/:$PATH
+            # __OR__
+        B cd; rm ./cpantofpm ; vi ./cpantofpm ; chmod a+x ./cpantofpm
+        
+        B reset; cd; rm -Rf ./*.deb ./cpantofpm_tmp/*; time cpantofpm -t deb RPerl
+            # __OR__
+        B reset; cd; rm -Rf ./*.rpm ./cpantofpm_tmp/*; time cpantofpm -t rpm RPerl
+
+
+
+        # [[[ RPM, YUM REPOSITORY ]]]
+        # server, install deps & retrieve RPMs
+        S apt-get install createrepo yum-utils gnupg2 gnupg-agent rng-tools
+        S mkdir -p /srv/www/packages.rperl.org/public_html/centos/7/os/{x86_64,SRPMS}
+        S chown -R www-data.www-data /srv/www/packages.rperl.org/
+        S chmod -R g+rwX /srv/www/packages.rperl.org/
+        B scp RPM_PACKAGER_SERVER:RPM_PACKAGER_DIR/*.rpm /srv/www/packages.rperl.org/public_html/centos/7/os/x86_64/
+        # server, generate & export & import GPG keys
+        S rngd -r /dev/urandom
+        B gpg2 --full-gen-key
+            # William N. Braswell, Jr. (packages.rperl.org) <william.braswell@autoparallel.com>
+        B gpg2 --list-keys
+        B gpg2 --export --armor "William N. Braswell, Jr. (packages.rperl.org) <william.braswell@autoparallel.com>" > /srv/www/packages.rperl.org/public_html/centos/RPM-GPG-KEY-CentOS-7
+        B less /srv/www/packages.rperl.org/public_html/centos/RPM-GPG-KEY-CentOS-7  # confirm key has been exported
+        B rpmkeys --import /srv/www/packages.rperl.org/public_html/centos/RPM-GPG-KEY-CentOS-7
+        B rpm -q gpg-pubkey --qf '%{NAME}-%{VERSION}-%{RELEASE}\t%{SUMMARY}\n'  # confirm key has been imported
+        # server, sign RPMs
+        B vi ~/.rpmmacros
+            # %_signature gpg
+            # %_gpg_name William N. Braswell, Jr. (packages.rperl.org) <william.braswell@autoparallel.com>
+            # %_gpg_bin /usr/bin
+            # %__gpg /usr/bin/gpg2
+        B export GPG_TTY=$(tty)
+        B rpmsign --addsign /srv/www/packages.rperl.org/public_html/centos/7/os/x86_64/*.rpm
+        B rpm -qpi /srv/www/packages.rperl.org/public_html/centos/7/os/x86_64/*.rpm | grep Signature  # confirm packages are signed
+        # server, create repo & sign repo metadata
+        B createrepo --verbose /srv/www/packages.rperl.org/public_html/centos/7/os/x86_64/
+        B gpg2 --detach-sign --armor /srv/www/packages.rperl.org/public_html/centos/7/os/x86_64/repodata/repomd.xml 
+        B less /srv/www/packages.rperl.org/public_html/centos/7/os/x86_64/repodata/repomd.xml.asc  # confirm repo metada is signed
+
+        # server, generate repo file
+        B vi /srv/www/packages.rperl.org/public_html/centos7-perl-cpan.repo
+            [centos7-perl-cpan]
+            name=CentOS 7 Perl CPAN Repository
+            baseurl=https://packages.rperl.org/centos/7/os/x86_64/
+            enabled=1
+            gpgcheck=1
+            repo_gpgcheck=1
+            gpgkey=https://packages.rperl.org/centos/RPM-GPG-KEY-CentOS-7
+
+        S chown -R www-data.www-data /srv/www/packages.rperl.org/
+        S chmod -R g+rwX /srv/www/packages.rperl.org/
+
+        
+        # client
+        S yum install pygpgme  # check GPG signatures of repo metadata & packages
+        S yum-config-manager --add-repo https://packages.rperl.org/centos7-perl-cpan.repo
+        S yum-config-manager --enable centos7-perl-cpan
+        S yum repolist all
+        S yum install perl-RPerl
+        
+
+
+
+
+        # [[[ DEB, APT REPOSITORY ]]]
+        # server
+        # client
 
 
 
@@ -2046,6 +2128,18 @@ if [ $MENU_CHOICE -le 31 ]; then
         #</IfModule>
         
         S $EDITOR /etc/apache2/apache2.conf
+
+        echo '[ SSL & https Support, Install Apache Certbot Packages ]'
+        S apt-get update
+        S apt-get install software-properties-common
+        S add-apt-repository ppa:certbot/certbot
+        S apt-get update
+        S apt-get install python-certbot-apache 
+        echo '[ SSL & https Support, Apache Certbot Certificates, Enable Automatic Configuration ]'
+        S certbot --apache
+        echo '[ SSL & https Support, Apache Certbot Certificates, Test Automatic Renewal ]'
+        S certbot renew --dry-run
+
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
@@ -3192,18 +3286,20 @@ wget -O ~/github_repos/cloudforfree.org-latest/modified/cms-uploads/user-profile
 # PORT FORWARDING, allow Plack/Starman via script/shinycms_server.pl when Apache is also running on the same OS
 S a2enmod proxy
 S a2enmod proxy_http
-S vi /etc/apache2/sites-available/cloudforfree.org.conf
 echo "<VirtualHost *:80>"
-echo "    ServerAdmin william.braswell@NOSPAM.autoparallel.com"
-echo "    DocumentRoot /srv/www/cloudforfree.org/public_html"
 echo "    ServerName cloudforfree.org"
+echo "    ServerAlias www.cloudforfree.org"
+echo "    ServerAdmin william.braswell@NOSPAM.autoparallel.com"
+echo "    DocumentRoot /srv/www/cloudforfree.org/public_html/"
 echo "    ErrorLog /srv/www/cloudforfree.org/logs/error.log"
 echo "    CustomLog /srv/www/cloudforfree.org/logs/custom.log common"
 echo "    ProxyPreserveHost On"
 echo "    ProxyPass / http://0:800/"
 echo "    ProxyPassReverse / http://0:800/"
 echo "</VirtualHost>"
+S vi /etc/apache2/sites-available/cloudforfree.org.conf
 S service apache2 restart
+
 
 
 # [[[ PERL CLOUDFORFREE, RUN PLACK SERVER MANUALLY, DO NOT MIX WITH APACHE2 FASTCGI BELOW ]]]
