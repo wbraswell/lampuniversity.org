@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.230_000'
+VERSION='0.231_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -1629,9 +1629,9 @@ if [ $MENU_CHOICE -le 26 ]; then
         B which fpm
         B fpm --version
 
-        B reset; cd; rm -Rf ./*.deb ./cpantofpm_tmp/*; time fpm --no-cpan-test --cpan-verbose --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir /home/wbraswell/cpantofpm_tmp/ -s cpan -t deb RPerl
+        B reset; rm -Rf ~/cpantofpm_tmp/* ~/cpantofpm_packages/*; cd ~/cpantofpm_packages/; time fpm --no-cpan-test --cpan-verbose --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/cpantofpm_tmp/ -s cpan -t deb --deb-?? RPerl
             # __OR__
-        B reset; cd; rm -Rf ./*.rpm ./cpantofpm_tmp/*; time fpm --no-cpan-test --cpan-verbose --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir /home/wbraswell/cpantofpm_tmp/ -s cpan -t rpm RPerl
+        B reset; rm -Rf ~/cpantofpm_tmp/* ~/cpantofpm_packages/*; cd ~/cpantofpm_packages/; time fpm --no-cpan-test --cpan-verbose --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/cpantofpm_tmp/ -s cpan -t rpm --rpm-ba RPerl
 
         # [[[ fpm & cpantofpm ]]]
         # GOOD, AS SOON AS WE FIX THE REMAINING ISSUES!
@@ -1642,24 +1642,24 @@ if [ $MENU_CHOICE -le 26 ]; then
         S cpan Alien::Build
 
 
-# START HERE: upgrade cpantofpm to save SPECS files, and to cause SRPMS to be built & saved
-# START HERE: upgrade cpantofpm to save SPECS files, and to cause SRPMS to be built & saved
-# START HERE: upgrade cpantofpm to save SPECS files, and to cause SRPMS to be built & saved
+# START HERE: fpm search() & download() PathTools dist-not-module; remove comments in lib/fpm/package/cpan.rb; save all deps files in correct DEPS folder;  RPerl & Alien post-processing, add deps to spec file and rebuild rpm/srpm files; skip processing if rpm/srpm/spec/dep files already present, else run fpm w/ force option to overwrite existing file(s); save file names in $distributions_processed & use to make tarball
+# START HERE: fpm search() & download() PathTools dist-not-module; remove comments in lib/fpm/package/cpan.rb; save all deps files in correct DEPS folder;  RPerl & Alien post-processing, add deps to spec file and rebuild rpm/srpm files; skip processing if rpm/srpm/spec/dep files already present, else run fpm w/ force option to overwrite existing file(s); save file names in $distributions_processed & use to make tarball
+# START HERE: fpm search() & download() PathTools dist-not-module; remove comments in lib/fpm/package/cpan.rb; save all deps files in correct DEPS folder;  RPerl & Alien post-processing, add deps to spec file and rebuild rpm/srpm files; skip processing if rpm/srpm/spec/dep files already present, else run fpm w/ force option to overwrite existing file(s); save file names in $distributions_processed & use to make tarball
 
-# THEN START HERE: rebuild packages w/ proper hostname, transfer & sign new packages, re-create repo, test repo, update get_rperl.html w/ instructions
-# THEN START HERE: rebuild packages w/ proper hostname, transfer & sign new packages, re-create repo, test repo, update get_rperl.html w/ instructions
-# THEN START HERE: rebuild packages w/ proper hostname, transfer & sign new packages, re-create repo, test repo, update get_rperl.html w/ instructions
+# THEN START HERE: rebuild packages w/ proper hostname, transfer & sign new packages, re-create repo, test repo, update get_rperl.html w/ instructions; DEB support
+# THEN START HERE: rebuild packages w/ proper hostname, transfer & sign new packages, re-create repo, test repo, update get_rperl.html w/ instructions; DEB support
+# THEN START HERE: rebuild packages w/ proper hostname, transfer & sign new packages, re-create repo, test repo, update get_rperl.html w/ instructions; DEB support
 
 
         S vi /etc/hostname && hostname -F /etc/hostname && hostname  # packages.rperl.org
         
-        B export PATH=~/repos_gitlab/app-cpantofpm-latest/bin/:$PATH
+        B export PATH=~/repos_gitlab/app-cpantofpm-latest/bin/:$PATH  # NEED FIX, HARD-CODED SHORTCUTS TO ~/cpantofpm BELOW
             # __OR__
         B cd; rm ./cpantofpm ; vi ./cpantofpm ; chmod a+x ./cpantofpm
         
-        B reset; cd; rm -Rf ./*.deb ./cpantofpm_tmp/*; time cpantofpm -t deb RPerl
+        B reset; rm -Rf ~/cpantofpm_tmp/* ~/cpantofpm_packages/*; cd ~/cpantofpm_packages/; time ~/cpantofpm -t deb RPerl
             # __OR__
-        B reset; cd; rm -Rf ./*.rpm ./cpantofpm_tmp/*; time cpantofpm -t rpm RPerl
+        B reset; rm -Rf ~/cpantofpm_tmp/* ~/cpantofpm_packages/*; cd ~/cpantofpm_packages/; time ~/cpantofpm -t rpm RPerl
 
 
 
@@ -2667,6 +2667,9 @@ if [ $MENU_CHOICE -le 43 ]; then
         B "mv mysqldump__myshinytemplate.com__no_user.sh.redacted mysqldump__$DOMAIN_NAME_NO_USER.sh.redacted"  # DO NOT ADD PASSWORD HERE
         B mkdir -p ~/bin
         B cp mysqldump__$DOMAIN_NAME_NO_USER.sh.redacted ~/bin/mysqldump__$DOMAIN_NAME_NO_USER.sh
+        # NEED ANSWER: should REDACTED in the regex below be wrapped in single quotes 'REDACTED' so as to avoid adding an extra pair of single quotes to the final output file???
+        # NEED ANSWER: should REDACTED in the regex below be wrapped in single quotes 'REDACTED' so as to avoid adding an extra pair of single quotes to the final output file???
+        # NEED ANSWER: should REDACTED in the regex below be wrapped in single quotes 'REDACTED' so as to avoid adding an extra pair of single quotes to the final output file???
         B sed -ri -e "s/REDACTED/'$MYSQL_PASSWORD'/g" ~/bin/mysqldump__$DOMAIN_NAME_NO_USER.sh  # ADD PASSWORD, USE SINGLE QUOTES IN CASE OF SPECIAL CHARACTERS
         B ln -s ~/public_html/$DOMAIN_NAME-latest/modified/*.sh ~/bin
         echo "[ Ensure Only User $USERNAME Can Read Files Which May Contain Passwords ]"
@@ -2977,6 +2980,7 @@ if [ $MENU_CHOICE -le 49 ]; then
         S chmod -R g+rwX /home/$USERNAME/public_html/$DOMAIN_NAME-latest/root/static/cms-uploads/
         S chmod -R g+rX /home/$USERNAME/public_html
         S chmod g+rX /home/$USERNAME/
+        S chmod g-w /home/$USERNAME/ /home/$USERNAME/.ssh /home/$USERNAME/.ssh/*
         S chmod -R o-rwx /home/$USERNAME/* /home/$USERNAME/.??*
 
 #        echo "[ Ensure Only User $USERNAME Can Read Files Which May Contain Passwords ]"
@@ -3220,6 +3224,7 @@ echo '[ Browse To http://$LOCAL_HOSTNAME/FileManager ]'
 
 S chgrp www-data /home/wbraswell/
 S chmod g+rX /home/wbraswell/
+S chmod g-w /home/$USERNAME/ /home/$USERNAME/.ssh /home/$USERNAME/.ssh/*
 
 
 # [[[ PERL CLOUDFORFREE, PLACK STARMAN TEST, Shiny & Apache2::FileManager ]]]
