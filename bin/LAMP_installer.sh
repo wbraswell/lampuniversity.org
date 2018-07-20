@@ -2586,6 +2586,7 @@ fi
 # SECTION 43 VARIABLES
 DOMAIN_NAME_UNDERSCORES='__EMPTY__'
 DOMAIN_NAME_NO_USER='__EMPTY__'
+DOMAIN_NAME_YES_USER='__EMPTY__'
 MYSQL_USERNAME='__EMPTY__'
 MYSQL_USERNAME_DEFAULT='__EMPTY__'
 MYSQL_PASSWORD='__EMPTY__'
@@ -2606,6 +2607,8 @@ if [ $MENU_CHOICE -le 43 ]; then
         DOMAIN_NAME_UNDERSCORES=${DOMAIN_NAME_UNDERSCORES//-/_}  # replace hyphens with underscores
         DOMAIN_NAME_NO_USER=$DOMAIN_NAME
         DOMAIN_NAME_NO_USER+='__no_user'
+        DOMAIN_NAME_YES_USER=$DOMAIN_NAME
+        DOMAIN_NAME_YES_USER+='__yes_user'
         MYSQL_USERNAME_DEFAULT=`expr match "$DOMAIN_NAME" '\([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789]*\)'`  # extract lowest-level hostname
         SITE_NAME_DEFAULT=$MYSQL_USERNAME_DEFAULT
         D $SITE_NAME "optional 'CamelCase' version of hostname $SITE_NAME_DEFAULT to be used as descriptive site name, NO SPACES, MAKE IT MATCH YOUR HOSTNAME" $SITE_NAME_DEFAULT
@@ -2665,12 +2668,15 @@ if [ $MENU_CHOICE -le 43 ]; then
         B mv git_backup__myshinytemplate.com.sh git_backup__$DOMAIN_NAME.sh
         B mv git_merge_modified__myshinytemplate.com.sh git_merge_modified__$DOMAIN_NAME.sh
         B "mv mysqldump__myshinytemplate.com__no_user.sh.redacted mysqldump__$DOMAIN_NAME_NO_USER.sh.redacted"  # DO NOT ADD PASSWORD HERE
+        B "mv mysqldump__myshinytemplate.com__yes_user.sh.redacted mysqldump__$DOMAIN_NAME_YES_USER.sh.redacted"  # DO NOT ADD PASSWORD HERE
         B mkdir -p ~/bin
         B cp mysqldump__$DOMAIN_NAME_NO_USER.sh.redacted ~/bin/mysqldump__$DOMAIN_NAME_NO_USER.sh
+        B cp mysqldump__$DOMAIN_NAME_YES_USER.sh.redacted ~/bin/mysqldump__$DOMAIN_NAME_YES_USER.sh
         # NEED ANSWER: should REDACTED in the regex below be wrapped in single quotes 'REDACTED' so as to avoid adding an extra pair of single quotes to the final output file???
         # NEED ANSWER: should REDACTED in the regex below be wrapped in single quotes 'REDACTED' so as to avoid adding an extra pair of single quotes to the final output file???
         # NEED ANSWER: should REDACTED in the regex below be wrapped in single quotes 'REDACTED' so as to avoid adding an extra pair of single quotes to the final output file???
         B sed -ri -e "s/REDACTED/'$MYSQL_PASSWORD'/g" ~/bin/mysqldump__$DOMAIN_NAME_NO_USER.sh  # ADD PASSWORD, USE SINGLE QUOTES IN CASE OF SPECIAL CHARACTERS
+        B sed -ri -e "s/REDACTED/'$MYSQL_PASSWORD'/g" ~/bin/mysqldump__$DOMAIN_NAME_YES_USER.sh  # ADD PASSWORD, USE SINGLE QUOTES IN CASE OF SPECIAL CHARACTERS
         B ln -s ~/public_html/$DOMAIN_NAME-latest/modified/*.sh ~/bin
         echo "[ Ensure Only User $USERNAME Can Read Files Which May Contain Passwords ]"
         B chmod -R go-rwx ~/bin
@@ -2722,6 +2728,7 @@ fi
 
 # SECTION 45 VARIABLES
 DOMAIN_NAME_UNDERSCORES_NO_USER='__EMPTY__'
+DOMAIN_NAME_UNDERSCORES_YES_USER='__EMPTY__'
 
 if [ $MENU_CHOICE -le 45 ]; then
     echo  '45. [[[ PERL SHINYCMS, BACKUP & RESTORE DATABASE ]]]'
@@ -2732,6 +2739,8 @@ if [ $MENU_CHOICE -le 45 ]; then
         DOMAIN_NAME_UNDERSCORES=${DOMAIN_NAME//./_}  # replace dots with underscores
         DOMAIN_NAME_UNDERSCORES_NO_USER=$DOMAIN_NAME_UNDERSCORES
         DOMAIN_NAME_UNDERSCORES_NO_USER+='__no_user'
+        DOMAIN_NAME_UNDERSCORES_YES_USER=$DOMAIN_NAME_UNDERSCORES
+        DOMAIN_NAME_UNDERSCORES_YES_USER+='__yes_user'
         MYSQL_USERNAME_DEFAULT=`expr match "$DOMAIN_NAME" '\([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789]*\)'`  # extract lowest-level hostname
         MYSQL_USERNAME_DEFAULT+='_user'
         D $MYSQL_USERNAME "mysql username (different than new machine's OS username)" $MYSQL_USERNAME_DEFAULT
@@ -2745,7 +2754,7 @@ if [ $MENU_CHOICE -le 45 ]; then
         B "mysqldump --user=$MYSQL_USERNAME --password='$MYSQL_PASSWORD' $DOMAIN_NAME_UNDERSCORES --lock-tables --ignore-table=$DOMAIN_NAME_UNDERSCORES.user > $DOMAIN_NAME_UNDERSCORES_NO_USER.sql"
 
         echo '[ Backup Database, DO Include ShinyCMS User & Password Data, Export Raw sql File ]'
-        B "mysqldump --user=$MYSQL_USERNAME --password='$MYSQL_PASSWORD' $DOMAIN_NAME_UNDERSCORES --lock-tables > $DOMAIN_NAME_UNDERSCORES.sql"
+        B "mysqldump --user=$MYSQL_USERNAME --password='$MYSQL_PASSWORD' $DOMAIN_NAME_UNDERSCORES --lock-tables > $DOMAIN_NAME_UNDERSCORES_YES_USER.sql"
 
         echo '[ Restore Database, Create Empty Database To Receive Restoration ]'
         echo '[ Copy Commands From The Following Lines ]'
@@ -2763,7 +2772,7 @@ if [ $MENU_CHOICE -le 45 ]; then
         B "mysql --user=$MYSQL_USERNAME --password='$MYSQL_PASSWORD' $DOMAIN_NAME_UNDERSCORES < $DOMAIN_NAME_UNDERSCORES_NO_USER.sql"
 
         echo '[ Restore Database, DO Include ShinyCMS User & Password Data, Import Raw sql File ]'
-        B "mysql --user=$MYSQL_USERNAME --password='$MYSQL_PASSWORD' $DOMAIN_NAME_UNDERSCORES < $DOMAIN_NAME_UNDERSCORES.sql"
+        B "mysql --user=$MYSQL_USERNAME --password='$MYSQL_PASSWORD' $DOMAIN_NAME_UNDERSCORES < $DOMAIN_NAME_UNDERSCORES_YES_USER.sql"
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
