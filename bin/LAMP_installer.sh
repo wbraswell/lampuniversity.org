@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.232_000'
+VERSION='0.233_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -2857,11 +2857,14 @@ END_HEREDOC
         B "ps -p1 | grep systemd && echo systemd || echo upstart"
 
         echo '[ Start FastCGI Service, Automatic, SystemD (Ubuntu v15.04 & Newer, CentOS, Most Modern Linux Distributions) ]'
-        S ln -s /home/$USERNAME/public_html/$DOMAIN_NAME-latest/modified/fastcgi_$DOMAIN_NAME.service /etc/systemd/system
+#        S ln -s /home/$USERNAME/public_html/$DOMAIN_NAME-latest/modified/fastcgi_$DOMAIN_NAME.service /etc/systemd/system  # causes "Failed to execute operation: Too many levels of symbolic links"
+        S systemctl enable /home/$USERNAME/public_html/$DOMAIN_NAME-latest/modified/fastcgi_$DOMAIN_NAME.service
         S systemctl daemon-reload
-        S systemctl enable fastcgi_$DOMAIN_NAME.service
+        echo '[ If SystemD Errors Occured On Previous Step, Analyze; If No Errors, Safe To Skip Analyze Command ]'
+        S systemd-analyze verify /etc/systemd/system/multi-user.target.wants/fastcgi_$DOMAIN_NAME.service
         S systemctl start fastcgi_$DOMAIN_NAME.service
-        S systemctl list-units
+        S systemctl status fastcgi_$DOMAIN_NAME.service
+        B systemctl list-units | grep fastcgi
 
         # OR
 
