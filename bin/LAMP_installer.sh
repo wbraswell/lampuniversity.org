@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.235_000'
+VERSION='0.236_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -16,6 +16,9 @@ VERSION='0.235_000'
 # rm ./LAMP_installer.sh; wget https://raw.githubusercontent.com/wbraswell/lampuniversity.org/master/bin/LAMP_installer.sh; chmod a+x ./LAMP_installer.sh
 # OR
 # rm ./lampinstaller; wget tinyurl.com/lampinstaller; chmod a+x ./lampinstaller
+
+# [[[ UNINDENT REGEX, USE WHEN PASTING INDENTED CONTENT FROM THIS FILE INTO OTHER FILES ]]]
+#:%s/^\ \ \ \ //g
 
 # enable extended pattern matching in case statements
 shopt -s extglob
@@ -147,27 +150,22 @@ D () {  # prompt user for input w/ _D_efault value
 }
 
 S () {  # _S_udo command
-    B sudo $@
-}
+# DEV NOTE: attempting to use S() as a shortcut to B() does not work, adds unnecessary logic to B() and incorrectly strips newline characters from commands
+# B sudo $@  # WRONG
 
-B () {  # _B_ash command
-    COMMAND="       ${02} ${03} ${04} ${05} ${06} ${07} ${08} ${09} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} \
+# DEV NOTE: using just plain $@ works for commands wrapped all in double-quotes such as redirected echo commands (presumably all stored as a single word in only ${01});
+# but $@ does NOT work for normal multi-word commands (not just stored in ${01}), must use $COMMAND to handle both cases
+    COMMAND=" ${01} ${02} ${03} ${04} ${05} ${06} ${07} ${08} ${09} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} \
         ${20} ${21} ${22} ${23} ${24} ${25} ${26} ${27} ${28} ${29} ${30} ${31} ${32} ${33} ${34} ${35} ${36} ${37} ${38} ${39} \
         ${40} ${41} ${42} ${43} ${44} ${45} ${46} ${47} ${48} ${49} ${50} ${51} ${52} ${53} ${54} ${55} ${56} ${57} ${58} ${59} \
         ${60} ${61} ${62} ${63} ${64} ${65} ${66} ${67} ${68} ${69} ${70} ${71} ${72} ${73} ${74} ${75} ${76} ${77} ${78} ${79} \
         ${80} ${81} ${82} ${83} ${84} ${85} ${86} ${87} ${88} ${89} ${90} ${91} ${92} ${93} ${94} ${95} ${96} ${97} ${98} ${99} "
-    if [[ $1 = 'sudo' ]]; then
-        COMMAND_FULL="sudo bash -c ' $COMMAND '"
-        PROMPT='Run above command AS ROOT, yes or no?  [yes] '
-    else
-        COMMAND="$1 $COMMAND"
-        COMMAND_FULL="bash -c ' $COMMAND '"
-        PROMPT='Run above command, yes or no?  [yes] '
-    fi
+
+#    echo '$' $@  # WRONG
     echo '$' $COMMAND
 
     while true; do
-        read -p "$PROMPT" -n 1 PROMPT_INPUT
+        read -p 'Run above command AS ROOT, yes or no?  [yes] ' -n 1 PROMPT_INPUT
         case $PROMPT_INPUT in
             n|N ) echo; echo; return;;
             y|Y ) echo; break;;
@@ -176,12 +174,30 @@ B () {  # _B_ash command
         esac
     done
 
-#    $COMMAND_FULL  # ERROR: -c: line 0: unexpected EOF while looking for matching `''
-    if [[ $1 = 'sudo' ]]; then
-        sudo bash -c " $COMMAND "
-    else
-        bash -c " $COMMAND "
-    fi
+#    sudo bash -c " $@ "  # WRONG
+    sudo bash -c " $COMMAND "
+    echo
+}
+
+B () {  # _B_ash command
+    COMMAND=" ${01} ${02} ${03} ${04} ${05} ${06} ${07} ${08} ${09} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} \
+        ${20} ${21} ${22} ${23} ${24} ${25} ${26} ${27} ${28} ${29} ${30} ${31} ${32} ${33} ${34} ${35} ${36} ${37} ${38} ${39} \
+        ${40} ${41} ${42} ${43} ${44} ${45} ${46} ${47} ${48} ${49} ${50} ${51} ${52} ${53} ${54} ${55} ${56} ${57} ${58} ${59} \
+        ${60} ${61} ${62} ${63} ${64} ${65} ${66} ${67} ${68} ${69} ${70} ${71} ${72} ${73} ${74} ${75} ${76} ${77} ${78} ${79} \
+        ${80} ${81} ${82} ${83} ${84} ${85} ${86} ${87} ${88} ${89} ${90} ${91} ${92} ${93} ${94} ${95} ${96} ${97} ${98} ${99} "
+    echo '$' $COMMAND
+
+    while true; do
+        read -p 'Run above command, yes or no?  [yes] ' -n 1 PROMPT_INPUT
+        case $PROMPT_INPUT in
+            n|N ) echo; echo; return;;
+            y|Y ) echo; break;;
+            '' ) break;;
+            * ) echo;;
+        esac
+    done
+
+    bash -c " $COMMAND "
     echo
 }
 
@@ -581,6 +597,36 @@ if [ $MENU_CHOICE -le 6 ]; then
             echo '[ CENTOS ONLY: Check Install, Confirm No Errors; WARNING! MAKE TAKE HOURS TO RUN! ]'
             S yum check
         fi
+
+        echo '[ Configure SSH, Keep Connections Alive, Required Over Some VPN & Proxy Connections ]'
+
+SSH_KEEPALIVE=$(cat <<END_HEREDOC
+
+# [ KEEP SSH CONNECTIONS ALIVE, required over some VPN & proxy connections ]
+# SSH client & server config, TCP layer: ping from server to client, can be spoofed or blocked by VPN, keep enabled but rely on SSH layer
+TCPKeepAlive yes
+END_HEREDOC
+)
+
+SSH_SERVERALIVE=$(cat <<END_HEREDOC
+# SSH client config, SSH layer: ping from client to server every 60 seconds, if no reply then try 60 times before disconnecting
+ServerAliveInterval 60 
+ServerAliveCountMax 60
+END_HEREDOC
+)
+
+SSH_CLIENTALIVE=$(cat <<END_HEREDOC
+# SSH server config, SSH layer: ping from server to client every 60 seconds, if no reply then try 60 times before disconnecting
+ClientAliveInterval 60
+ClientAliveCountMax 60
+END_HEREDOC
+)
+
+        S "echo '$SSH_KEEPALIVE'   >> /etc/ssh/ssh_config"  # DEV NOTE: must wrap redirects in quotes
+        S "echo '$SSH_SERVERALIVE' >> /etc/ssh/ssh_config"  # DEV NOTE: must wrap redirects in quotes
+        S "echo '$SSH_KEEPALIVE'   >> /etc/ssh/sshd_config"  # DEV NOTE: must wrap redirects in quotes
+        S "echo '$SSH_CLIENTALIVE' >> /etc/ssh/sshd_config"  # DEV NOTE: must wrap redirects in quotes
+        S service sshd restart
 
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
