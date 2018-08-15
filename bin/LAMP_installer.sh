@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.236_000'
+VERSION='0.237_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -1334,8 +1334,8 @@ if [ $MENU_CHOICE -le 25 ]; then
         echo '[ GCC: gcc & g++ Required For Compiling ]'
         echo '[ libc: libcrypt.(a|so) Required For Compiling ]'
         echo '[ libperl: libperl.(a|so) & perl.h etc, Required For Compiling ]'
-        echo '[ openssl: err.h Required By RPerl Subdependency Net::SSLeay From IO::Socket::SSL ]'
-        echo '[ zlib: zlib.h Required By SDL.pm, Which Is Required For Graphics ]'
+        echo '[ openssl: err.h Required By RPerl Subdependency Net::SSLeay From IO::Socket::SSL From ... From Alien::* ]'
+        echo '[ zlib: zlib.h Required By SDL.pm, Itself Required For Graphics In RPerl Applications ]'
         echo '[ GMP: GNU Multiple-Precision Arithmetic Library Required For Math ]'
         echo '[ GSL: GNU Scientific Library Required For Math ]'
         echo '[ Pluto polyCC: polycc Required For Parallel Compiling, Depends On texinfo flex bison ]'
@@ -1357,7 +1357,10 @@ if [ $MENU_CHOICE -le 25 ]; then
             echo '[ UBUNTU ONLY: Update APT Repositories ]'
             S apt-get update
             echo '[ UBUNTU ONLY: Install RPerl Dependencies ]'
-            S apt-get install g++ libc6-dev libperl-dev libssl-dev zlib1g-dev libgmp-dev libgsl0-dev texinfo flex bison astyle pkg-config
+            S apt-get install g++ make libc6-dev perl libperl-dev libssl-dev zlib1g zlib1g-dev libgmp10 libgmpxx4ldbl libgmp-dev libgsl0-dev texinfo flex bison astyle
+
+            echo '[ UBUNTU ONLY: Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, pkg-config ]'
+            S apt-get install pkg-config
 
             echo "[ UBUNTU ONLY: Install RPerl Dependencies, MongoDB C & C++ Drivers; Must Use Latest libbson & libmongoc From Bionic v18.04 Repositories ]"
             echo "[ UBUNTU ONLY: Install RPerl Dependencies, MongoDB C & C++ Drivers; In Xenial v16.04, Temporarily Replace All Occurrences Of 'xenial' With 'bionic' (Same For Other Non-Bionic Releases), Skip If Already Using Bionic Or Newer ]"
@@ -1710,13 +1713,22 @@ if [ $MENU_CHOICE -le 26 ]; then
 
 
         # [[[ RPM, YUM REPOSITORY ]]]
-        # server, install deps & retrieve RPMs
+        # server, install deps, RUN ONCE ONLY
         S apt-get install createrepo yum-utils gnupg2 gnupg-agent rng-tools
-        S mkdir -p /srv/www/packages.rperl.org/public_html/centos/7/os/{x86_64,SRPMS}
+
+        # server, retrieve RPMs
+        S mkdir -p /srv/www/packages.rperl.org/public_html/centos/7/os
+
+        B scp ./perl-RPerl-VERSION-1-RPM_ALL_DEPS.tar.gz PACKAGE_SERVER:/srv/www/packages.rperl.org/public_html/centos/7/os/  # FROM PACKAGER OR INTERMEDIATE HOST TO PACKAGE SERVER
+
+        CD /srv/www/packages.rperl.org/public_html/centos/7/os
+        S rm -Rf DEPS SPECS SRPMS x86_64
+        B tar -xzvf perl-RPerl-VERSION-1-RPM_ALL_DEPS.tar.gz
+
         S chown -R www-data.www-data /srv/www/packages.rperl.org/
-        S chmod -R g+rwX /srv/www/packages.rperl.org/
-        B scp RPM_PACKAGER_SERVER:RPM_PACKAGER_DIR/*.rpm /srv/www/packages.rperl.org/public_html/centos/7/os/x86_64/
-        # server, generate & export & import GPG keys
+        S chmod -R g+rwX,o-w /srv/www/packages.rperl.org/
+
+        # server, generate & export & import GPG keys, RUN ONCE ONLY
         S rngd -r /dev/urandom
         B gpg2 --full-gen-key
             # William N. Braswell, Jr. (packages.rperl.org) <william.braswell@autoparallel.com>
@@ -1725,21 +1737,27 @@ if [ $MENU_CHOICE -le 26 ]; then
         B less /srv/www/packages.rperl.org/public_html/centos/RPM-GPG-KEY-CentOS-7  # confirm key has been exported
         B rpmkeys --import /srv/www/packages.rperl.org/public_html/centos/RPM-GPG-KEY-CentOS-7
         B rpm -q gpg-pubkey --qf '%{NAME}-%{VERSION}-%{RELEASE}\t%{SUMMARY}\n'  # confirm key has been imported
-        # server, sign RPMs
+
+        # server, prepare to sign RPMs, RUN ONCE ONLY
         B vi ~/.rpmmacros
             # %_signature gpg
             # %_gpg_name William N. Braswell, Jr. (packages.rperl.org) <william.braswell@autoparallel.com>
             # %_gpg_bin /usr/bin
             # %__gpg /usr/bin/gpg2
-        B export GPG_TTY=$(tty)
-        B rpmsign --addsign /srv/www/packages.rperl.org/public_html/centos/7/os/x86_64/*.rpm
-        B rpm -qpi /srv/www/packages.rperl.org/public_html/centos/7/os/x86_64/*.rpm | grep Signature  # confirm packages are signed
-        # server, create repo & sign repo metadata
-        B createrepo --verbose /srv/www/packages.rperl.org/public_html/centos/7/os/x86_64/
-        B gpg2 --detach-sign --armor /srv/www/packages.rperl.org/public_html/centos/7/os/x86_64/repodata/repomd.xml 
-        B less /srv/www/packages.rperl.org/public_html/centos/7/os/x86_64/repodata/repomd.xml.asc  # confirm repo metada is signed
 
-        # server, generate repo file
+        # server, sign RPMs
+        CD /srv/www/packages.rperl.org/public_html/centos/7/os
+        B export GPG_TTY=$(tty)
+        B rpmsign --addsign SRPMS/*.rpm x86_64/*.rpm
+        B rpm -qpi SRPMS/*.rpm x86_64/*.rpm | grep Signature  # confirm packages are signed
+
+        # server, create repo & sign repo metadata
+        CD /srv/www/packages.rperl.org/public_html/centos/7/os
+        B createrepo --verbose .
+        B gpg2 --detach-sign --armor repodata/repomd.xml 
+        B less repodata/repomd.xml.asc  # confirm repo metada is signed
+
+        # server, generate repo file, RUN ONCE ONLY
         B vi /srv/www/packages.rperl.org/public_html/centos7-perl-cpan.repo
             [centos7-perl-cpan]
             name=CentOS 7 Perl CPAN Repository
@@ -1750,7 +1768,7 @@ if [ $MENU_CHOICE -le 26 ]; then
             gpgkey=https://packages.rperl.org/centos/RPM-GPG-KEY-CentOS-7
 
         S chown -R www-data.www-data /srv/www/packages.rperl.org/
-        S chmod -R g+rwX /srv/www/packages.rperl.org/
+        S chmod -R g+rwX,o-w /srv/www/packages.rperl.org/
 
         
         # client
@@ -1759,7 +1777,7 @@ if [ $MENU_CHOICE -le 26 ]; then
         S yum-config-manager --enable centos7-perl-cpan
         S yum repolist all
         S yum install perl-RPerl
-        
+
 
 
 
