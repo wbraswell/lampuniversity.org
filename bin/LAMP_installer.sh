@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.237_000'
+VERSION='0.238_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -273,7 +273,7 @@ echo
 echo  '        <<< LOCAL GUI SECTIONS >>>'
 echo  '12. [[[ UBUNTU LINUX, INSTALL BASE GUI OPERATING SYSTEM PACKAGES ]]]'
 echo  '13. [[[ UBUNTU LINUX, INSTALL EXTRA GUI OPERATING SYSTEM PACKAGES ]]]'
-echo  '14. [[[ UBUNTU LINUX, INSTALL XPRA ]]]'
+echo  '14. [[[ UBUNTU LINUX, INSTALL VNC & XPRA ]]]'
 echo  '15. [[[ UBUNTU LINUX, INSTALL VIRTUALBOX GUEST ADDITIONS ]]]'
 echo  '16. [[[ UBUNTU LINUX, UNINSTALL HUD & BLUETOOTH & MODEMMANAGER & GVFS ]]]'
 echo  '17. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER ]]]'
@@ -834,9 +834,62 @@ fi
 LOCAL_HOSTNAME='__EMPTY__'
 
 if [ $MENU_CHOICE -le 14 ]; then
-    echo '14. [[[ UBUNTU LINUX, INSTALL XPRA ]]]'
+    echo '14. [[[ UBUNTU LINUX, INSTALL VNC & XPRA ]]]'
     echo
     VERIFY_UBUNTU
+
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        echo '14.0 [ VNC Server, Install VNC ]'
+        S apt-get install x11vnc
+
+        # VNC server, start VNC independent of client
+#        B x11vnc -display :0  # run now
+            # __OR__
+#        S x11vnc -wait 50 -noxdamage -passwd PASSWORD -display :0 -forever -o /var/log/x11vnc.log -bg  # run at startup, put this inside startup file
+
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        echo '14.0 [ VNC Client, Install VNC ]'
+        S apt-get install ssvnc
+    fi
+
+
+    if [ $MACHINE_CHOICE -eq 0 ]; then
+        C 'Please run section 14.0 on the existing local machine before proceeding.'
+        echo '14.1a [ If VNC Server has Private IP via NAT, and '
+        echo '        If VNC Client has Private IP via NAT with SSH Pinhole AKA Port Forwarding'
+        echo '        Then: VNC Server, Start Reverse SSH Tunnel; and '
+        echo '              VNC Client, Start Double-Reverse SSH Tunnel; and VNC Server, Start VNC'
+        C 'Please read the instructions above to determine if you should run the following 1 command.'
+        P $LOCAL_HOSTNAME "Existing Machine's Local Hostname"
+        LOCAL_HOSTNAME=$USER_INPUT
+        P $LOCAL_USERNAME "Existing Machine's Local Username"
+        LOCAL_USERNAME=$USER_INPUT
+        B ssh -R 19999:localhost:22 $LOCAL_USERNAME@$LOCAL_HOSTNAME
+
+    elif [ $MACHINE_CHOICE -eq 1 ]; then
+        C 'Please run sections 14.0 & 14.1 on the new remote machine before proceeding.'
+        echo '14.1a [ If VNC Server has Private IP via NAT, and '
+        echo '        If VNC Client has Private IP via NAT with SSH Pinhole AKA Port Forwarding'
+        echo '        Then: VNC Server, Start Reverse SSH Tunnel; and '
+        echo '              VNC Client, Start Double-Reverse SSH Tunnel; and VNC Server, Start VNC'
+        C 'Please read the instructions above to determine if you should run the following 1 command.'
+        P $REMOTE_USERNAME "New Machine's Remote Username"
+        REMOTE_USERNAME=$USER_INPUT
+        B ssh $REMOTE_USERNAME@localhost -p 19999 -t -L 5900:localhost:5900 'x11vnc -localhost -display :0'
+            # __OR__
+        echo '14.1b [ If VNC Server has Public IP, and '
+        echo '        If VNC Client has Private IP via NAT with SSH Pinhole AKA Port Forwarding'
+        echo '        Then: VNC Client, Start Reverse SSH Tunnel; and VNC Server, Start VNC ]'
+        C 'Please read the instructions above to determine if you should run the following 1 command.'
+        P $REMOTE_HOSTNAME "New Machine's Remote Hostname"
+        REMOTE_HOSTNAME=$USER_INPUT
+        B ssh $REMOTE_HOSTNAME -t -L 5900:localhost:5900 'x11vnc -localhost -display :0'
+
+        echo '14.2 [ VNC Client, Start VNC ]'
+        B ssvncviewer localhost:0
+    fi
+
+
     if [ $MACHINE_CHOICE -eq 0 ]; then
         C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
         echo '[ Test X-Windows Single-Session Connection ]'
