@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.238_000'
+VERSION='0.239_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -275,7 +275,7 @@ echo  '12. [[[ UBUNTU LINUX, INSTALL BASE GUI OPERATING SYSTEM PACKAGES ]]]'
 echo  '13. [[[ UBUNTU LINUX, INSTALL EXTRA GUI OPERATING SYSTEM PACKAGES ]]]'
 echo  '14. [[[ UBUNTU LINUX, INSTALL VNC & XPRA ]]]'
 echo  '15. [[[ UBUNTU LINUX, INSTALL VIRTUALBOX GUEST ADDITIONS ]]]'
-echo  '16. [[[ UBUNTU LINUX, UNINSTALL HUD & BLUETOOTH & MODEMMANAGER & GVFS ]]]'
+echo  '16. [[[ UBUNTU LINUX, UNINSTALL HUD & BLUETOOTH & MODEMMANAGER & GVFS & EXTRA GUI PACKAGES ]]]'
 echo  '17. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER ]]]'
 echo  '18. [[[ UBUNTU LINUX, CONFIGURE XFCE WINDOW MANAGER ]]]'
 echo  '19. [[[ UBUNTU LINUX, ENABLE AUTOMATIC SECURITY UPDATES ]]]'
@@ -852,7 +852,6 @@ if [ $MENU_CHOICE -le 14 ]; then
         S apt-get install ssvnc
     fi
 
-
     if [ $MACHINE_CHOICE -eq 0 ]; then
         C 'Please run section 14.0 on the existing local machine before proceeding.'
         echo '14.1a [ If VNC Server has Private IP via NAT, and '
@@ -875,6 +874,9 @@ if [ $MENU_CHOICE -le 14 ]; then
         C 'Please read the instructions above to determine if you should run the following 1 command.'
         P $REMOTE_USERNAME "New Machine's Remote Username"
         REMOTE_USERNAME=$USER_INPUT
+        echo 'Test Reverse SSH Tunnel Before Proceeding...'
+        B ssh $REMOTE_USERNAME@localhost -p 19999
+#        B scp -P 19999 $LOCAL_PATH/$LOCAL_FILENAME $REMOTE_USERNAME@localhost:$REMOTE_PATH  # template for SCP over reverse SSH tunnel
         B ssh $REMOTE_USERNAME@localhost -p 19999 -t -L 5900:localhost:5900 'x11vnc -localhost -display :0'
             # __OR__
         echo '14.1b [ If VNC Server has Public IP, and '
@@ -993,7 +995,7 @@ if [ $MENU_CHOICE -le 15 ]; then
 fi
 
 if [ $MENU_CHOICE -le 16 ]; then
-    echo '16. [[[ UBUNTU LINUX, UNINSTALL HUD & BLUETOOTH & MODEMMANAGER & GVFS ]]]'
+    echo '16. [[[ UBUNTU LINUX, UNINSTALL HUD & BLUETOOTH & MODEMMANAGER & GVFS & EXTRA GUI PACKAGES ]]]'
     echo
     VERIFY_UBUNTU
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -1005,7 +1007,7 @@ if [ $MENU_CHOICE -le 16 ]; then
         S apt-get purge modemmanager
         echo '[ Uninstall Or Disable GVFS To Speed Up Thunar File Explorer ]'
         echo '[ OPTION 1 ONLY: Uninstall GVFS Completely ]'
-        S apt-get purge gvfs-daemons
+        S apt-get purge gvfs-daemons gigolo
         echo '[ OPTION 2 ONLY: Disable GVFS Network Mounting ]'
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
@@ -1013,6 +1015,9 @@ if [ $MENU_CHOICE -le 16 ]; then
         echo 'AutoMount=false'
         echo
         S $EDITOR /usr/share/gvfs/mounts/network.mount
+        echo '[ Uninstall Extra GUI Packages To Free System Storage (Disk Space) ]'
+        S apt-get purge thunderbird pidgin simple-scan orage gnome-mines gnome-sudoku speech-dispatcher xfce4-notes transmission-gtk
+        S apt-get purge libreoffice-common
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
@@ -1642,76 +1647,22 @@ if [ $MENU_CHOICE -le 26 ]; then
 
 
 
-        # [[[ cpanspec & rpmbuild ]]]
-        # NOT YET FULLY TESTED, DOES NOT HANDLE DEPENDENCIES
-        B vi ~/.rpmmacros
-            # %packager William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>
-            # %vendor Auto-Parallel Technologies, Inc.
-            # %_topdir %{getenv:HOME}/rpmbuild
-            # # disable grep through input Perl source code for "use Foo;" statements
-            # %__perl_requires %{nil}
-        S yum install cpanspec rpm-build
-        B mkdir -p ~/rpmbuild/SOURCES && cd ~/rpmbuild
-#        B cpanspec --packager="William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>" --old --follow --verbose ./SOURCES/RPerl-FOO.tar.gz
-        B cpanspec --old --follow --verbose RPerl
-        B mv *.gz SOURCES
-        B mv *.spec SPECS
-        B rpmbuild -bs --sign --verbose ./perl-RPerl.spec
-        # ...
 
-        # __OR__
-
-        # [[[ cpantorpm ]]]
-        # NOT GOOD, DOES NOT HANDLE DEPENDENCIES; also gives confusing error messages such as missing files when not actually missing
-        S yum install strace
-        S cpan App::CPANtoRPM
-        B cpantorpm --debug Foo::Bar
-
-        # __OR__
-        
-        # [[[ cpan2dist ]]]
-        # NOT GOOD, ENDLESS DEPENDENCY LOOP BETWEEN ExtUtils::MakeMaker AND Encode etc, PLUS OTHER ERRORS
-        S cpan CPANPLUS
-        S cpan CPANPLUS::Dist::Fedora
-        B cpan2dist --format CPANPLUS::Dist::Fedora --verbose --keepsource --force --nobuildprereq ExtUtils::MakeMaker
-        B cpan2dist --format CPANPLUS::Dist::Fedora --buildprereq --verbose --keepsource RPerl
-
-        # DEV VERSION OF CPANPLUS::Dist::Fedora
-        # prefer pre-built from CPAN below
-#        S yum install mercurial
-#        S cpan Dist::Zilla
-#        B mkdir ~/repos_bitbucket && cd ~/repos_bitbucket
-#        B hg clone https://wbraswell@bitbucket.org/shlomif/cpanplus-dist-backends cpanplus-dist-backends-latest
-        # prefer latest version from CPAN below
-#        S cpan SHLOMIF/CPANPLUS-Dist-Fedora-0.2.0.tar.gz
-        S cpan CPANPLUS::Dist::Fedora  # 0.2.0 now available
- 
-        # cpan2dist, DEV VERSION
-        S apt-get install mercurial
-        B cpanm Dist::Zilla
-
-        # cpan2dist, DEBIAN SUPPORT
-        # NOT GOOD, BROKEN & WILL NOT INSTALL, NOT MAINTAINED SINCE 2009
-        B cpanm CPANPLUS::Dist::Deb
-
-        # __OR__
-
-        # [[[ fpm ]]]
-        # GOOD, AS SOON AS WE FIX THE REMAINING ISSUES!
-        # fpm, DEPENDENCIES
+        # [[[ FPM ]]]
+        # fpm, install deps
         S apt-get install ruby ruby-dev rubygems build-essential
             # __OR__
         S yum install ruby-devel gcc make rpm-build rubygems
         S gem update --system  # must have RubyGems >= v2.7.5 to avoid "Errno::EPERM: Operation not permitted @ chown_internal" on `bundle install` for fpm dev version
         S cpan App::cpanminus
         
-        # fpm, RELEASE VERSION
+        # fpm, install release version
         S gem install --no-ri --no-rdoc fpm
         B which fpm
         B fpm --version
         B fpm --verbose -s cpan -t rpm ExtUtils::MakeMaker
 
-        # fpm, DEV VERSION
+        # fpm, install dev version
         S apt-get install bsdtar
             # __OR__
         S yum install bsdtar
@@ -1731,12 +1682,14 @@ if [ $MENU_CHOICE -le 26 ]; then
         B which fpm
         B fpm --version
 
+        # fpm, build RPerl package w/out deps
         B reset; rm -Rf ~/cpantofpm_tmp/* ~/cpantofpm_packages/*; cd ~/cpantofpm_packages/; time fpm --no-cpan-test --cpan-verbose --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/cpantofpm_tmp/ -s cpan -t deb --deb-?? RPerl
             # __OR__
         B reset; rm -Rf ~/cpantofpm_tmp/* ~/cpantofpm_packages/*; cd ~/cpantofpm_packages/; time fpm --no-cpan-test --cpan-verbose --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/cpantofpm_tmp/ -s cpan -t rpm --rpm-ba RPerl
 
-        # [[[ fpm & cpantofpm ]]]
-        # GOOD, AS SOON AS WE FIX THE REMAINING ISSUES!
+
+        # [[[ CPANtoFPM ]]]
+        # cpantofpm, install deps
         S cpan Module::CoreList
         S apt-get install expect  # for unbuffer
             # __OR__
@@ -1753,15 +1706,52 @@ if [ $MENU_CHOICE -le 26 ]; then
 # THEN START HERE: rebuild packages w/ proper hostname, transfer & sign new packages, re-create repo, test repo, update get_rperl.html w/ instructions; DEB support
 
 
+        # cpantofpm, set hostname to be embedded in packages
         S vi /etc/hostname && hostname -F /etc/hostname && hostname  # packages.rperl.org
         
+        # cpantofpm, set path to executable
         B export PATH=~/repos_gitlab/app-cpantofpm-latest/bin/:$PATH  # NEED FIX, HARD-CODED SHORTCUTS TO ~/cpantofpm BELOW
             # __OR__
         B cd; rm ./cpantofpm ; vi ./cpantofpm ; chmod a+x ./cpantofpm
         
+        # cpantofpm, build RPerl package w/ deps
         B reset; rm -Rf ~/cpantofpm_tmp/* ~/cpantofpm_packages/*; cd ~/cpantofpm_packages/; time ~/cpantofpm -t deb RPerl
             # __OR__
         B reset; rm -Rf ~/cpantofpm_tmp/* ~/cpantofpm_packages/*; cd ~/cpantofpm_packages/; time ~/cpantofpm -t rpm RPerl
+
+
+
+        # [[[ PCRE2, JPCRE2, Pluto, BSON, MongoDB C Driver, MongoDB C++ Driver]]]
+        B wget https://ftp.pcre.org/pub/pcre/pcre2-10.31.tar.gz
+        B tar -xzvf pcre2-10.31.tar.gz
+        CD pcre2-10.31
+        B ./configure --enable-pcre2-16 --enable-pcre2-32 --disable-shared --enable-jit
+        B make
+        B make check
+        B mkdir -p /tmp/fpm_install_tmp && rm -Rf /tmp/fpm_install_tmp/*
+        B make install DESTDIR=/tmp/fpm_install_tmp
+        B reset; rm -Rf ~/fpm_tmp/*; time fpm --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/fpm_tmp/ -s dir -t rpm --rpm-ba -p pcre2-VERSION_ARCH.rpm     -n pcre2     -v 10.31 -C /tmp/fpm_install_tmp usr/local/lib usr/local/bin usr/local/share
+        B reset; rm -Rf ~/fpm_tmp/*; time fpm --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/fpm_tmp/ -s dir -t rpm --rpm-ba -p pcre2-dev_VERSION_ARCH.rpm -n pcre2-dev -v 10.31 -C /tmp/fpm_install_tmp usr/include
+
+        # START HERE: copy SRPM & SPEC files for pcre2 above, repeat process for jpcre2 etc below
+        # START HERE: copy SRPM & SPEC files for pcre2 above, repeat process for jpcre2 etc below
+        # START HERE: copy SRPM & SPEC files for pcre2 above, repeat process for jpcre2 etc below
+        
+        B wget https://github.com/jpcre2/jpcre2/archive/10.31.02-2.tar.gz
+        B mv 10.31.02-2.tar.gz jpcre2-10.31.02-2.tar.gz
+        
+        B wget https://github.com/bondhugula/pluto/files/737550/pluto-0.11.4.tar.gz
+        B tar -xzvf pluto-0.11.4.tar.gz
+        CD pluto-0.11.4/
+        B ./configure
+        B make
+        B make test
+        S make install
+        CD ..
+
+
+
+
 
 
 
