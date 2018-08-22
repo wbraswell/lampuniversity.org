@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.239_000'
+VERSION='0.240_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -1722,21 +1722,36 @@ if [ $MENU_CHOICE -le 26 ]; then
 
 
         # [[[ PCRE2, JPCRE2, Pluto, BSON, MongoDB C Driver, MongoDB C++ Driver]]]
+        CD ~/
         B wget https://ftp.pcre.org/pub/pcre/pcre2-10.31.tar.gz
         B tar -xzvf pcre2-10.31.tar.gz
         CD pcre2-10.31
         B ./configure --enable-pcre2-16 --enable-pcre2-32 --disable-shared --enable-jit
         B make
         B make check
-        B mkdir -p /tmp/fpm_install_tmp && rm -Rf /tmp/fpm_install_tmp/*
-        B make install DESTDIR=/tmp/fpm_install_tmp
-        B reset; rm -Rf ~/fpm_tmp/*; time fpm --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/fpm_tmp/ -s dir -t rpm --rpm-ba -p pcre2-VERSION_ARCH.rpm     -n pcre2     -v 10.31 -C /tmp/fpm_install_tmp usr/local/lib usr/local/bin usr/local/share
-        B reset; rm -Rf ~/fpm_tmp/*; time fpm --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/fpm_tmp/ -s dir -t rpm --rpm-ba -p pcre2-dev_VERSION_ARCH.rpm -n pcre2-dev -v 10.31 -C /tmp/fpm_install_tmp usr/include
-
-        # START HERE: copy SRPM & SPEC files for pcre2 above, repeat process for jpcre2 etc below
-        # START HERE: copy SRPM & SPEC files for pcre2 above, repeat process for jpcre2 etc below
-        # START HERE: copy SRPM & SPEC files for pcre2 above, repeat process for jpcre2 etc below
+        B mkdir -p ~/fpm_tmp_install && rm -Rf ~/fpm_tmp_install/*
+        B make install DESTDIR=~/fpm_tmp_install
+        CD ~/
+        B mkdir -p ~/fpm_tmp_work && rm -Rf ~/fpm_tmp_work/*
+        B reset; time fpm --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/fpm_tmp_work/ -s dir -t rpm --rpm-ba -p pcre2-VERSION_ARCH.rpm     -n pcre2     -v 10.31 -C ~/fpm_tmp_install usr/local/lib usr/local/bin usr/local/share
+        B rm pcre2-10.31_x86_64.rpm  # prefer file naming uniformity with '-1' in all file names
+        B cp ~/fpm_tmp_work/package-rpm-build-*/RPMS/x86_64/pcre2-10.31-1.x86_64.rpm ~/cpantofpm_packages/x86_64/
+        B cp ~/fpm_tmp_work/package-rpm-build-*/SRPMS/pcre2-10.31-1.src.rpm ~/cpantofpm_packages/SRPMS/
+        B cp ~/fpm_tmp_work/package-rpm-build-*/SPECS/pcre2.spec ~/cpantofpm_packages/SPECS/
+        B mkdir -p ~/fpm_tmp_work && rm -Rf ~/fpm_tmp_work/*
+        B reset; time fpm --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/fpm_tmp_work/ -s dir -t rpm --rpm-ba -p pcre2-dev_VERSION_ARCH.rpm -n pcre2-dev -v 10.31 -C ~/fpm_tmp_install usr/local/include
+        B rm pcre2-dev_10.31_x86_64.rpm  # prefer file naming uniformity with '-1' in all file names
+        B cp ~/fpm_tmp_work/package-rpm-build-*/RPMS/x86_64/pcre2-dev-10.31-1.x86_64.rpm ~/cpantofpm_packages/x86_64/
+        B cp ~/fpm_tmp_work/package-rpm-build-*/SRPMS/pcre2-dev-10.31-1.src.rpm ~/cpantofpm_packages/SRPMS/
+        B cp ~/fpm_tmp_work/package-rpm-build-*/SPECS/pcre2-dev.spec ~/cpantofpm_packages/SPECS/
+        B rm -Rf pcre2-10.31.tar.gz pcre2-10.31 ~/fpm_tmp_work ~/fpm_tmp_install
         
+        # START HERE: use PCRE2 package process above as template for JPCRE2 etc below
+        # START HERE: use PCRE2 package process above as template for JPCRE2 etc below
+        # START HERE: use PCRE2 package process above as template for JPCRE2 etc below
+
+
+
         B wget https://github.com/jpcre2/jpcre2/archive/10.31.02-2.tar.gz
         B mv 10.31.02-2.tar.gz jpcre2-10.31.02-2.tar.gz
         
