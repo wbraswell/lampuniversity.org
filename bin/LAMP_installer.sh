@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.240_000'
+VERSION='0.241_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -1463,7 +1463,6 @@ if [ $MENU_CHOICE -le 25 ]; then
 #            # DEV NOTE: prefer pre-built RPMs below
 ##            B wget http://dl.fedoraproject.org/pub/fedora/linux/updates/27/SRPMS/Packages/l/libbson-1.9.3-1.fc27.src.rpm  # DEV NOTE: prefer GitHub mirror below
 #            B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson-1.9.3-1.fc27.src.rpm  # DEV NOTE: prefer our own GitHub mirror for uniformity
-#            B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson-1.9.3-1.el7.centos.src.rpm  # DEV NOTE: prefer our own re-built source RPMs for uniformity
 #            S rpm -i -vv ./libbson-1.9.3-1.fc27.src.rpm
 #            B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson.spec
 #            S mv ./libbson.spec /root/rpmbuild/SPECS/libbson.spec
@@ -1478,6 +1477,15 @@ if [ $MENU_CHOICE -le 25 ]; then
             S rpm -i -vv ./libbson-devel-1.9.3-1.el7.centos.x86_64.rpm  # provides pkgconfig(libbson-1.0) to satisfy mongodb-c-driver requirements
             B rm ./libbson-1.9.3-1.el7.centos.x86_64.rpm
             B rm ./libbson-devel-1.9.3-1.el7.centos.x86_64.rpm  
+
+
+            # DEV NOTE: check if SRPM can be rebuilt
+            B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson-1.9.3-1.el7.centos.src.rpm
+            B rpm -ivh ./libbson-1.9.3-1.el7.centos.src.rpm
+            S yum-builddep libbson
+            B rpmbuild -v -ba ~/rpmbuild/SPECS/libbson.spec
+
+
 
             echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, MongoDB C Driver ]'
 
@@ -1668,7 +1676,7 @@ if [ $MENU_CHOICE -le 26 ]; then
         S yum install bsdtar
             # __OR__
         S xcode-select --install  # Mac OS 10.9 (Mavericks)
-        
+
         S gem install bundler
         B mkdir -p ~/repos_github
 #        B git clone git@github.com:jordansissel/fpm.git ~/repos_github/fpm-latest
@@ -1688,6 +1696,40 @@ if [ $MENU_CHOICE -le 26 ]; then
         B reset; rm -Rf ~/cpantofpm_tmp/* ~/cpantofpm_packages/*; cd ~/cpantofpm_packages/; time fpm --no-cpan-test --cpan-verbose --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/cpantofpm_tmp/ -s cpan -t rpm --rpm-ba RPerl
 
 
+        # [[[ FPM-Cookery ]]]
+        S gem install bundler
+        B mkdir -p ~/repos_github
+        B git clone https://github.com/bernd/fpm-cookery.git ~/repos_github/fpm-cookery-latest
+        CD ~/repos_github/fpm-cookery-latest
+        S bundle install  # ignore warning about not running as root, must run as root for `sudo fpm-cook install-deps` to find facter.rb & other fpm-cookery runtime deps
+        B rake spec --trace  # run tests, may seem frozen for 5 - 10 minutes
+        B export PATH=~/repos_github/fpm-cookery-latest/bin:$PATH
+        B which fpm-cook
+        B fpm-cook --version
+        
+        B mkdir -p ~/fpm_cookery_tmp
+        CD ~/fpm_cookery_tmp
+        B vi recipe.rb
+            #class Tmux < FPM::Cookery::Recipe
+            #  description 'terminal multiplexer'
+            #  name     'tmux'
+            #  version  '1.9a'
+            #  homepage 'http://tmux.github.io'
+            #  source   'https://github.com/tmux/tmux/releases/download/1.9a/tmux-1.9a.tar.gz'
+            #  build_depends 'libevent-devel', 'ncurses-devel'
+            #  depends       'libevent-2.0*'
+            #  def build
+            #    configure :prefix => prefix
+            #    make
+            #  end
+            #  def install
+            #    make :install, 'DESTDIR' => destdir
+            #  end
+            #end
+        S ~/repos_github/fpm-cookery-latest/bin/fpm-cook install-deps
+        B fpm-cook
+
+
         # [[[ CPANtoFPM ]]]
         # cpantofpm, install deps
         S cpan Module::CoreList
@@ -1696,15 +1738,17 @@ if [ $MENU_CHOICE -le 26 ]; then
         S yum install expect  # for unbuffer
         S cpan Alien::Build
 
+# FPM THEN START HERE: FPM pull request; DEB support; RPM mock support
+# FPM THEN START HERE: FPM pull request; DEB support; RPM mock support
+# FPM THEN START HERE: FPM pull request; DEB support; RPM mock support
 
-# START HERE: fpm search() & download() PathTools dist-not-module; remove comments in lib/fpm/package/cpan.rb; save all deps files in correct DEPS folder;  RPerl & Alien post-processing, add deps to spec file and rebuild rpm/srpm files; skip processing if rpm/srpm/spec/dep files already present, else run fpm w/ force option to overwrite existing file(s); save file names in $distributions_processed & use to make tarball
-# START HERE: fpm search() & download() PathTools dist-not-module; remove comments in lib/fpm/package/cpan.rb; save all deps files in correct DEPS folder;  RPerl & Alien post-processing, add deps to spec file and rebuild rpm/srpm files; skip processing if rpm/srpm/spec/dep files already present, else run fpm w/ force option to overwrite existing file(s); save file names in $distributions_processed & use to make tarball
-# START HERE: fpm search() & download() PathTools dist-not-module; remove comments in lib/fpm/package/cpan.rb; save all deps files in correct DEPS folder;  RPerl & Alien post-processing, add deps to spec file and rebuild rpm/srpm files; skip processing if rpm/srpm/spec/dep files already present, else run fpm w/ force option to overwrite existing file(s); save file names in $distributions_processed & use to make tarball
+# FPM THEN START HERE: merge FPM & FPM-Cookery to enable SPEC/SRPM output;; __OR__;; get fpm to accept SPEC file as input; rebuild libbson & mongo-c-driver & mongo-cxx-driver using SPEC files & fpm; manually build SPEC files for PCRE2 & JPCRE2 & PLUTO 
+# FPM THEN START HERE: merge FPM & FPM-Cookery to enable SPEC/SRPM output;; __OR__;; get fpm to accept SPEC file as input; rebuild libbson & mongo-c-driver & mongo-cxx-driver using SPEC files & fpm; manually build SPEC files for PCRE2 & JPCRE2 & PLUTO 
+# FPM THEN START HERE: merge FPM & FPM-Cookery to enable SPEC/SRPM output;; __OR__;; get fpm to accept SPEC file as input; rebuild libbson & mongo-c-driver & mongo-cxx-driver using SPEC files & fpm; manually build SPEC files for PCRE2 & JPCRE2 & PLUTO 
 
-# THEN START HERE: rebuild packages w/ proper hostname, transfer & sign new packages, re-create repo, test repo, update get_rperl.html w/ instructions; DEB support
-# THEN START HERE: rebuild packages w/ proper hostname, transfer & sign new packages, re-create repo, test repo, update get_rperl.html w/ instructions; DEB support
-# THEN START HERE: rebuild packages w/ proper hostname, transfer & sign new packages, re-create repo, test repo, update get_rperl.html w/ instructions; DEB support
-
+# FPM THEN START HERE: remove comments in lib/fpm/package/cpan.rb; save all deps files in correct DEPS folder;  skip processing if rpm/srpm/spec/dep files already present, else run fpm w/ force option to overwrite existing file(s); save file names in $distributions_processed & use to make tarball
+# FPM THEN START HERE: remove comments in lib/fpm/package/cpan.rb; save all deps files in correct DEPS folder;  skip processing if rpm/srpm/spec/dep files already present, else run fpm w/ force option to overwrite existing file(s); save file names in $distributions_processed & use to make tarball
+# FPM THEN START HERE: remove comments in lib/fpm/package/cpan.rb; save all deps files in correct DEPS folder;  skip processing if rpm/srpm/spec/dep files already present, else run fpm w/ force option to overwrite existing file(s); save file names in $distributions_processed & use to make tarball
 
         # cpantofpm, set hostname to be embedded in packages
         S vi /etc/hostname && hostname -F /etc/hostname && hostname  # packages.rperl.org
@@ -1721,7 +1765,7 @@ if [ $MENU_CHOICE -le 26 ]; then
 
 
 
-        # [[[ PCRE2, JPCRE2, Pluto, BSON, MongoDB C Driver, MongoDB C++ Driver]]]
+        # [[[ PCRE2 ]]]
         CD ~/
         B wget https://ftp.pcre.org/pub/pcre/pcre2-10.31.tar.gz
         B tar -xzvf pcre2-10.31.tar.gz
@@ -1733,39 +1777,79 @@ if [ $MENU_CHOICE -le 26 ]; then
         B make install DESTDIR=~/fpm_tmp_install
         CD ~/
         B mkdir -p ~/fpm_tmp_work && rm -Rf ~/fpm_tmp_work/*
-        B reset; time fpm --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/fpm_tmp_work/ -s dir -t rpm --rpm-ba -p pcre2-VERSION_ARCH.rpm     -n pcre2     -v 10.31 -C ~/fpm_tmp_install usr/local/lib usr/local/bin usr/local/share
-        B rm pcre2-10.31_x86_64.rpm  # prefer file naming uniformity with '-1' in all file names
-        B cp ~/fpm_tmp_work/package-rpm-build-*/RPMS/x86_64/pcre2-10.31-1.x86_64.rpm ~/cpantofpm_packages/x86_64/
-        B cp ~/fpm_tmp_work/package-rpm-build-*/SRPMS/pcre2-10.31-1.src.rpm ~/cpantofpm_packages/SRPMS/
-        B cp ~/fpm_tmp_work/package-rpm-build-*/SPECS/pcre2.spec ~/cpantofpm_packages/SPECS/
+        B reset; time fpm --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/fpm_tmp_work/ -s dir -t rpm --rpm-ba -p libpcre2-VERSION_ARCH.rpm     -n libpcre2     -v 10.31 -C ~/fpm_tmp_install usr/local/lib usr/local/bin usr/local/share
+        B rm libpcre2-10.31_x86_64.rpm  # prefer file naming uniformity with '-1' in all file names
+        B cp ~/fpm_tmp_work/package-rpm-build-*/RPMS/x86_64/libpcre2-10.31-1.x86_64.rpm ~/cpantofpm_packages/x86_64/
+        B cp ~/fpm_tmp_work/package-rpm-build-*/SRPMS/libpcre2-10.31-1.src.rpm ~/cpantofpm_packages/SRPMS/
+        B cp ~/fpm_tmp_work/package-rpm-build-*/SPECS/libpcre2.spec ~/cpantofpm_packages/SPECS/
         B mkdir -p ~/fpm_tmp_work && rm -Rf ~/fpm_tmp_work/*
-        B reset; time fpm --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/fpm_tmp_work/ -s dir -t rpm --rpm-ba -p pcre2-dev_VERSION_ARCH.rpm -n pcre2-dev -v 10.31 -C ~/fpm_tmp_install usr/local/include
-        B rm pcre2-dev_10.31_x86_64.rpm  # prefer file naming uniformity with '-1' in all file names
-        B cp ~/fpm_tmp_work/package-rpm-build-*/RPMS/x86_64/pcre2-dev-10.31-1.x86_64.rpm ~/cpantofpm_packages/x86_64/
-        B cp ~/fpm_tmp_work/package-rpm-build-*/SRPMS/pcre2-dev-10.31-1.src.rpm ~/cpantofpm_packages/SRPMS/
-        B cp ~/fpm_tmp_work/package-rpm-build-*/SPECS/pcre2-dev.spec ~/cpantofpm_packages/SPECS/
+        B reset; time fpm --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/fpm_tmp_work/ -s dir -t rpm --rpm-ba -p libpcre2-dev_VERSION_ARCH.rpm -n libpcre2-dev -v 10.31 -C ~/fpm_tmp_install usr/local/include
+        B rm libpcre2-dev_10.31_x86_64.rpm  # prefer file naming uniformity with '-1' in all file names
+        B cp ~/fpm_tmp_work/package-rpm-build-*/RPMS/x86_64/libpcre2-dev-10.31-1.x86_64.rpm ~/cpantofpm_packages/x86_64/
+        B cp ~/fpm_tmp_work/package-rpm-build-*/SRPMS/libpcre2-dev-10.31-1.src.rpm ~/cpantofpm_packages/SRPMS/
+        B cp ~/fpm_tmp_work/package-rpm-build-*/SPECS/libpcre2-dev.spec ~/cpantofpm_packages/SPECS/
         B rm -Rf pcre2-10.31.tar.gz pcre2-10.31 ~/fpm_tmp_work ~/fpm_tmp_install
-        
-        # START HERE: use PCRE2 package process above as template for JPCRE2 etc below
-        # START HERE: use PCRE2 package process above as template for JPCRE2 etc below
-        # START HERE: use PCRE2 package process above as template for JPCRE2 etc below
+
+        # [[[ JPCRE2 ]]]
+        S rpm -i ~/cpantofpm_packages/x86_64/libpcre2-10.31-1.x86_64.rpm
+        S rpm -i ~/cpantofpm_packages/x86_64/libpcre2-dev-10.31-1.x86_64.rpm
+        CD ~/
+        B wget https://github.com/jpcre2/jpcre2/archive/10.31.02-2.tar.gz -O jpcre2-10.31.02-2.tar.gz
+        B tar -xzvf jpcre2-10.31.02-2.tar.gz
+        CD jpcre2-10.31.02-2
+        B ./configure --disable-cpp11 --enable-test
+        B make
+        B make check
+        B mkdir -p ~/fpm_tmp_install && rm -Rf ~/fpm_tmp_install/*
+        B make install DESTDIR=~/fpm_tmp_install
+        CD ~/
+        B mkdir -p ~/fpm_tmp_work && rm -Rf ~/fpm_tmp_work/*
+        B reset; time fpm --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/fpm_tmp_work/ -s dir -t rpm --rpm-ba -p libjpcre2-dev_VERSION_ARCH.rpm -n libjpcre2-dev -v 10.31.02-2 -d "libpcre2 >= 10.31" -d "libpcre2-dev >= 10.31" -C ~/fpm_tmp_install usr/local/include usr/local/share/doc
+        B rm libjpcre2-dev_10.31.02_2_x86_64.rpm  # prefer file naming uniformity with '-1' in all file names
+        B cp ~/fpm_tmp_work/package-rpm-build-*/RPMS/x86_64/libjpcre2-dev-10.31.02_2-1.x86_64.rpm ~/cpantofpm_packages/x86_64/
+        B cp ~/fpm_tmp_work/package-rpm-build-*/SRPMS/libjpcre2-dev-10.31.02_2-1.src.rpm ~/cpantofpm_packages/SRPMS/
+        B cp ~/fpm_tmp_work/package-rpm-build-*/SPECS/libjpcre2-dev.spec ~/cpantofpm_packages/SPECS/
+        B rm -Rf jpcre2-10.31.02-2.tar.gz jpcre2-10.31.02-2 ~/fpm_tmp_work/ ~/fpm_tmp_install/
+        S rpm -e libpcre2 libpcre2-dev
 
 
+# FPM START HERE: transfer all remaining packages to server, sign packages & re-create repo, test repo, update get_rperl.html w/ instructions
+# FPM START HERE: transfer all remaining packages to server, sign packages & re-create repo, test repo, update get_rperl.html w/ instructions
+# FPM START HERE: transfer all remaining packages to server, sign packages & re-create repo, test repo, update get_rperl.html w/ instructions
 
-        B wget https://github.com/jpcre2/jpcre2/archive/10.31.02-2.tar.gz
-        B mv 10.31.02-2.tar.gz jpcre2-10.31.02-2.tar.gz
-        
+
+        # [[[ Pluto ]]]
+        CD ~/
         B wget https://github.com/bondhugula/pluto/files/737550/pluto-0.11.4.tar.gz
         B tar -xzvf pluto-0.11.4.tar.gz
-        CD pluto-0.11.4/
+        CD pluto-0.11.4
         B ./configure
         B make
         B make test
-        S make install
-        CD ..
+        B mkdir -p ~/fpm_tmp_install && rm -Rf ~/fpm_tmp_install/*
+        B make install DESTDIR=~/fpm_tmp_install
+        CD ~/
+        B mkdir -p ~/fpm_tmp_work && rm -Rf ~/fpm_tmp_work/*
+        B reset; time fpm --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/fpm_tmp_work/ -s dir -t rpm --rpm-ba -p pluto-polycc-VERSION_ARCH.rpm     -n pluto-polycc     -v 0.11.4 -C ~/fpm_tmp_install usr/local/lib usr/local/bin usr/local/share
+        B rm pluto-polycc-0.11.4_x86_64.rpm  # prefer file naming uniformity with '-1' in all file names
+        B cp ~/fpm_tmp_work/package-rpm-build-*/RPMS/x86_64/pluto-polycc-0.11.4-1.x86_64.rpm ~/cpantofpm_packages/x86_64/
+        B cp ~/fpm_tmp_work/package-rpm-build-*/SRPMS/pluto-polycc-0.11.4-1.src.rpm ~/cpantofpm_packages/SRPMS/
+        B cp ~/fpm_tmp_work/package-rpm-build-*/SPECS/pluto-polycc.spec ~/cpantofpm_packages/SPECS/
+        B mkdir -p ~/fpm_tmp_work && rm -Rf ~/fpm_tmp_work/*
+        B reset; time fpm --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/fpm_tmp_work/ -s dir -t rpm --rpm-ba -p pluto-polycc-dev-VERSION_ARCH.rpm -n pluto-polycc-dev -v 0.11.4 -C ~/fpm_tmp_install usr/local/include
+        B rm pluto-polycc-dev-0.11.4_x86_64.rpm  # prefer file naming uniformity with '-1' in all file names
+        B cp ~/fpm_tmp_work/package-rpm-build-*/RPMS/x86_64/pluto-polycc-dev-0.11.4-1.x86_64.rpm ~/cpantofpm_packages/x86_64/
+        B cp ~/fpm_tmp_work/package-rpm-build-*/SRPMS/pluto-polycc-dev-0.11.4-1.src.rpm ~/cpantofpm_packages/SRPMS/
+        B cp ~/fpm_tmp_work/package-rpm-build-*/SPECS/pluto-polycc-dev.spec ~/cpantofpm_packages/SPECS/
+        B rm -Rf pluto-0.11.4.tar.gz pluto-0.11.4 ~/fpm_tmp_work/ ~/fpm_tmp_install/
 
 
 
+
+
+
+
+        # [[[ BSON, MongoDB C Driver, MongoDB C++ Driver ]]]
 
 
 
