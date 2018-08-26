@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.242_000'
+VERSION='0.243_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -283,7 +283,7 @@ echo
 echo  '         <<< PERL & RPERL SECTIONS >>>'
 echo  '20. [[[        LINUX,   INSTALL  PERL DEPENDENCIES ]]]'
 echo  '21. [[[        LINUX,   INSTALL  PERL & CPANM ]]]'
-echo  '24. [[[        LINUX,   BUILD   RPERL DEPENDENCIES ]]]'
+echo  '24. [[[        LINUX,   PACKAGE RPERL DEPENDENCIES ]]]'
 echo  '25. [[[        LINUX,   INSTALL RPERL DEPENDENCIES ]]]'
 echo  '26. [[[  PERL,          INSTALL RPERL ]]]'
 echo  '28. [[[ RPERL,          RUN COMPILER TESTS ]]]'
@@ -347,6 +347,7 @@ echo  '          [[[<<< OS Menu >>>]]]'
 echo
 echo \ '0. [[[           UBUNTU       ]]]'
 echo \ '1. [[[           CENTOS       ]]]'
+echo \ '9. [[[           OTHER        ]]]'
 echo
 
 while true; do
@@ -354,6 +355,7 @@ while true; do
    case $OS_CHOICE in
        0 ) echo; OS_CHOICE='UBUNTU'; break;;
        1 ) echo; OS_CHOICE='CENTOS'; break;;
+       9 ) echo; OS_CHOICE='OTHER'; break;;
        '' ) echo; OS_CHOICE='UBUNTU'; break;;
        * ) echo 'Please choose a number from the menu!'; echo;;
    esac
@@ -1374,7 +1376,7 @@ if [ $MENU_CHOICE -le 21 ]; then
 fi
 
 if [ $MENU_CHOICE -le 24 ]; then
-    echo  '24. [[[ LINUX, BUILD RPERL DEPENDENCIES ]]]'
+    echo  '24. [[[ LINUX, PACKAGE RPERL DEPENDENCIES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
 
@@ -1477,9 +1479,9 @@ if [ $MENU_CHOICE -le 24 ]; then
         S cpan Module::CoreList
         S cpan Alien::Build
 
-# FPM THEN START HERE: FPM pull request; DEB support; RPM mock support
-# FPM THEN START HERE: FPM pull request; DEB support; RPM mock support
-# FPM THEN START HERE: FPM pull request; DEB support; RPM mock support
+# FPM THEN START HERE: FPM CPAN pull request pacman test failures; DEB support; RPM mock support
+# FPM THEN START HERE: FPM CPAN pull request pacman test failures; DEB support; RPM mock support
+# FPM THEN START HERE: FPM CPAN pull request pacman test failures; DEB support; RPM mock support
 
 # FPM THEN START HERE: merge FPM & FPM-Cookery to enable SPEC/SRPM output;; __OR__;; get fpm to accept SPEC file as input; rebuild libbson & mongo-c-driver & mongo-cxx-driver using SPEC files & fpm; manually build SPEC files for PCRE2 & JPCRE2 & PLUTO 
 # FPM THEN START HERE: merge FPM & FPM-Cookery to enable SPEC/SRPM output;; __OR__;; get fpm to accept SPEC file as input; rebuild libbson & mongo-c-driver & mongo-cxx-driver using SPEC files & fpm; manually build SPEC files for PCRE2 & JPCRE2 & PLUTO 
@@ -1648,6 +1650,7 @@ if [ $MENU_CHOICE -le 24 ]; then
             # DEB START HERE: create packages
             # DEB START HERE: create packages
         elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+            echo '[ CENTOS ONLY: Build RPerl Dependencies, MongoDB C++ Driver Prerequisites, BSON libbson ]'
             # perl-interpreter is a dummy package for CentOS 7 compatibility with Fedora source packages libbson & mongo-c-driver
             S yum install rpm-build libtool cyrus-sasl-lib cyrus-sasl-devel snappy-devel perl-interpreter python-sphinx
 
@@ -1659,13 +1662,22 @@ if [ $MENU_CHOICE -le 24 ]; then
             S rpmbuild -ba /root/rpmbuild/SPECS/libbson.spec
             S rpm -i -vv /root/rpmbuild/RPMS/x86_64/libbson-1.9.3-1.el7.centos.x86_64.rpm
             S rpm -i -vv /root/rpmbuild/RPMS/x86_64/libbson-devel-1.9.3-1.el7.centos.x86_64.rpm  # provides pkgconfig(libbson-1.0) to satisfy mongodb-c-driver requirements
+            
+            # DEV NOTE: check if SRPM can be rebuilt
+#            B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson-1.9.3-1.el7.centos.src.rpm
+#            B rpm -ivh ./libbson-1.9.3-1.el7.centos.src.rpm
+#            S yum-builddep libbson
+#            B rpmbuild -v -ba ~/rpmbuild/SPECS/libbson.spec
+
+            # DEV NOTE: copy our own pre-built packages into CPANtoFPM directory structure
+            CD ~/cpantofpm_packages/SPECS/
+            B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson.spec 
+            CD ~/cpantofpm_packages/SRPMS/
+            B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson-1.9.3-1.el7.centos.src.rpm 
+            CD ~/cpantofpm_packages/x86_64/
+            B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson-1.9.3-1.el7.centos.x86_64.rpm
+            B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson-devel-1.9.3-1.el7.centos.x86_64.rpm
         fi
-
-
-# START HERE: continue moving Mongo C & C++ build code out of section 25 into this section below
-# START HERE: continue moving Mongo C & C++ build code out of section 25 into this section below
-# START HERE: continue moving Mongo C & C++ build code out of section 25 into this section below
-
 
         # [[[ MongoDB C Driver ]]]
         # [[[ MongoDB C Driver ]]]
@@ -1675,6 +1687,29 @@ if [ $MENU_CHOICE -le 24 ]; then
             # DEB START HERE: create packages
             # DEB START HERE: create packages
         elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+            echo '[ CENTOS ONLY: Build RPerl Dependencies, MongoDB C++ Driver Prerequisites, MongoDB C Driver ]'
+#            B wget http://dl.fedoraproject.org/pub/fedora/linux/updates/27/SRPMS/Packages/m/mongo-c-driver-1.9.3-1.fc27.src.rpm  # DEV NOTE: prefer GitHub mirror below
+#            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver-1.9.3-1.fc27.src.rpm  # DEV NOTE: prefer our own GitHub mirror for uniformity
+            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver-1.9.3-1.el7.centos.src.rpm  # DEV NOTE: prefer our own re-built source RPMs for uniformity
+            S rpm -i -vv mongo-c-driver-1.9.3-1.fc27.src.rpm
+            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver.spec
+            S mv ./mongo-c-driver.spec /root/rpmbuild/SPECS/mongo-c-driver.spec
+            S systemctl stop mongodb.service
+            S rpmbuild -ba /root/rpmbuild/SPECS/mongo-c-driver.spec
+            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-c-driver-libs-1.9.3-1.el7.centos.x86_64.rpm
+            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-c-driver-1.9.3-1.el7.centos.x86_64.rpm
+            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-c-driver-devel-1.9.3-1.el7.centos.x86_64.rpm
+            S systemctl start mongodb.service
+
+            # DEV NOTE: copy our own pre-built packages into CPANtoFPM directory structure
+            CD ~/cpantofpm_packages/SPECS/
+            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver.spec
+            CD ~/cpantofpm_packages/SRPMS/
+            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver-1.9.3-1.el7.centos.src.rpm
+            CD ~/cpantofpm_packages/x86_64/
+            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver-libs-1.9.3-1.el7.centos.x86_64.rpm
+            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver-1.9.3-1.el7.centos.x86_64.rpm
+            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver-devel-1.9.3-1.el7.centos.x86_64.rpm
         fi
 
         # [[[ MongoDB C++ Driver ]]]
@@ -1684,17 +1719,100 @@ if [ $MENU_CHOICE -le 24 ]; then
             # DEB START HERE: create packages
             # DEB START HERE: create packages
             # DEB START HERE: create packages
+
+            # BEGIN UBUNTU MANUAL BUILD, MONGOCXX C++ DRIVER
+
+            echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Download & Uncompress ]'
+            B wget https://github.com/wbraswell/mongo-cxx-driver-mirror/raw/master/mongo-cxx-driver-3.2.0.tar.gz
+            B tar -xzvf mongo-cxx-driver-3.2.0.tar.gz && cd mongo-cxx-driver-3.2.0/build 
+
+            # CMake Error at /usr/lib/x86_64-linux-gnu/cmake/libbson-1.0/libbson-1.0-config.cmake:28 (message): File or directory /usr/lib/include/libbson-1.0 referenced by variable BSON_INCLUDE_DIRS does not exist !
+            echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Copy The Following Line ]'
+            echo "set (PACKAGE_PREFIX_DIR /usr)  # WBRASWELL 20180615 2018.166: manually set PACKAGE_PREFIX_DIR due to CMake 'does not exist' failures"
+            echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Paste The Now-Copied Line Immediately BEFORE The Following Line ]'
+            echo "set_and_check (BSON_INCLUDE_DIRS \"${PACKAGE_PREFIX_DIR}/include/libbson-1.0\")"
+            S $EDITOR /usr/lib/x86_64-linux-gnu/cmake/libbson-1.0/libbson-1.0-config.cmake
+            # CMake Error at /usr/lib/x86_64-linux-gnu/cmake/libmongoc-1.0/libmongoc-1.0-config.cmake:31 (message): File or directory /usr/lib/include/libmongoc-1.0 referenced by variable MONGOC_INCLUDE_DIRS does not exist !
+            echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Paste The Now-Copied Line AGAIN Immediately BEFORE The Following Line ]'
+            echo "set_and_check (MONGOC_INCLUDE_DIRS \"${PACKAGE_PREFIX_DIR}/include/libmongoc-1.0\")"
+            S $EDITOR /usr/lib/x86_64-linux-gnu/cmake/libmongoc-1.0/libmongoc-1.0-config.cmake
+
+            # CMake Error: The following variables are used in this project, but they are set to NOTFOUND.  Please set them or make sure they are set and tested correctly in the CMake files: BSON_LIBRARY MONGOC_LIBRARY
+    #        B cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/lib ..
+            echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Configure The C++ Build Process ]'
+            B cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DMONGOC_LIBRARY=/usr/lib/x86_64-linux-gnu/libmongoc-1.0.so -DBSON_LIBRARY=/usr/lib/x86_64-linux-gnu/libbson-1.0.so ..
+            echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Build & Install The Minimalistic Polyfill ]'
+            S make EP_mnmlstc_core
+            echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Build ]'
+            B make
+            echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Install ]'
+            S make install
+    #        S ln -sf /usr/lib/pkgconfig/libmongocxx.pc /usr/share/pkgconfig/libmongocxx.pc  # NOT NECESSARY IN UBUNTU???
+    #        S ln -sf /usr/lib/pkgconfig/libbsoncxx.pc /usr/share/pkgconfig/libbsoncxx.pc    # NOT NECESSARY IN UBUNTU???
+            echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Before Running Optional Test Program, Please Install MongoDB Server Via LAMP Installer SECTION 60 [[[ UBUNTU LINUX, INSTALL MONGODB ]]] ]'
+            echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Save Test Program ]'
+            B printf "#include <iostream>\n#include <bsoncxx/builder/stream/document.hpp>\n#include <bsoncxx/json.hpp>\n#include <mongocxx/client.hpp>\n#include <mongocxx/instance.hpp>\nint main(int, char**) {\n    mongocxx::instance inst{};\n    mongocxx::client conn{mongocxx::uri{}};\n    bsoncxx::builder::stream::document document{};\n    auto collection = conn[\"testdb\"][\"testcollection\"];\n    document << \"hello\" << \"world\";\n    collection.insert_one(document.view());\n    auto cursor = collection.find({});\n    for (auto&& doc : cursor) {\n        std::cout << bsoncxx::to_json(doc) << std::endl;\n    }\n}" > ./mongocxx_test.cpp
+            echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Compile Test Program ]'
+            B c++ --std=c++11 mongocxx_test.cpp -o mongocxx_test -I/usr/include/mongocxx/v_noabi -I/usr/include/bsoncxx/v_noabi/ -L/usr/lib -Wl,-rpath,/usr/lib -lmongocxx -lbsoncxx
+            echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Run Test Program ]'
+            B ./mongocxx_test
+            echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Delete Test Program ]'
+            B rm -Rf ./mongocxx_test*
+
+            # END UBUNTU MANUAL BUILD, MONGOCXX C++ DRIVER
+
         elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+#            # DEV NOTE: prefer pre-built RPMs below
+#            echo '[ CENTOS ONLY: Build RPerl Dependencies, MongoDB C++ Driver Prerequisites, Fix Broken CMake Files ]'
+#            # NEED ANSWER: can we fix this CMake error permanently by including --enable-static in configure for both libbson & mongo-c-driver above???
+#            # CMake Error at /lib64/cmake/libbson-1.0/libbson-1.0-config.cmake:28 (message): File or directory //include/libbson-1.0 referenced by variable BSON_INCLUDE_DIRS does not exist !
+#            B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson-1.0-config.cmake
+#            S mv ./libbson-1.0-config.cmake /lib64/cmake/libbson-1.0/libbson-1.0-config.cmake
+#            # CMake Error at /lib64/cmake/libmongoc-1.0/libmongoc-1.0-config.cmake:30 (message): File or directory //include/libmongoc-1.0 referenced by variable MONGOC_INCLUDE_DIRS does not exist !
+#            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/libmongoc-1.0-config.cmake
+#            S mv ./libmongoc-1.0-config.cmake /lib64/cmake/libmongoc-1.0/libmongoc-1.0-config.cmake
+
+            echo '[ CENTOS ONLY: Build RPerl Dependencies, MongoDB C++ Driver ]'
+            S yum install cmake3
+
+#            # DEV NOTE: prefer already-fixed tarball below
+#            B wget https://github.com/mongodb/mongo-cxx-driver/archive/r3.2.0.tar.gz
+#            S mv ./r3.2.0.tar.gz /root/rpmbuild/SOURCES/mongo-cxx-driver-3.2.0.tar.gz
+#            CD /root/rpmbuild/SOURCES
+#            S tar -xzvf mongo-cxx-driver-3.2.0.tar.gz
+#            S mv mongo-cxx-driver-r3.2.0 mongo-cxx-driver-3.2.0
+#            S rm mongo-cxx-driver-3.2.0.tar.gz
+#            S tar -czvf mongo-cxx-driver-3.2.0.tar.gz ./mongo-cxx-driver-3.2.0
+            # DEV NOTE: prefer our own already-fixed tarball below, for convenience
+            B wget https://github.com/wbraswell/mongo-cxx-driver-mirror/raw/master/mongo-cxx-driver-3.2.0.tar.gz
+            S mv ./mongo-cxx-driver-3.2.0.tar.gz /root/rpmbuild/SOURCES/mongo-cxx-driver-3.2.0.tar.gz
+            CD /root/rpmbuild/SPECS
+            S wget https://raw.githubusercontent.com/wbraswell/mongo-cxx-driver-mirror/master/mongo-cxx-driver.spec
+            S rpmbuild -ba /root/rpmbuild/SPECS/mongo-cxx-driver.spec
+            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-cxx-driver-libs-3.2.0-1.el7.centos.x86_64.rpm
+            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-cxx-driver-3.2.0-1.el7.centos.x86_64.rpm
+            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-cxx-driver-devel-3.2.0-1.el7.centos.x86_64.rpm
+
+            # DEV NOTE: copy our own pre-built packages into CPANtoFPM directory structure
+            CD ~/cpantofpm_packages/SPECS/
+            B wget https://github.com/wbraswell/mongo-cxx-driver-mirror/raw/master/mongo-cxx-driver.spec    
+            CD ~/cpantofpm_packages/SRPMS/
+            B wget https://github.com/wbraswell/mongo-cxx-driver-mirror/raw/master/mongo-cxx-driver-3.2.0-1.el7.centos.src.rpm
+            CD ~/cpantofpm_packages/x86_64/
+            B wget https://github.com/wbraswell/mongo-cxx-driver-mirror/raw/master/mongo-cxx-driver-libs-3.2.0-1.el7.centos.x86_64.rpm
+            B wget https://github.com/wbraswell/mongo-cxx-driver-mirror/raw/master/mongo-cxx-driver-3.2.0-1.el7.centos.x86_64.rpm
+            B wget https://github.com/wbraswell/mongo-cxx-driver-mirror/raw/master/mongo-cxx-driver-devel-3.2.0-1.el7.centos.x86_64.rpm
         fi
 
-
-
-    
         # [[[ RPM, YUM REPOSITORY ]]]
+        # [[[ RPM, YUM REPOSITORY ]]]
+        # [[[ RPM, YUM REPOSITORY ]]]
+
+        # server, install deps, RUN ONCE ONLY
         if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
-            # server, install deps, RUN ONCE ONLY
             S apt-get install createrepo yum-utils gnupg2 gnupg-agent rng-tools
         elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+            S yum install createrepo yum-utils gnupg2 rng-tools
         fi
 
         # server, retrieve RPMs
@@ -1751,13 +1869,13 @@ if [ $MENU_CHOICE -le 24 ]; then
         S chown -R www-data.www-data /srv/www/packages.rperl.org/
         S chmod -R g+rwX,o-w /srv/www/packages.rperl.org/
 
-
-
-
         # [[[ DEB, APT REPOSITORY ]]]
-        # server
-        # client
+        # [[[ DEB, APT REPOSITORY ]]]
+        # [[[ DEB, APT REPOSITORY ]]]
 
+# DEB START HERE: set up server, set up client, install
+# DEB START HERE: set up server, set up client, install
+# DEB START HERE: set up server, set up client, install
 
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
@@ -1801,6 +1919,10 @@ if [ $MENU_CHOICE -le 25 ]; then
             echo '[ UBUNTU ONLY: Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, pkg-config ]'
             S apt-get install pkg-config
 
+# DEB START HERE: build & use our own libbson & libmongoc & libmongocxx packages, remove use of Bionic repo below
+# DEB START HERE: build & use our own libbson & libmongoc & libmongocxx packages, remove use of Bionic repo below
+# DEB START HERE: build & use our own libbson & libmongoc & libmongocxx packages, remove use of Bionic repo below
+
             echo "[ UBUNTU ONLY: Install RPerl Dependencies, MongoDB C & C++ Drivers; Must Use Latest libbson & libmongoc From Bionic v18.04 Repositories ]"
             echo "[ UBUNTU ONLY: Install RPerl Dependencies, MongoDB C & C++ Drivers; In Xenial v16.04, Temporarily Replace All Occurrences Of 'xenial' With 'bionic' (Same For Other Non-Bionic Releases), Skip If Already Using Bionic Or Newer ]"
             S $EDITOR /etc/apt/sources.list
@@ -1819,11 +1941,18 @@ if [ $MENU_CHOICE -le 25 ]; then
         elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
             VERIFY_CENTOS
 
+
+# RPM START HERE: remove wget & rpm below w/ yum via packages.rperl.org, astyle & libbson & libmongoc & libmongocxx & pluto
+# RPM START HERE: remove wget & rpm below w/ yum via packages.rperl.org
+# RPM START HERE: remove wget & rpm below w/ yum via packages.rperl.org
+
+
             echo '[ CENTOS ONLY: Install RPerl Dependencies ]'
             S yum install gcc-c++ make glibc-devel perl-core perl-libs perl-devel openssl-devel zlib zlib-static zlib-devel gmp gmp-static gmp-devel gsl gsl-devel texinfo flex bison
             echo '[ CENTOS ONLY: Install RPerl Dependencies, GCC/G++ GDB Debugging Symbols ]'
 #            S debuginfo-install cracklib-2.9.0-11.el7.x86_64 cyrus-sasl-lib-2.1.26-21.el7.x86_64 glibc-2.17-196.el7_4.2.x86_64 keyutils-libs-1.5.8-3.el7.x86_64 krb5-libs-1.15.1-8.el7.x86_64 libcom_err-1.42.9-10.el7.x86_64 libgcc-4.8.5-16.el7_4.2.x86_64 libselinux-2.5-11.el7.x86_64 libstdc++-4.8.5-16.el7_4.2.x86_64 nspr-4.13.1-1.0.el7_3.x86_64 nss-3.28.4-15.el7_4.x86_64 nss-softokn-freebl-3.28.3-8.el7_4.x86_64 nss-util-3.28.4-3.el7.x86_64 openldap-2.4.44-5.el7.x86_64 openssl-libs-1.0.2k-8.el7.x86_64 pcre-8.32-17.el7.x86_64 postgresql96-libs-9.6.8-1PGDG.rhel7.x86_64 zlib-1.2.7-17.el7.x86_64
             S debuginfo-install cracklib cyrus-sasl-lib glibc keyutils-libs krb5-libs libcom_err libgcc libselinux libstdc++ nspr nss nss-softokn-freebl nss-util openldap openssl-libs pcre postgresql96-libs zlib
+
             echo '[ CENTOS ONLY: Download & Install RPerl Dependency AStyle ]'
             B wget https://github.com/wbraswell/astyle-mirror/raw/master/backup/astyle-2.05.1-1.el7.centos.x86_64.rpm
             S rpm -v -i ./astyle-2.05.1-1.el7.centos.x86_64.rpm
@@ -1836,7 +1965,7 @@ if [ $MENU_CHOICE -le 25 ]; then
 #            echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, MongoDB C Driver ]'
 #            S yum install pkgconfig mongo-c-driver
 
-            echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, libbson ]'
+            echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, BSON libbson ]'
 
             # DEV NOTE: use our own pre-built RPMs from GitHub mirror, for speed & reliability & convenience
             B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson-1.9.3-1.el7.centos.x86_64.rpm
@@ -1844,29 +1973,10 @@ if [ $MENU_CHOICE -le 25 ]; then
             S rpm -i -vv ./libbson-1.9.3-1.el7.centos.x86_64.rpm
             S rpm -i -vv ./libbson-devel-1.9.3-1.el7.centos.x86_64.rpm  # provides pkgconfig(libbson-1.0) to satisfy mongodb-c-driver requirements
             B rm ./libbson-1.9.3-1.el7.centos.x86_64.rpm
-            B rm ./libbson-devel-1.9.3-1.el7.centos.x86_64.rpm  
-            # DEV NOTE: check if SRPM can be rebuilt
-#            B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson-1.9.3-1.el7.centos.src.rpm
-#            B rpm -ivh ./libbson-1.9.3-1.el7.centos.src.rpm
-#            S yum-builddep libbson
-#            B rpmbuild -v -ba ~/rpmbuild/SPECS/libbson.spec
+            B rm ./libbson-devel-1.9.3-1.el7.centos.x86_64.rpm
 
             echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, MongoDB C Driver ]'
 
-#            # DEV NOTE: prefer pre-built RPMs below
-##            B wget http://dl.fedoraproject.org/pub/fedora/linux/updates/27/SRPMS/Packages/m/mongo-c-driver-1.9.3-1.fc27.src.rpm  # DEV NOTE: prefer GitHub mirror below
-##            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver-1.9.3-1.fc27.src.rpm  # DEV NOTE: prefer our own GitHub mirror for uniformity
-#            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver-1.9.3-1.el7.centos.src.rpm  # DEV NOTE: prefer our own re-built source RPMs for uniformity
-#            S rpm -i -vv mongo-c-driver-1.9.3-1.fc27.src.rpm
-#            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver.spec
-#            S mv ./mongo-c-driver.spec /root/rpmbuild/SPECS/mongo-c-driver.spec
-#            S systemctl stop mongodb.service
-#            S rpmbuild -ba /root/rpmbuild/SPECS/mongo-c-driver.spec
-#            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-c-driver-libs-1.9.3-1.el7.centos.x86_64.rpm
-#            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-c-driver-1.9.3-1.el7.centos.x86_64.rpm
-#            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-c-driver-devel-1.9.3-1.el7.centos.x86_64.rpm
-#            S systemctl start mongodb.service
-#            # OR
             # DEV NOTE: prefer our own pre-built RPMs from GitHub mirror, for speed & reliability & convenience
             B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver-libs-1.9.3-1.el7.centos.x86_64.rpm
             B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver-1.9.3-1.el7.centos.x86_64.rpm
@@ -1880,39 +1990,8 @@ if [ $MENU_CHOICE -le 25 ]; then
             B rm ./mongo-c-driver-1.9.3-1.el7.centos.x86_64.rpm
             B rm ./mongo-c-driver-devel-1.9.3-1.el7.centos.x86_64.rpm
 
-#            # DEV NOTE: prefer pre-built RPMs below
-#            echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, Fix Broken CMake Files ]'
-#            # NEED ANSWER: can we fix this CMake error permanently by including --enable-static in configure for both libbson & mongo-c-driver above???
-#            # CMake Error at /lib64/cmake/libbson-1.0/libbson-1.0-config.cmake:28 (message): File or directory //include/libbson-1.0 referenced by variable BSON_INCLUDE_DIRS does not exist !
-#            B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson-1.0-config.cmake
-#            S mv ./libbson-1.0-config.cmake /lib64/cmake/libbson-1.0/libbson-1.0-config.cmake
-#            # CMake Error at /lib64/cmake/libmongoc-1.0/libmongoc-1.0-config.cmake:30 (message): File or directory //include/libmongoc-1.0 referenced by variable MONGOC_INCLUDE_DIRS does not exist !
-#            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/libmongoc-1.0-config.cmake
-#            S mv ./libmongoc-1.0-config.cmake /lib64/cmake/libmongoc-1.0/libmongoc-1.0-config.cmake
-
             echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver ]'
 
-            S yum install cmake3
-
-#            # DEV NOTE: prefer pre-built RPMs below
-##            # DEV NOTE: prefer already-fixed tarball below
-##            B wget https://github.com/mongodb/mongo-cxx-driver/archive/r3.2.0.tar.gz
-##            S mv ./r3.2.0.tar.gz /root/rpmbuild/SOURCES/mongo-cxx-driver-3.2.0.tar.gz
-##            CD /root/rpmbuild/SOURCES
-##            S tar -xzvf mongo-cxx-driver-3.2.0.tar.gz
-##            S mv mongo-cxx-driver-r3.2.0 mongo-cxx-driver-3.2.0
-##            S rm mongo-cxx-driver-3.2.0.tar.gz
-##            S tar -czvf mongo-cxx-driver-3.2.0.tar.gz ./mongo-cxx-driver-3.2.0
-#            # DEV NOTE: prefer our own already-fixed tarball below, for convenience
-#            B wget https://github.com/wbraswell/mongo-cxx-driver-mirror/raw/master/mongo-cxx-driver-3.2.0.tar.gz
-#            S mv ./mongo-cxx-driver-3.2.0.tar.gz /root/rpmbuild/SOURCES/mongo-cxx-driver-3.2.0.tar.gz
-#            CD /root/rpmbuild/SPECS
-#            S wget https://raw.githubusercontent.com/wbraswell/mongo-cxx-driver-mirror/master/mongo-cxx-driver.spec
-#            S rpmbuild -ba /root/rpmbuild/SPECS/mongo-cxx-driver.spec
-#            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-cxx-driver-libs-3.2.0-1.el7.centos.x86_64.rpm
-#            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-cxx-driver-3.2.0-1.el7.centos.x86_64.rpm
-#            S rpm -i -vv /root/rpmbuild/RPMS/x86_64/mongo-cxx-driver-devel-3.2.0-1.el7.centos.x86_64.rpm
-#            # OR
             # DEV NOTE: prefer our own pre-built RPMs from GitHub mirror, for speed & reliability & convenience
             B wget https://github.com/wbraswell/mongo-cxx-driver-mirror/raw/master/mongo-cxx-driver-libs-3.2.0-1.el7.centos.x86_64.rpm
             B wget https://github.com/wbraswell/mongo-cxx-driver-mirror/raw/master/mongo-cxx-driver-3.2.0-1.el7.centos.x86_64.rpm
@@ -1926,78 +2005,37 @@ if [ $MENU_CHOICE -le 25 ]; then
 
             echo '[ CENTOS ONLY: Check Install, Confirm No Errors; WARNING! MAKE TAKE HOURS TO RUN! ]'
             S yum check
+        # OR
+        elif [[ "$OS_CHOICE" == "OTHER" ]]; then
+            echo '[ WARNING: Do NOT Use Manual Build Options Below, Unless You Are Not In Ubuntu Or CentOS, Or You Have No Choice! ]'
+            C 'Please read the warnings above.  Seriously.'
+            echo '[ MANUAL BUILD ONLY: Install RPerl Dependency GCC, Download ]'
+            B 'wget http://www.netgull.com/gcc/releases/gcc-5.2.0/gcc-5.2.0.tar.bz2; tar -xjvf gcc-5.2.0.tar.bz2'
+            echo '[ MANUAL BUILD ONLY: Install RPerl Dependency GCC, Build ]'
+            B 'cd gcc-5.2.0; ./configure; make; make test'
+            echo '[ MANUAL BUILD ONLY: Install RPerl Dependency GCC, Install ]'
+            S 'cd gcc-5.2.0; make install'
+            echo '[ MANUAL BUILD ONLY: Install RPerl Dependency GMP, Visit The Following URL For Installation Instructions ]'
+            echo 'https://gmplib.org'
+            echo
+            echo '[ MANUAL BUILD ONLY: Install RPerl Dependency AStyle, Visit The Following URL For Installation Instructions ]'
+            echo 'http://astyle.sourceforge.net'
+            echo
+
+            echo '[ MANUAL BUILD ONLY: Install RPerl Dependency Pluto PolyCC, Download ]'
+            # B 'wget https://github.com/wbraswell/pluto-mirror/raw/master/backup/pluto-0.11.4.tar.gz; tar -xzvf pluto-0.11.4.tar.gz'  # prefer official repo below
+            B 'wget https://github.com/bondhugula/pluto/files/737550/pluto-0.11.4.tar.gz; tar -xzvf pluto-0.11.4.tar.gz'
+            echo '[ MANUAL BUILD ONLY: Install RPerl Dependency Pluto PolyCC, Build ]'
+            B 'cd pluto-0.11.4; ./configure; make; make test'
+            echo '[ Install RPerl Dependency Pluto PolyCC, Install ]'
+            S 'cd pluto-0.11.4; make install'
         fi
 
-        echo '[ Check GCC Version, Must Be v4.7 Or Newer, Use Manual Build Option If Automatic Install Options Fail Or Are Too Old ]'
+        echo '[ Check GCC Version, Must Be v4.7 Or Newer; If Automatic Install Options Fail Or Are Too Old, Then Restart Installer & Select OTHER Operating System For Manual Build Option ]'
         B g++ --version
 
-        echo '[ Check AStyle Version, Must Be v2.05.1 Or Newer, Use Manual Build Option If Automatic Install Options Fail Or Are Too Old ]'
+        echo '[ Check AStyle Version, Must Be v2.05.1 Or Newer; If Automatic Install Options Fail Or Are Too Old, Then Restart Installer & Select OTHER Operating System For Manual Build Option ]'
         B astyle -V
-
-        # OR
-        echo '[ WARNING: Do NOT Use Manual Build Options Below, Unless You Are Not In Ubuntu Or CentOS, Or You Have No Choice! ]'
-        C 'Please read the warnings above.  Seriously.'
-        echo '[ MANUAL BUILD ONLY: Install RPerl Dependency GCC, Download ]'
-        B 'wget http://www.netgull.com/gcc/releases/gcc-5.2.0/gcc-5.2.0.tar.bz2; tar -xjvf gcc-5.2.0.tar.bz2'
-        echo '[ MANUAL BUILD ONLY: Install RPerl Dependency GCC, Build ]'
-        B 'cd gcc-5.2.0; ./configure; make; make test'
-        echo '[ MANUAL BUILD ONLY: Install RPerl Dependency GCC, Install ]'
-        S 'cd gcc-5.2.0; make install'
-        echo '[ MANUAL BUILD ONLY: Install RPerl Dependency GMP, Visit The Following URL For Installation Instructions ]'
-        echo 'https://gmplib.org'
-        echo
-        echo '[ MANUAL BUILD ONLY: Install RPerl Dependency AStyle, Visit The Following URL For Installation Instructions ]'
-        echo 'http://astyle.sourceforge.net'
-        echo
-
-        # BEGIN UBUNTU MANUAL BUILD, MONGOCXX C++ DRIVER
-
-        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Download & Uncompress ]'
-        B wget https://github.com/wbraswell/mongo-cxx-driver-mirror/raw/master/mongo-cxx-driver-3.2.0.tar.gz
-        B tar -xzvf mongo-cxx-driver-3.2.0.tar.gz && cd mongo-cxx-driver-3.2.0/build 
-
-        # CMake Error at /usr/lib/x86_64-linux-gnu/cmake/libbson-1.0/libbson-1.0-config.cmake:28 (message): File or directory /usr/lib/include/libbson-1.0 referenced by variable BSON_INCLUDE_DIRS does not exist !
-        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Copy The Following Line ]'
-        echo "set (PACKAGE_PREFIX_DIR /usr)  # WBRASWELL 20180615 2018.166: manually set PACKAGE_PREFIX_DIR due to CMake 'does not exist' failures"
-        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Paste The Now-Copied Line Immediately BEFORE The Following Line ]'
-        echo "set_and_check (BSON_INCLUDE_DIRS \"${PACKAGE_PREFIX_DIR}/include/libbson-1.0\")"
-        S $EDITOR /usr/lib/x86_64-linux-gnu/cmake/libbson-1.0/libbson-1.0-config.cmake
-        # CMake Error at /usr/lib/x86_64-linux-gnu/cmake/libmongoc-1.0/libmongoc-1.0-config.cmake:31 (message): File or directory /usr/lib/include/libmongoc-1.0 referenced by variable MONGOC_INCLUDE_DIRS does not exist !
-        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Paste The Now-Copied Line AGAIN Immediately BEFORE The Following Line ]'
-        echo "set_and_check (MONGOC_INCLUDE_DIRS \"${PACKAGE_PREFIX_DIR}/include/libmongoc-1.0\")"
-        S $EDITOR /usr/lib/x86_64-linux-gnu/cmake/libmongoc-1.0/libmongoc-1.0-config.cmake
-
-        # CMake Error: The following variables are used in this project, but they are set to NOTFOUND.  Please set them or make sure they are set and tested correctly in the CMake files: BSON_LIBRARY MONGOC_LIBRARY
-#        B cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/lib ..
-        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Configure The C++ Build Process ]'
-        B cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DMONGOC_LIBRARY=/usr/lib/x86_64-linux-gnu/libmongoc-1.0.so -DBSON_LIBRARY=/usr/lib/x86_64-linux-gnu/libbson-1.0.so ..
-        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Build & Install The Minimalistic Polyfill ]'
-        S make EP_mnmlstc_core
-        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Build ]'
-        B make
-        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Install ]'
-        S make install
-#        S ln -sf /usr/lib/pkgconfig/libmongocxx.pc /usr/share/pkgconfig/libmongocxx.pc  # NOT NECESSARY IN UBUNTU???
-#        S ln -sf /usr/lib/pkgconfig/libbsoncxx.pc /usr/share/pkgconfig/libbsoncxx.pc    # NOT NECESSARY IN UBUNTU???
-        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Before Running Optional Test Program, Please Install MongoDB Server Via LAMP Installer SECTION 60 [[[ UBUNTU LINUX, INSTALL MONGODB ]]] ]'
-        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Save Test Program ]'
-        B printf "#include <iostream>\n#include <bsoncxx/builder/stream/document.hpp>\n#include <bsoncxx/json.hpp>\n#include <mongocxx/client.hpp>\n#include <mongocxx/instance.hpp>\nint main(int, char**) {\n    mongocxx::instance inst{};\n    mongocxx::client conn{mongocxx::uri{}};\n    bsoncxx::builder::stream::document document{};\n    auto collection = conn[\"testdb\"][\"testcollection\"];\n    document << \"hello\" << \"world\";\n    collection.insert_one(document.view());\n    auto cursor = collection.find({});\n    for (auto&& doc : cursor) {\n        std::cout << bsoncxx::to_json(doc) << std::endl;\n    }\n}" > ./mongocxx_test.cpp
-        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Compile Test Program ]'
-        B c++ --std=c++11 mongocxx_test.cpp -o mongocxx_test -I/usr/include/mongocxx/v_noabi -I/usr/include/bsoncxx/v_noabi/ -L/usr/lib -Wl,-rpath,/usr/lib -lmongocxx -lbsoncxx
-        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Run Test Program ]'
-        B ./mongocxx_test
-        echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Delete Test Program ]'
-        B rm -Rf ./mongocxx_test*
-
-        # END UBUNTU MANUAL BUILD, MONGOCXX C++ DRIVER
-
-        echo '[ Install RPerl Dependency Pluto PolyCC, Download ]'
-        # B 'wget https://github.com/wbraswell/pluto-mirror/raw/master/backup/pluto-0.11.4.tar.gz; tar -xzvf pluto-0.11.4.tar.gz'  # prefer official repo below
-        B 'wget https://github.com/bondhugula/pluto/files/737550/pluto-0.11.4.tar.gz; tar -xzvf pluto-0.11.4.tar.gz'
-        echo '[ Install RPerl Dependency Pluto PolyCC, Build ]'
-        B 'cd pluto-0.11.4; ./configure; make; make test'
-        echo '[ Install RPerl Dependency Pluto PolyCC, Install ]'
-        S 'cd pluto-0.11.4; make install'
 
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
