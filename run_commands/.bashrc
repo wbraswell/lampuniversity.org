@@ -27,7 +27,9 @@ fi
 # DEV NOTE: do NOT enable relative (non-absolute) dirs in @INC,
 # may cause unpredictable behavior, or may cause dists (like Net::DNS) to locate themselves during `perl Makefile.PL`
 #export PERL5LIB=blib/lib:lib:$PERL5LIB
-export PATH=.:script:bin:$HOME/script:$HOME/bin:$PATH
+# DEV NOTE: append relative paths to the end of PATH,
+# to avoid error "No such file or directory" if ./script/ or ./bin/ exist & desired command is instead in ~/script/ or ~/bin/
+export PATH=$HOME/script:$HOME/bin:$PATH:.:script:bin
 
 # RPerl GitHub latest code
 if [ -d $HOME/github_repos/rperl-latest ]; then 
