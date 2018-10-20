@@ -1,12 +1,13 @@
-#!/usr/bin/perl
-# Copyright © 2014 - 2015, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.22.0.
+#!/usr/bin/env perl
+# Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.26.0.
+our $VERSION = 0.100_000;
 
 my $input_module = $ARGV[0];
 #print 'have $input_module = ' . $input_module . "\n";
 
 # METHOD 1, does NOT work with Inline::*
 # hard-coded example
-# print '$ExtUtils::MakeMaker::VERSION = ' . $ExtUtils::MakeMaker::VERSION . qq{\n};
+# perl -e 'use ExtUtils::MakeMaker; print q{$ExtUtils::MakeMaker::VERSION = } . $ExtUtils::MakeMaker::VERSION . qq{\n};'
 my $eval_string =<< "EOF";
 use $input_module;
 print '\$$input_module\:\:VERSION = ' . \$$input_module\:\:VERSION . qq{\\n};

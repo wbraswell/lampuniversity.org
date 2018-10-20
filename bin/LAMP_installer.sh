@@ -1389,7 +1389,7 @@ if [ $MENU_CHOICE -le 24 ]; then
             S apt-get install ruby ruby-dev rubygems build-essential
         elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
             VERIFY_CENTOS
-            S yum install ruby-devel gcc make rpm-build rubygems
+            S yum install ruby-devel gcc make rpm-build rubygems perl-generators
         fi
 
         S gem update --system  # must have RubyGems >= v2.7.5 to avoid "Errno::EPERM: Operation not permitted @ chown_internal" on `bundle install` for fpm dev version
@@ -1400,6 +1400,15 @@ if [ $MENU_CHOICE -le 24 ]; then
         B which fpm
         B fpm --version
         B fpm --verbose -s cpan -t rpm ExtUtils::MakeMaker
+
+# SRPM START HERE: to build source packages, figure out which parts to insert into spec file via --edit, BuildRequires & Obsoletes %build & %install & %check   https://src.fedoraproject.org/cgit/rpms/perl-IO-Compress.git/tree/perl-IO-Compress.spec
+# SRPM START HERE: to build source packages, figure out which parts to insert into spec file via --edit, BuildRequires & Obsoletes %build & %install & %check   https://src.fedoraproject.org/cgit/rpms/perl-IO-Compress.git/tree/perl-IO-Compress.spec
+# SRPM START HERE: to build source packages, figure out which parts to insert into spec file via --edit, BuildRequires & Obsoletes %build & %install & %check   https://src.fedoraproject.org/cgit/rpms/perl-IO-Compress.git/tree/perl-IO-Compress.spec
+
+        B fpm --verbose --debug-workspace --edit --no-cpan-test -s cpan -t rpm IO::Compress::Gzip
+        B rpm -qp --whatprovides ./perl-IO-Compress-2.081-1.noarch.rpm  # package not installed
+        B rpm -q --whatprovides  perl-IO-Compress  # package installed
+        B repoquery --provides perl-IO-Compress  # package installed or not
 
         # fpm, install dev version
         if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
@@ -1630,17 +1639,6 @@ if [ $MENU_CHOICE -le 24 ]; then
 
         B rm -Rf pluto-0.11.4.tar.gz pluto-0.11.4 ~/fpm_tmp_work/ ~/fpm_tmp_install/
 
-
-
-
-
-# FPM START HERE: transfer all remaining packages to server, sign packages & re-create repo, test repo, update get_rperl.html w/ instructions
-# FPM START HERE: transfer all remaining packages to server, sign packages & re-create repo, test repo, update get_rperl.html w/ instructions
-# FPM START HERE: transfer all remaining packages to server, sign packages & re-create repo, test repo, update get_rperl.html w/ instructions
-
-
-
-
         # [[[ BSON ]]]
         # [[[ BSON ]]]
         # [[[ BSON ]]]
@@ -1815,15 +1813,20 @@ if [ $MENU_CHOICE -le 24 ]; then
             S yum install createrepo yum-utils gnupg2 rng-tools
         fi
 
-        # server, retrieve RPMs
-        S mkdir -p /srv/www/packages.rperl.org/public_html/centos/7/os
+        # server, prepare to receive RPMs tarball
+        S mkdir -p /srv/www/packages.rperl.org/public_html/centos/7/rperl
+        CD /srv/www/packages.rperl.org/public_html/centos/7/rperl
+        S rm -Rf DEPS SPECS SRPMS x86_64 *.tar.gz
+        
+        # packager machine, create & transfer RPMs tarball
+        B ~/manual_packages_copy.sh
+        CD ~/cpantofpm_packages
+        B tar -czvf ./perl-RPerl-VERSION-1-RPM_ALL_DEPS.tar.gz ./*
+        B scp ./perl-RPerl-VERSION-1-RPM_ALL_DEPS.tar.gz packages.rperl.org:/srv/www/packages.rperl.org/public_html/centos/7/rperl/
 
-        B scp ./perl-RPerl-VERSION-1-RPM_ALL_DEPS.tar.gz PACKAGE_SERVER:/srv/www/packages.rperl.org/public_html/centos/7/os/  # FROM PACKAGER OR INTERMEDIATE HOST TO PACKAGE SERVER
-
-        CD /srv/www/packages.rperl.org/public_html/centos/7/os
-        S rm -Rf DEPS SPECS SRPMS x86_64
+        # server, unpack RPMs tarball & set initial permissions
+        CD /srv/www/packages.rperl.org/public_html/centos/7/rperl
         B tar -xzvf perl-RPerl-VERSION-1-RPM_ALL_DEPS.tar.gz
-
         S chown -R www-data.www-data /srv/www/packages.rperl.org/
         S chmod -R g+rwX,o-w /srv/www/packages.rperl.org/
 
@@ -1832,9 +1835,9 @@ if [ $MENU_CHOICE -le 24 ]; then
         B gpg2 --full-gen-key
             # William N. Braswell, Jr. (packages.rperl.org) <william.braswell@autoparallel.com>
         B gpg2 --list-keys
-        B gpg2 --export --armor "William N. Braswell, Jr. (packages.rperl.org) <william.braswell@autoparallel.com>" > /srv/www/packages.rperl.org/public_html/centos/RPM-GPG-KEY-CentOS-7
-        B less /srv/www/packages.rperl.org/public_html/centos/RPM-GPG-KEY-CentOS-7  # confirm key has been exported
-        B rpmkeys --import /srv/www/packages.rperl.org/public_html/centos/RPM-GPG-KEY-CentOS-7
+        B gpg2 --export --armor "William N. Braswell, Jr. (packages.rperl.org) <william.braswell@autoparallel.com>" > /srv/www/packages.rperl.org/public_html/centos/RPM-GPG-KEY-RPerl-7
+        B less /srv/www/packages.rperl.org/public_html/centos/RPM-GPG-KEY-RPerl-7  # confirm key has been exported
+        B rpmkeys --import /srv/www/packages.rperl.org/public_html/centos/RPM-GPG-KEY-RPerl-7
         B rpm -q gpg-pubkey --qf '%{NAME}-%{VERSION}-%{RELEASE}\t%{SUMMARY}\n'  # confirm key has been imported
 
         # server, prepare to sign RPMs, RUN ONCE ONLY
@@ -1844,28 +1847,30 @@ if [ $MENU_CHOICE -le 24 ]; then
             # %_gpg_bin /usr/bin
             # %__gpg /usr/bin/gpg2
 
-        # server, sign RPMs
-        CD /srv/www/packages.rperl.org/public_html/centos/7/os
+        # server, sign RPMs & confirm signed
+        CD /srv/www/packages.rperl.org/public_html/centos/7/rperl
         B export GPG_TTY=$(tty)
         B rpmsign --addsign SRPMS/*.rpm x86_64/*.rpm
-        B rpm -qpi SRPMS/*.rpm x86_64/*.rpm | grep Signature  # confirm packages are signed
+        B rpm -qpi SRPMS/*.rpm x86_64/*.rpm | grep Signature
 
-        # server, create repo & sign repo metadata
-        CD /srv/www/packages.rperl.org/public_html/centos/7/os
+        # server, create repo & sign repo metadata & confirm signed
+        CD /srv/www/packages.rperl.org/public_html/centos/7/rperl/x86_64
+        B rm -Rf ./repodata/
         B createrepo --verbose .
         B gpg2 --detach-sign --armor repodata/repomd.xml 
-        B less repodata/repomd.xml.asc  # confirm repo metada is signed
+        B less repodata/repomd.xml.asc
 
         # server, generate repo file, RUN ONCE ONLY
         B vi /srv/www/packages.rperl.org/public_html/centos7-perl-cpan.repo
             [centos7-perl-cpan]
             name=CentOS 7 Perl CPAN Repository
-            baseurl=https://packages.rperl.org/centos/7/os/x86_64/
+            baseurl=https://packages.rperl.org/centos/7/rperl/x86_64/
             enabled=1
             gpgcheck=1
             repo_gpgcheck=1
-            gpgkey=https://packages.rperl.org/centos/RPM-GPG-KEY-CentOS-7
+            gpgkey=https://packages.rperl.org/centos/RPM-GPG-KEY-RPerl-7
 
+        # server, set final permissions
         S chown -R www-data.www-data /srv/www/packages.rperl.org/
         S chmod -R g+rwX,o-w /srv/www/packages.rperl.org/
 
@@ -2094,7 +2099,8 @@ if [ $MENU_CHOICE -le 26 ]; then
                 S yum install pygpgme  # check GPG signatures of repo metadata & packages
                 S yum-config-manager --add-repo https://packages.rperl.org/centos7-perl-cpan.repo
                 S yum-config-manager --enable centos7-perl-cpan
-                S yum repolist all
+                S yum repolist all    # confirm repo is in list
+                S yum clean metadata  # clean metadata from other repos, or after updating our repo
                 S yum install perl-RPerl
             fi
 
