@@ -1,4 +1,4 @@
-# Last Updated 20161029 2016.303
+# Last Updated 20181019 2018.292
 
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
@@ -15,16 +15,18 @@ fi
 # [[[ BEGIN CONTENT, LAMP UNIVERSITY & RPERL FAMILY OF SOFTWARE ]]]
 # [[[ BEGIN CONTENT, LAMP UNIVERSITY & RPERL FAMILY OF SOFTWARE ]]]
 
-# local::lib, do NOT mix with Perlbrew below
+# enable local::lib, do NOT mix with Perlbrew below
 if [ -d $HOME/perl5/lib/perl5 ]; then 
     eval $(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)
 fi
 
-# Perlbrew, do NOT mix with local::lib above
+# enable Perlbrew, do NOT mix with local::lib above
 #source ~/perl5/perlbrew/etc/bashrc
 
 # current directory code
-export PERL5LIB=blib/lib:lib:$PERL5LIB
+# DEV NOTE: do NOT enable relative (non-absolute) dirs in @INC,
+# may cause unpredictable behavior, or may cause dists (like Net::DNS) to locate themselves during `perl Makefile.PL`
+#export PERL5LIB=blib/lib:lib:$PERL5LIB
 export PATH=.:script:bin:$HOME/script:$HOME/bin:$PATH
 
 # RPerl GitHub latest code
@@ -37,7 +39,7 @@ fi
 if [ -d $HOME/github_repos/mathperl-latest ]; then 
     export PERL5LIB=$HOME/github_repos/mathperl-latest/lib:$PERL5LIB
     export PATH=$HOME/github_repos/mathperl-latest/script:$PATH
-if
+fi
 
 # PhysicsPerl GitHub latest code
 if [ -d $HOME/github_repos/physicsperl-latest ]; then 
@@ -47,7 +49,7 @@ fi
 
 # perlall
 if [ -f ~/.perlall ]; then
-    . ~/.perlall
+    source ~/.perlall
 fi
 
 # Vi; for opening files in new tab of existing gvim, couldn't figure how to put this in .vimrc
@@ -156,7 +158,7 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 # See /usr/share/doc/bash-doc/examples in the bash-doc package.
 
 if [ -f ~/.bash_aliases ]; then
-    . ~/.bash_aliases
+    source ~/.bash_aliases
 fi
 
 # enable programmable completion features (you don't need to enable
@@ -164,9 +166,9 @@ fi
 # sources /etc/bash.bashrc).
 if ! shopt -oq posix; then
   if [ -f /usr/share/bash-completion/bash_completion ]; then
-    . /usr/share/bash-completion/bash_completion
+    source /usr/share/bash-completion/bash_completion
   elif [ -f /etc/bash_completion ]; then
-    . /etc/bash_completion
+    source /etc/bash_completion
   fi
 fi
 
@@ -174,6 +176,7 @@ fi
 
 # SSH Keys; for GitHub, etc.
 if [ -f /usr/bin/keychain ] && [ -f $HOME/.ssh/id_rsa ]; then
-    /usr/bin/keychain $HOME/.ssh/id_rsa;  source $HOME/.keychain/$HOSTNAME-sh
+    /usr/bin/keychain $HOME/.ssh/id_rsa
+    source $HOME/.keychain/$HOSTNAME-sh
 fi
 
