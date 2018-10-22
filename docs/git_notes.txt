@@ -1,5 +1,5 @@
-Git Notes 20170215 2017.046
-Copyright (c) 2014, 2015, 2016, 2017 William N. Braswell, Jr.
+Git Notes 20181022 2018.295
+Copyright (c) 2014, 2015, 2016, 2017, 2018 William N. Braswell, Jr.
 
 # [[[ INDIVIDUAL COMMANDS ]]]
 # [[[ INDIVIDUAL COMMANDS ]]]
@@ -169,3 +169,18 @@ $ git push --force origin master
 
 # [[[ UNDO GIT ADD & UNDO GIT COMMIT ]]]
 $ git reset HEAD~
+
+
+# [[[ COMBINE MULTIPLE COMMITS INTO ONE COMMIT, AUTOMATICALLY UPDATES ASSOCIATED PULL REQUEST ]]]
+# first, make 1 or more commits to a specific repo branch, and push to git server
+$ git add -A; git commit -a
+$ git push origin master
+$ ...
+# second, make final commit
+$ git add -A; git commit -a
+# third, rebase to total number of commits (2 minimum), choose 'pick' for latest commit and 'squash' for all others,
+# leave multiple commit messages as-is if already correct & descriptive
+$ git rebase -i HEAD~2
+# fourth, force push back to git server, will overwrite/update existing commit with all new commits merged together,
+# also check any associated pull request(s) to see updated changes w/out closing PR or opening new PR
+$ git push -f
