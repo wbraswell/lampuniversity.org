@@ -9,6 +9,7 @@ then
 else
     echo "This program uses 'grep -Plr' for searching and 'perl -e "... s/FIND/REPLACE/gxms ..."' for replacement."
     echo "Please see the Perl documentation for more info:  https://perldoc.perl.org/perlre.html"
+    echo
     echo "[[[ USAGE EXAMPLES ]]]"
     echo "1. Replace All Occurrences Of 'FOO' With 'BAR'"
     echo "$ find_replace_recurse.sh 'FOO' 'BAR' ./"
@@ -17,6 +18,7 @@ else
     echo 'NOTE: all regular expressions are greedy by default, beware of using (.*) when one line contains multiple matches'
     echo "3. Replace All Occurrences Of \"FOO\" With \"'FOO'\" (In Other Words, Wrap FOO In Single Quotes)"
     echo "$ find_replace_recurse.sh 'FOO' \"'FOO'\" ./"
+    echo
     echo "[[[ CHARACTER ESCAPE RULES ]]]"
     echo "   REFERENCE OF ALL CHARACTERS,  any text,               any quotes: SPACE \" ' \` ~ ! @ # $ % ^ & * ( ) [ ] { } < > | \\ / - _ + = : ; ? , ."
     echo "           UNUSABLE CHARACTERS, find text,            single quotes:         '"
@@ -33,6 +35,10 @@ else
     echo "  BACKSLASH-ESCAPED CHARACTERS, replace text,         double quotes:       \"   \`                                       /"
     echo "2-BACKSLASH-ESCAPED CHARACTERS, replace text,         double quotes:                     $"
     echo "3-BACKSLASH-ESCAPED CHARACTERS, replace text,         double quotes:                                                 \\"
+    echo
+    echo "[[[ COMMON ERRORS ]]]"
+    echo "1. Replacement reported but no changes actually made to file(s), don't forget to backslash-escape all SPACE characters in single-quoted search string"
+    echo "2. Infinite loop(s), caused by replacement string containing search string, try replacing with intermediate string then replace that with final string"
     echo
 fi
 
