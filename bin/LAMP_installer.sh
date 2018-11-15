@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.243_000'
+VERSION='0.244_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -1487,6 +1487,9 @@ if [ $MENU_CHOICE -le 24 ]; then
 
         S cpan Module::CoreList
         S cpan Alien::Build
+        B cpanm -v -n MetaCPAN::Client
+
+
 
 # FPM THEN START HERE: FPM CPAN pull request pacman test failures; DEB support; RPM mock support
 # FPM THEN START HERE: FPM CPAN pull request pacman test failures; DEB support; RPM mock support
@@ -1857,7 +1860,7 @@ if [ $MENU_CHOICE -le 24 ]; then
         CD /srv/www/packages.rperl.org/public_html/centos/7/rperl/x86_64
         B rm -Rf ./repodata/
         B createrepo --verbose .
-        B gpg2 --detach-sign --armor repodata/repomd.xml 
+        B gpg2 --detach-sign --armor repodata/repomd.xml
         B less repodata/repomd.xml.asc
 
         # server, generate repo file, RUN ONCE ONLY
@@ -2102,6 +2105,14 @@ if [ $MENU_CHOICE -le 26 ]; then
                 S yum repolist all    # confirm repo is in list
                 S yum clean metadata  # clean metadata from other repos, or after updating our repo
                 S yum install perl-RPerl
+
+                echo '[ CHECK RPERL INSTALL ]'
+                B which rperl
+                B rpm -qf /usr/bin/rperl
+
+                echo '[ UNINSTALL RPERL, IF LAST TRANSACTION ]'
+                S yum history
+                S yum history undo last
             fi
 
         elif [ $RPERL_CHOICE -eq 'b' ]; then
