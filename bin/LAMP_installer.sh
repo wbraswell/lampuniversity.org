@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.244_000'
+VERSION='0.245_000'
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -32,6 +32,50 @@ OS_CHOICE="UNKNOWN"
 : <<'END_COMMENT'
     foo bar bat
 END_COMMENT
+
+
+
+
+
+# command-line arguments AKA options
+for i in "$@"
+do
+case $i in
+    -os=*|--operating_system=*)
+    OS_CHOICE="${i#*=}"
+    shift
+    ;;
+    -pi=*|--perl_install=*)
+    PERL_INSTALL_CHOICE="${i#*=}"
+    shift
+    ;;
+    -ri=*|--rperl_install=*)
+    RPERL_INSTALL_CHOICE="${i#*=}"
+    shift
+    ;;
+    -rdp=*|--rperl_deps_package=*)
+    RPERL_DEPS_PACKAGE_CHOICE="${i#*=}"
+    shift
+    ;;
+#    --somearg)  # argument w/out value, set value to 'YES'
+#    SOMEARG_CHOICE=YES
+#    shift
+#    ;;
+    *)
+          # unknown argument, ignore
+    ;;
+esac
+done
+
+echo 'Received the following command-line arguments AKA options:'
+echo "OS_CHOICE                 = ${OS_CHOICE}"
+echo " PERL_INSTALL_CHOICE      = ${PERL_INSTALL_CHOICE}"
+echo "RPERL_INSTALL_CHOICE      = ${RPERL_INSTALL_CHOICE}"
+echo "RPERL_DEPS_PACKAGE_CHOICE = ${RPERL_DEPS_PACKAGE_CHOICE}"
+
+
+
+
 
 CURRENT_SECTION_COMPLETE () {
     echo
@@ -1185,7 +1229,7 @@ if [ $MENU_CHOICE -le 20 ]; then
 fi
 
 # SECTION 21 VARIABLES
-PERL_CHOICE='__EMPTY__'
+PERL_INSTALL_CHOICE='__EMPTY__'
 
 if [ $MENU_CHOICE -le 21 ]; then
     echo '21. [[[ LINUX, INSTALL PERL & CPANM ]]]'
@@ -1221,10 +1265,10 @@ if [ $MENU_CHOICE -le 21 ]; then
         C 'Please read the warnings above.  Seriously.'
         echo
 
-        P $PERL_CHOICE "Perl Installation Option: a, b, c, d"
-        PERL_CHOICE=$USER_INPUT
+        P $PERL_INSTALL_CHOICE "Perl Installation Option: a, b, c, d"
+        PERL_INSTALL_CHOICE=$USER_INPUT
 
-        if [ $PERL_CHOICE -eq 'a' ]; then
+        if [ $PERL_INSTALL_CHOICE -eq 'a' ]; then
 
             echo '21a. [[[ LINUX, INSTALL SINGLE-USER PERL LOCAL::LIB & CPANM ]]]'
             echo '[ Install local::lib & CPANM in ~/perl5 ]'
@@ -1254,7 +1298,7 @@ if [ $MENU_CHOICE -le 21 ]; then
             echo '[ If Not, Please Log Out & Log Back In, Then Return To This Point & Check Again ]'
             B 'set | grep perl5'
 
-        elif [ $PERL_CHOICE -eq 'b' ]; then
+        elif [ $PERL_INSTALL_CHOICE -eq 'b' ]; then
 
             echo '21b. [[[ LINUX, INSTALL SINGLE-USER PERLBREW & CPANM ]]]'
             echo '[ You Should Use Ubuntu Or CentOS Instead Of curl Below, Unless You Are Not In Ubuntu Or CentOS, Or You Have No Choice ]'
@@ -1329,7 +1373,7 @@ if [ $MENU_CHOICE -le 21 ]; then
             echo '[ Re-Check Version Of ExtUtils::MakeMaker, Must Be v7.04 Or Newer ]'
             B 'perl -MExtUtils::MakeMaker\ 999'
 
-        elif [ $PERL_CHOICE -eq 'c' ]; then
+        elif [ $PERL_INSTALL_CHOICE -eq 'c' ]; then
 
             echo '21c. [[[ LINUX, INSTALL SYSTEM-WIDE PERL FROM SOURCE & CPANM ]]]'
             echo '[ WARNING: Choose ONLY ONE Of The Following Two Methods: Manual Build, Or Tokuhirom Perl-Build ]'
@@ -1348,7 +1392,7 @@ if [ $MENU_CHOICE -le 21 ]; then
             echo '[ EITHER OPTION: Install cpanminus ]'
             S perl -MCPAN -e 'install App::cpanminus'
 
-        elif [ $PERL_CHOICE -eq 'd' ]; then
+        elif [ $PERL_INSTALL_CHOICE -eq 'd' ]; then
 
             echo '21d. [[[ LINUX, INSTALL SYSTEM-WIDE SYSTEM PERL & CPANM ]]]'
             if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
@@ -2052,7 +2096,7 @@ if [ $MENU_CHOICE -le 25 ]; then
 fi
 
 # SECTION 26 VARIABLES
-RPERL_CHOICE='__EMPTY__'
+RPERL_INSTALL_CHOICE='__EMPTY__'
 
 # SECTION 26b VARIABLES
 GITHUB_EMAIL='__EMPTY__'
@@ -2086,10 +2130,10 @@ if [ $MENU_CHOICE -le 26 ]; then
         C 'Please read the warnings above.  Seriously.'
         echo
 
-        P $RPERL_CHOICE "RPerl Installation Option: a, b, c"
-        RPERL_CHOICE=$USER_INPUT
+        P $RPERL_INSTALL_CHOICE "RPerl Installation Option: a, b, c"
+        RPERL_INSTALL_CHOICE=$USER_INPUT
 
-        if [ $RPERL_CHOICE -eq 'a' ]; then
+        if [ $RPERL_INSTALL_CHOICE -eq 'a' ]; then
 
             echo '26a. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA PACKAGES.RPERL.ORG ]]]'
             echo
@@ -2115,7 +2159,7 @@ if [ $MENU_CHOICE -le 26 ]; then
                 S yum history undo last
             fi
 
-        elif [ $RPERL_CHOICE -eq 'b' ]; then
+        elif [ $RPERL_INSTALL_CHOICE -eq 'b' ]; then
 
             echo '26b. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPAN ]]]'
             echo
@@ -2140,7 +2184,7 @@ if [ $MENU_CHOICE -le 26 ]; then
             echo '$ sudo cpan RPerl'
             echo
 
-        elif [ $RPERL_CHOICE -eq 'c' ]; then
+        elif [ $RPERL_INSTALL_CHOICE -eq 'c' ]; then
 
             echo '26c. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB ]]]'
             echo
@@ -2938,6 +2982,7 @@ if [ $MENU_CHOICE -le 42 ]; then
         echo '[ Ensure MySQL Configured To Support Perl Distribution DBD::mysql `make test` Command ]'
         echo '[ Copy Commands From The Following Lines ]'
         echo "mysql> CREATE USER '$USERNAME'@'localhost' IDENTIFIED BY '';"
+        echo "mysql> SET PASSWORD FOR $USERNAME = '';"
         echo "mysql> GRANT ALL PRIVILEGES ON test.* TO '$USERNAME'@'localhost';"
         echo "mysql> QUIT"
         echo
