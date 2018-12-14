@@ -26,7 +26,14 @@ shopt -s extglob
 # global variables
 USER_INPUT=''
 CURRENT_SECTION=0
-OS_CHOICE="UNKNOWN"
+
+# command-line arguments
+SECTION_CHOICE="__EMPTY__"
+MACHINE_CHOICE="__EMPTY__"
+OS_CHOICE="__EMPTY__"
+PERL_INSTALL_CHOICE="__EMPTY__"
+RPERL_INSTALL_CHOICE="__EMPTY__"
+RPERL_DEPS_PACKAGE_CHOICE="__EMPTY__"
 
 # block comment template
 : <<'END_COMMENT'
@@ -41,24 +48,32 @@ END_COMMENT
 for i in "$@"
 do
 case $i in
-    -os=*|--operating_system=*)
+    -s=*|--section=*)
+    SECTION_CHOICE="${i#*=}"
+    shift
+    ;;
+    -m=*|--machine=*)
+    MACHINE_CHOICE="${i#*=}"
+    shift
+    ;;
+    -os=*|--operating-system=*)
     OS_CHOICE="${i#*=}"
     shift
     ;;
-    -pi=*|--perl_install=*)
+    -pi=*|--perl-install=*)
     PERL_INSTALL_CHOICE="${i#*=}"
     shift
     ;;
-    -ri=*|--rperl_install=*)
+    -ri=*|--rperl-install=*)
     RPERL_INSTALL_CHOICE="${i#*=}"
     shift
     ;;
-    -rdp=*|--rperl_deps_package=*)
+    -rdp=*|--rperl-deps-package=*)
     RPERL_DEPS_PACKAGE_CHOICE="${i#*=}"
     shift
     ;;
-#    --somearg)  # argument w/out value, set value to 'YES'
-#    SOMEARG_CHOICE=YES
+#    --some-arg)  # argument w/out value, set value to 'YES'
+#    SOME_ARG_CHOICE=YES
 #    shift
 #    ;;
     *)
@@ -68,11 +83,12 @@ esac
 done
 
 echo 'Received the following command-line arguments AKA options:'
+echo "SECTION_CHOICE            = ${SECTION_CHOICE}"
+echo "MACHINE_CHOICE            = ${MACHINE_CHOICE}"
 echo "OS_CHOICE                 = ${OS_CHOICE}"
 echo " PERL_INSTALL_CHOICE      = ${PERL_INSTALL_CHOICE}"
 echo "RPERL_INSTALL_CHOICE      = ${RPERL_INSTALL_CHOICE}"
 echo "RPERL_DEPS_PACKAGE_CHOICE = ${RPERL_DEPS_PACKAGE_CHOICE}"
-
 
 
 
@@ -251,9 +267,9 @@ VERIFY_OS_CHOICE() {
 
     local GUESS='UNKNOWN'
     if [[ -f "/etc/redhat-release" ]]; then
-        GUESS='CENTOS'
+        GUESS='centos'
     elif [[ -f "/etc/debian_version" ]]; then
-        GUESS='UBUNTU'
+        GUESS='ubuntu'
     fi
 
     if [[ "$GUESS" != "$CHOICE" ]]; then
@@ -283,127 +299,136 @@ VERIFY_OS_CHOICE() {
 }
 
 VERIFY_CENTOS() {
-    VERIFY_OS_CHOICE 'CENTOS'
+    VERIFY_OS_CHOICE 'centos'
 }
 
 VERIFY_UBUNTU() {
-    VERIFY_OS_CHOICE 'UBUNTU'
+    VERIFY_OS_CHOICE 'ubuntu'
 }
 
-echo "[[[<<< LAMP Installer Script v$VERSION >>>]]]"
-echo
-echo '  [[[<<< Tested Using Fresh Installs >>>]]]'
-echo
-echo 'Xubuntu v14.04.2 (Trusty Tahr)'
-echo 'Xubuntu v16.04.4 (Xenial Xerus)'
-echo 'CentOS  v7.4-1708'
-echo
-echo  '          [[[<<< Main Menu >>>]]]'
-echo
-echo  '        <<< LOCAL CLI SECTIONS >>>'
-echo \ '0. [[[        LINUX, CONFIGURE OPERATING SYSTEM USERS ]]]'
-echo \ '1. [[[        LINUX, CONFIGURE CLOUD NETWORKING ]]]'
-echo \ '2. [[[ UBUNTU LINUX, USB INSTALL, FIX BROKEN SWAP DEVICE ]]]'
-echo \ '3. [[[ UBUNTU LINUX, FIX BROKEN LOCALE ]]]'
-echo \ '4. [[[ UBUNTU LINUX, INSTALL EXPERIMENTAL UBUNTU SDK BEFORE OTHER PACKAGES ]]]'
-echo \ '5. [[[ UBUNTU LINUX, UPGRADE ENTIRE OPERATING SYSTEM OR ALL PACKAGES ]]]'
-echo \ '6. [[[        LINUX, INSTALL BASE CLI OPERATING SYSTEM PACKAGES ]]]'
-echo \ '7. [[[ UBUNTU LINUX, INSTALL & TEST CLAMAV ANTI-VIRUS ]]]'
-echo \ '8. [[[        LINUX, INSTALL LAMP UNIVERSITY TOOLS ]]]'
-echo \ '9. [[[ UBUNTU LINUX, INSTALL HEIRLOOM TOOLS (including bdiff) ]]]'
-echo  '10. [[[ UBUNTU LINUX, INSTALL BROADCOM B43 WIFI ]]]'
-echo  '11. [[[ UBUNTU LINUX, PERFORMANCE BENCHMARKING ]]]'
-echo
-echo  '        <<< LOCAL GUI SECTIONS >>>'
-echo  '12. [[[ UBUNTU LINUX, INSTALL BASE GUI OPERATING SYSTEM PACKAGES ]]]'
-echo  '13. [[[ UBUNTU LINUX, INSTALL EXTRA GUI OPERATING SYSTEM PACKAGES ]]]'
-echo  '14. [[[ UBUNTU LINUX, INSTALL VNC & XPRA ]]]'
-echo  '15. [[[ UBUNTU LINUX, INSTALL VIRTUALBOX GUEST ADDITIONS ]]]'
-echo  '16. [[[ UBUNTU LINUX, UNINSTALL HUD & BLUETOOTH & MODEMMANAGER & GVFS & EXTRA GUI PACKAGES ]]]'
-echo  '17. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER ]]]'
-echo  '18. [[[ UBUNTU LINUX, CONFIGURE XFCE WINDOW MANAGER ]]]'
-echo  '19. [[[ UBUNTU LINUX, ENABLE AUTOMATIC SECURITY UPDATES ]]]'
-echo
-echo  '         <<< PERL & RPERL SECTIONS >>>'
-echo  '20. [[[        LINUX,   INSTALL  PERL DEPENDENCIES ]]]'
-echo  '21. [[[        LINUX,   INSTALL  PERL & CPANM ]]]'
-echo  '24. [[[        LINUX,   PACKAGE RPERL DEPENDENCIES ]]]'
-echo  '25. [[[        LINUX,   INSTALL RPERL DEPENDENCIES ]]]'
-echo  '26. [[[  PERL,          INSTALL RPERL ]]]'
-echo  '28. [[[ RPERL,          RUN COMPILER TESTS ]]]'
-echo  '29. [[[ RPERL,          INSTALL RPERL APPS & RUN DEMOS ]]]'
-echo
-echo  '         <<< SERVICE SECTIONS >>>'
-echo  '30. [[[ UBUNTU LINUX,   INSTALL NFS ]]]'
-echo  '31. [[[ UBUNTU LINUX,   INSTALL APACHE & MOD_PERL ]]]'
-echo  '32. [[[ APACHE,         CONFIGURE DOMAIN(S) ]]]'
-echo  '33. [[[ UBUNTU LINUX,   INSTALL MYSQL & PHPMYADMIN ]]]'
-echo  '34. [[[ APACHE & MYSQL, CONFIGURE PHPMYADMIN ]]]'
-echo  '35. [[[ UBUNTU LINUX,   INSTALL WEBMIN ]]]'
-echo  '36. [[[ UBUNTU LINUX,   INSTALL POSTFIX ]]]'
-echo  '37. [[[ PERL,           INSTALL     LATEST CATALYST ]]]'
-echo  '38. [[[ UBUNTU LINUX,   INSTALL NON-LATEST CATALYST ]]]'
-echo  '39. [[[ PERL,           CHECK CATALYST VERSIONS ]]]'
-echo  '40. [[[ PERL,           INSTALL RAPIDAPP ]]]'
-echo  '41. [[[ UBUNTU LINUX,   INSTALL SHINYCMS DEPENDENCIES ]]]'
-echo  '42. [[[ PERL SHINYCMS,  INSTALL SHINYCMS DEPENDENCIES & SHINYCMS ]]]'
-echo  '43. [[[ PERL SHINYCMS,  CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES ]]]'
-echo  '44. [[[ PERL SHINYCMS,  BUILD DEMO DATA & RUN TESTS ]]]'
-echo  '45. [[[ PERL SHINYCMS,  BACKUP & RESTORE DATABASE ]]]'
-echo  '46. [[[ PERL SHINYCMS,  CONFIGURE APACHE MOD_FASTCGI ]]]'
-echo  '47. [[[ PERL SHINYCMS,  CONFIGURE APACHE MOD_PERL ]]]'
-echo  '48. [[[ PERL SHINYCMS,  CREATE    APACHE DIRECTORIES & ENABLE STATIC  PAGE ]]]'
-echo  '49. [[[ PERL SHINYCMS,  CONFIGURE APACHE PERMISSIONS & ENABLE DYNAMIC PAGES ]]]'
-echo  '50. [[[ PERL SHINYCMS,  CONFIGURE SHINY ]]]'
-echo
-echo  '60. [[[        LINUX,   INSTALL MONGODB ]]]'
-echo
-echo  '70. [[[ PERL CLOUDFORFREE, FOOOOOO ]]]'
-echo
+# do not provide menu prompt if already provided as command-line argument
+if [ $SECTION_CHOICE == '__EMPTY__' ]; then
+    echo "[[[<<< LAMP Installer Script v$VERSION >>>]]]"
+    echo
+    echo '  [[[<<< Tested Using Fresh Installs >>>]]]'
+    echo
+    echo 'Xubuntu v14.04.2 (Trusty Tahr)'
+    echo 'Xubuntu v16.04.4 (Xenial Xerus)'
+    echo 'CentOS  v7.4-1708'
+    echo
+    echo  '          [[[<<< Main Menu >>>]]]'
+    echo
+    echo  '        <<< LOCAL CLI SECTIONS >>>'
+    echo \ '0. [[[        LINUX, CONFIGURE OPERATING SYSTEM USERS ]]]'
+    echo \ '1. [[[        LINUX, CONFIGURE CLOUD NETWORKING ]]]'
+    echo \ '2. [[[ UBUNTU LINUX, USB INSTALL, FIX BROKEN SWAP DEVICE ]]]'
+    echo \ '3. [[[ UBUNTU LINUX, FIX BROKEN LOCALE ]]]'
+    echo \ '4. [[[ UBUNTU LINUX, INSTALL EXPERIMENTAL UBUNTU SDK BEFORE OTHER PACKAGES ]]]'
+    echo \ '5. [[[ UBUNTU LINUX, UPGRADE ENTIRE OPERATING SYSTEM OR ALL PACKAGES ]]]'
+    echo \ '6. [[[        LINUX, INSTALL BASE CLI OPERATING SYSTEM PACKAGES ]]]'
+    echo \ '7. [[[ UBUNTU LINUX, INSTALL & TEST CLAMAV ANTI-VIRUS ]]]'
+    echo \ '8. [[[        LINUX, INSTALL LAMP UNIVERSITY TOOLS ]]]'
+    echo \ '9. [[[ UBUNTU LINUX, INSTALL HEIRLOOM TOOLS (including bdiff) ]]]'
+    echo  '10. [[[ UBUNTU LINUX, INSTALL BROADCOM B43 WIFI ]]]'
+    echo  '11. [[[ UBUNTU LINUX, PERFORMANCE BENCHMARKING ]]]'
+    echo
+    echo  '        <<< LOCAL GUI SECTIONS >>>'
+    echo  '12. [[[ UBUNTU LINUX, INSTALL BASE GUI OPERATING SYSTEM PACKAGES ]]]'
+    echo  '13. [[[ UBUNTU LINUX, INSTALL EXTRA GUI OPERATING SYSTEM PACKAGES ]]]'
+    echo  '14. [[[ UBUNTU LINUX, INSTALL VNC & XPRA ]]]'
+    echo  '15. [[[ UBUNTU LINUX, INSTALL VIRTUALBOX GUEST ADDITIONS ]]]'
+    echo  '16. [[[ UBUNTU LINUX, UNINSTALL HUD & BLUETOOTH & MODEMMANAGER & GVFS & EXTRA GUI PACKAGES ]]]'
+    echo  '17. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER ]]]'
+    echo  '18. [[[ UBUNTU LINUX, CONFIGURE XFCE WINDOW MANAGER ]]]'
+    echo  '19. [[[ UBUNTU LINUX, ENABLE AUTOMATIC SECURITY UPDATES ]]]'
+    echo
+    echo  '         <<< PERL & RPERL SECTIONS >>>'
+    echo  '20. [[[        LINUX,   INSTALL  PERL DEPENDENCIES ]]]'
+    echo  '21. [[[        LINUX,   INSTALL  PERL & CPANM ]]]'
+    echo  '24. [[[        LINUX,   PACKAGE RPERL DEPENDENCIES ]]]'
+    echo  '25. [[[        LINUX,   INSTALL RPERL DEPENDENCIES ]]]'
+    echo  '26. [[[  PERL,          INSTALL RPERL ]]]'
+    echo  '28. [[[ RPERL,          RUN COMPILER TESTS ]]]'
+    echo  '29. [[[ RPERL,          INSTALL RPERL APPS & RUN DEMOS ]]]'
+    echo
+    echo  '         <<< SERVICE SECTIONS >>>'
+    echo  '30. [[[ UBUNTU LINUX,   INSTALL NFS ]]]'
+    echo  '31. [[[ UBUNTU LINUX,   INSTALL APACHE & MOD_PERL ]]]'
+    echo  '32. [[[ APACHE,         CONFIGURE DOMAIN(S) ]]]'
+    echo  '33. [[[ UBUNTU LINUX,   INSTALL MYSQL & PHPMYADMIN ]]]'
+    echo  '34. [[[ APACHE & MYSQL, CONFIGURE PHPMYADMIN ]]]'
+    echo  '35. [[[ UBUNTU LINUX,   INSTALL WEBMIN ]]]'
+    echo  '36. [[[ UBUNTU LINUX,   INSTALL POSTFIX ]]]'
+    echo  '37. [[[ PERL,           INSTALL     LATEST CATALYST ]]]'
+    echo  '38. [[[ UBUNTU LINUX,   INSTALL NON-LATEST CATALYST ]]]'
+    echo  '39. [[[ PERL,           CHECK CATALYST VERSIONS ]]]'
+    echo  '40. [[[ PERL,           INSTALL RAPIDAPP ]]]'
+    echo  '41. [[[ UBUNTU LINUX,   INSTALL SHINYCMS DEPENDENCIES ]]]'
+    echo  '42. [[[ PERL SHINYCMS,  INSTALL SHINYCMS DEPENDENCIES & SHINYCMS ]]]'
+    echo  '43. [[[ PERL SHINYCMS,  CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES ]]]'
+    echo  '44. [[[ PERL SHINYCMS,  BUILD DEMO DATA & RUN TESTS ]]]'
+    echo  '45. [[[ PERL SHINYCMS,  BACKUP & RESTORE DATABASE ]]]'
+    echo  '46. [[[ PERL SHINYCMS,  CONFIGURE APACHE MOD_FASTCGI ]]]'
+    echo  '47. [[[ PERL SHINYCMS,  CONFIGURE APACHE MOD_PERL ]]]'
+    echo  '48. [[[ PERL SHINYCMS,  CREATE    APACHE DIRECTORIES & ENABLE STATIC  PAGE ]]]'
+    echo  '49. [[[ PERL SHINYCMS,  CONFIGURE APACHE PERMISSIONS & ENABLE DYNAMIC PAGES ]]]'
+    echo  '50. [[[ PERL SHINYCMS,  CONFIGURE SHINY ]]]'
+    echo
+    echo  '60. [[[        LINUX,   INSTALL MONGODB ]]]'
+    echo
+    echo  '70. [[[ PERL CLOUDFORFREE, FOOOOOO ]]]'
+    echo
 
-while true; do
-    read -p 'Please type your chosen main menu section number, or press <ENTER> for 0... ' MENU_CHOICE
-    case $MENU_CHOICE in
-        [0123456789]|[1234][0123456789]|5[01]|60 ) echo; break;;
-        '' ) echo; MENU_CHOICE=0; break;;
-        * ) echo 'Please choose a section number from the menu!'; echo;;
-    esac
-done
+    while true; do
+        read -p 'Please type your chosen main menu section number, or press <ENTER> for 0... ' SECTION_CHOICE
+        case $SECTION_CHOICE in
+            [0123456789]|[1234][0123456789]|5[01]|60 ) echo; break;;
+            '' ) echo; SECTION_CHOICE=0; break;;
+            * ) echo 'Please choose a section number from the menu!'; echo;;
+        esac
+    done
 
-CURRENT_SECTION=$MENU_CHOICE
+fi
+CURRENT_SECTION=$SECTION_CHOICE
 
-echo  '          [[[<<< Machine Menu >>>]]]'
-echo
-echo \ '0. [[[      NEW MACHINE; SERVER; REMOTE CLOUD HOST ]]]'
-echo \ '1. [[[ EXISTING MACHINE; CLIENT; LOCAL USER SYSTEM ]]]'
-echo
+# do not provide menu prompt if already provided as command-line argument
+if [ $MACHINE_CHOICE == '__EMPTY__' ]; then
+    echo  '          [[[<<< Machine Menu >>>]]]'
+    echo
+    echo \ '0. [[[      NEW MACHINE; SERVER; REMOTE CLOUD HOST ]]]'
+    echo \ '1. [[[ EXISTING MACHINE; CLIENT; LOCAL USER SYSTEM ]]]'
+    echo
 
-while true; do
-    read -p 'Please type your machine menu choice number, or press <ENTER> for 0... ' MACHINE_CHOICE
-    case $MACHINE_CHOICE in
-        [01] ) echo; break;;
-        '' ) echo; MACHINE_CHOICE=0; break;;
-        * ) echo 'Please choose a number from the menu!'; echo;;
-    esac
-done
+    while true; do
+        read -p 'Please type your machine menu choice number, or press <ENTER> for 0... ' MACHINE_CHOICE
+        case $MACHINE_CHOICE in
+            [01] ) echo; break;;
+            '' ) echo; MACHINE_CHOICE=0; break;;
+            * ) echo 'Please choose a number from the menu!'; echo;;
+        esac
+    done
+fi
 
-echo  '          [[[<<< OS Menu >>>]]]'
-echo
-echo \ '0. [[[           UBUNTU       ]]]'
-echo \ '1. [[[           CENTOS       ]]]'
-echo \ '9. [[[           OTHER        ]]]'
-echo
+# do not provide menu prompt if already provided as command-line argument
+if [ $OS_CHOICE == '__EMPTY__' ]; then
+    echo  '          [[[<<< OS Menu >>>]]]'
+    echo
+    echo \ '0. [[[           UBUNTU       ]]]'
+    echo \ '1. [[[           CENTOS       ]]]'
+    echo \ '9. [[[           OTHER        ]]]'
+    echo
 
-while true; do
-   read -p 'Please type your OS menu choice number, or press <ENTER> for 0... ' OS_CHOICE
-   case $OS_CHOICE in
-       0 ) echo; OS_CHOICE='UBUNTU'; break;;
-       1 ) echo; OS_CHOICE='CENTOS'; break;;
-       9 ) echo; OS_CHOICE='OTHER'; break;;
-       '' ) echo; OS_CHOICE='UBUNTU'; break;;
-       * ) echo 'Please choose a number from the menu!'; echo;;
-   esac
-done
+    while true; do
+        read -p 'Please type your OS menu choice number, or press <ENTER> for 0... ' OS_CHOICE
+        case $OS_CHOICE in
+            0 ) echo; OS_CHOICE='ubuntu'; break;;
+            1 ) echo; OS_CHOICE='centos'; break;;
+            9 ) echo; OS_CHOICE='OTHER'; break;;
+            '' ) echo; OS_CHOICE='ubuntu'; break;;
+            * ) echo 'Please choose a number from the menu!'; echo;;
+        esac
+    done
+fi
 
 # SECTION 0 VARIABLES
 EDITOR='__EMPTY__'
@@ -411,7 +436,7 @@ USERNAME='__EMPTY__'
 IP_ADDRESS='__EMPTY__'
 DOMAIN_NAME='__EMPTY__'
 
-if [ $MENU_CHOICE -le 0 ]; then
+if [ $SECTION_CHOICE -le 0 ]; then
     echo '0. [[[ LINUX, CONFIGURE OPERATING SYSTEM USERS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -470,7 +495,7 @@ fi
 # START HERE: add non-fully-qualified hostname to 127.0.1.1 entry in /etc/hosts, to allow for gogetspace forcing overwrite of /etc/hostname
 # START HERE: add non-fully-qualified hostname to 127.0.1.1 entry in /etc/hosts, to allow for gogetspace forcing overwrite of /etc/hostname
 
-if [ $MENU_CHOICE -le 1 ]; then
+if [ $SECTION_CHOICE -le 1 ]; then
     echo '1. [[[ LINUX, CONFIGURE CLOUD NETWORKING ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -513,7 +538,7 @@ fi
 # SECTION 2 VARIABLES
 SWAP_DEVICE='__EMPTY__'
 
-if [ $MENU_CHOICE -le 2 ]; then
+if [ $SECTION_CHOICE -le 2 ]; then
     echo '2. [[[ UBUNTU LINUX, USB INSTALL, FIX BROKEN SWAP DEVICE ]]]'
     echo
     VERIFY_UBUNTU
@@ -543,7 +568,7 @@ if [ $MENU_CHOICE -le 2 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 3 ]; then
+if [ $SECTION_CHOICE -le 3 ]; then
     echo '3. [[[ UBUNTU LINUX, FIX BROKEN LOCALE ]]]'
     echo
     VERIFY_UBUNTU
@@ -559,7 +584,7 @@ if [ $MENU_CHOICE -le 3 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 4 ]; then
+if [ $SECTION_CHOICE -le 4 ]; then
     echo '4. [[[ UBUNTU LINUX, INSTALL EXPERIMENTAL UBUNTU SDK BEFORE OTHER PACKAGES ]]]'
     echo
     VERIFY_UBUNTU
@@ -577,7 +602,7 @@ fi
 # START HERE: ensure "CODENAME-updates" (ex. "xenial-updates") entries exist in /etc/apt/sources.list
 # START HERE: ensure "CODENAME-updates" (ex. "xenial-updates") entries exist in /etc/apt/sources.list
 
-if [ $MENU_CHOICE -le 5 ]; then
+if [ $SECTION_CHOICE -le 5 ]; then
     echo '5. [[[ UBUNTU LINUX, UPGRADE ENTIRE OPERATING SYSTEM OR ALL PACKAGES ]]]'
     echo
     VERIFY_UBUNTU
@@ -612,12 +637,12 @@ if [ $MENU_CHOICE -le 5 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 6 ]; then
+if [ $SECTION_CHOICE -le 6 ]; then
     echo '6. [[[ LINUX, INSTALL BASE CLI OPERATING SYSTEM PACKAGES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
 
-        if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+        if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             VERIFY_UBUNTU
             echo '[ UBUNTU ONLY: Check Install, Confirm No Errors ]'
             S apt-get update
@@ -628,7 +653,7 @@ if [ $MENU_CHOICE -le 6 ]; then
             echo '[ UBUNTU ONLY: Check Install, Confirm No Errors ]'
             S apt-get -f install
         # OR
-        elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+        elif [[ "$OS_CHOICE" == "centos" ]]; then
             VERIFY_CENTOS
             echo '[ CENTOS ONLY: Check Install, Confirm No Errors; WARNING! MAKE TAKE HOURS TO RUN! ]'
             S yum check
@@ -677,7 +702,7 @@ END_HEREDOC
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 7 ]; then
+if [ $SECTION_CHOICE -le 7 ]; then
     echo '7. [[[ UBUNTU LINUX, INSTALL & TEST CLAMAV ANTI-VIRUS ]]]'
     echo
     VERIFY_UBUNTU
@@ -707,7 +732,7 @@ if [ $MENU_CHOICE -le 7 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 8 ]; then
+if [ $SECTION_CHOICE -le 8 ]; then
     echo '8. [[[ LINUX, INSTALL LAMP UNIVERSITY TOOLS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -727,7 +752,7 @@ if [ $MENU_CHOICE -le 8 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 9 ]; then
+if [ $SECTION_CHOICE -le 9 ]; then
     echo '9. [[[ UBUNTU LINUX, INSTALL HEIRLOOM TOOLS ]]]'
     echo
     VERIFY_UBUNTU
@@ -748,7 +773,7 @@ if [ $MENU_CHOICE -le 9 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 10 ]; then
+if [ $SECTION_CHOICE -le 10 ]; then
     echo '10. [[[ UBUNTU LINUX, INSTALL BROADCOM B43 WIFI ]]]'
     echo
     VERIFY_UBUNTU
@@ -772,7 +797,7 @@ CPUMINER_SERVER='__EMPTY__'
 CPUMINER_USERNAME='__EMPTY__'
 CPUMINER_PASSWORD='__EMPTY__'
 
-if [ $MENU_CHOICE -le 11 ]; then
+if [ $SECTION_CHOICE -le 11 ]; then
     echo '11. [[[ UBUNTU LINUX, PERFORMANCE BENCHMARKING ]]]'
     echo
     VERIFY_UBUNTU
@@ -800,7 +825,7 @@ fi
 # SECTION 12 VARIABLES
 UBUNTU_RELEASE_NAME='__EMPTY__'
 
-if [ $MENU_CHOICE -le 12 ]; then
+if [ $SECTION_CHOICE -le 12 ]; then
     echo '12. [[[ UBUNTU LINUX, INSTALL BASE GUI OPERATING SYSTEM PACKAGES ]]]'
     echo
     VERIFY_UBUNTU
@@ -839,7 +864,7 @@ if [ $MENU_CHOICE -le 12 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 13 ]; then
+if [ $SECTION_CHOICE -le 13 ]; then
     echo '13. [[[ UBUNTU LINUX, INSTALL EXTRA GUI OPERATING SYSTEM PACKAGES ]]]'
     echo
     VERIFY_UBUNTU
@@ -876,7 +901,7 @@ fi
 # SECTION 14 VARIABLES
 LOCAL_HOSTNAME='__EMPTY__'
 
-if [ $MENU_CHOICE -le 14 ]; then
+if [ $SECTION_CHOICE -le 14 ]; then
     echo '14. [[[ UBUNTU LINUX, INSTALL VNC & XPRA ]]]'
     echo
     VERIFY_UBUNTU
@@ -1019,7 +1044,7 @@ fi
 # SECTION 15 VARIABLES
 ISO_MOUNT_POINT='__EMPTY__'
 
-if [ $MENU_CHOICE -le 15 ]; then
+if [ $SECTION_CHOICE -le 15 ]; then
     echo '15. [[[ UBUNTU LINUX, INSTALL VIRTUALBOX GUEST ADDITIONS ]]]'
     echo
     VERIFY_UBUNTU
@@ -1037,7 +1062,7 @@ if [ $MENU_CHOICE -le 15 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 16 ]; then
+if [ $SECTION_CHOICE -le 16 ]; then
     echo '16. [[[ UBUNTU LINUX, UNINSTALL HUD & BLUETOOTH & MODEMMANAGER & GVFS & EXTRA GUI PACKAGES ]]]'
     echo
     VERIFY_UBUNTU
@@ -1067,7 +1092,7 @@ if [ $MENU_CHOICE -le 16 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 17 ]; then
+if [ $SECTION_CHOICE -le 17 ]; then
     echo '17. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER & CONFIGURE SPACE TELESCOPE IMAGES ]]]'
     echo
     VERIFY_UBUNTU
@@ -1095,7 +1120,7 @@ if [ $MENU_CHOICE -le 17 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 18 ]; then
+if [ $SECTION_CHOICE -le 18 ]; then
     echo '18. [[[ UBUNTU LINUX, CONFIGURE XFCE WINDOW MANAGER ]]]'
     echo
     VERIFY_UBUNTU
@@ -1129,7 +1154,7 @@ fi
 # NEED UPDATE: do not require X interface (or any interactivity at all) to enable automatic security updates, directly modify the appropriate config files instead
 # NEED UPDATE: do not require X interface (or any interactivity at all) to enable automatic security updates, directly modify the appropriate config files instead
 
-if [ $MENU_CHOICE -le 19 ]; then
+if [ $SECTION_CHOICE -le 19 ]; then
     echo '19. [[[ UBUNTU LINUX, ENABLE AUTOMATIC SECURITY UPDATES ]]]'
     echo
     VERIFY_UBUNTU
@@ -1149,7 +1174,7 @@ if [ $MENU_CHOICE -le 19 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 20 ]; then
+if [ $SECTION_CHOICE -le 20 ]; then
     echo '20. [[[ LINUX, INSTALL PERL DEPENDENCIES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -1162,7 +1187,7 @@ if [ $MENU_CHOICE -le 20 ]; then
         echo '[ ExtUtils::MakeMaker: Source Code Builder, Required To Build Many Perl Software Suites ]'
         echo
 
-        if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+        if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             VERIFY_UBUNTU
             echo '[ UBUNTU ONLY: Install Perl Debugging Symbols System-Wide ]'
             S apt-get install perl-debug
@@ -1175,7 +1200,7 @@ if [ $MENU_CHOICE -le 20 ]; then
             echo '[ UBUNTU ONLY: Check Install, Confirm No Errors ]'
             S apt-get -f install
         # OR
-        elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+        elif [[ "$OS_CHOICE" == "centos" ]]; then
             VERIFY_CENTOS
             echo '[ CENTOS ONLY: Install CPAN ]'
             S yum install perl-core perl-CPAN
@@ -1229,9 +1254,9 @@ if [ $MENU_CHOICE -le 20 ]; then
 fi
 
 # SECTION 21 VARIABLES
-PERL_INSTALL_CHOICE='__EMPTY__'
+#PERL_INSTALL_CHOICE='__EMPTY__'  # this is now a global variable for command-line args, see top of file
 
-if [ $MENU_CHOICE -le 21 ]; then
+if [ $SECTION_CHOICE -le 21 ]; then
     echo '21. [[[ LINUX, INSTALL PERL & CPANM ]]]'
 
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -1265,10 +1290,10 @@ if [ $MENU_CHOICE -le 21 ]; then
         C 'Please read the warnings above.  Seriously.'
         echo
 
-        P $PERL_INSTALL_CHOICE "Perl Installation Option: a, b, c, d"
+        P $PERL_INSTALL_CHOICE "Perl Installation Option (either single letter or hyphenated words): [a] locallib-cpanm, [b] perlbrew-cpanm, [c] source-cpanm, [d] system-cpanm"
         PERL_INSTALL_CHOICE=$USER_INPUT
 
-        if [ $PERL_INSTALL_CHOICE -eq 'a' ]; then
+        if [ $PERL_INSTALL_CHOICE == 'a' ] || [ $PERL_INSTALL_CHOICE == 'locallib-cpanm' ]; then
 
             echo '21a. [[[ LINUX, INSTALL SINGLE-USER PERL LOCAL::LIB & CPANM ]]]'
             echo '[ Install local::lib & CPANM in ~/perl5 ]'
@@ -1298,14 +1323,14 @@ if [ $MENU_CHOICE -le 21 ]; then
             echo '[ If Not, Please Log Out & Log Back In, Then Return To This Point & Check Again ]'
             B 'set | grep perl5'
 
-        elif [ $PERL_INSTALL_CHOICE -eq 'b' ]; then
+        elif [ $PERL_INSTALL_CHOICE == 'b' ] || [ $PERL_INSTALL_CHOICE == 'perlbrew-cpanm' ]; then
 
             echo '21b. [[[ LINUX, INSTALL SINGLE-USER PERLBREW & CPANM ]]]'
             echo '[ You Should Use Ubuntu Or CentOS Instead Of curl Below, Unless You Are Not In Ubuntu Or CentOS, Or You Have No Choice ]'
             echo '[ WARNING: Use Only ONE Of The Following Three Options, EITHER Ubuntu OR CentOS OR curl, But NOT More Than One! ]'
             C 'Please read the warning above.  Seriously.'
 
-            if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+            if [[ "$OS_CHOICE" == "ubuntu" ]]; then
                 VERIFY_UBUNTU
 
                 echo '[ UBUNTU ONLY: Install Perlbrew ]'
@@ -1314,7 +1339,7 @@ if [ $MENU_CHOICE -le 21 ]; then
                 echo '[ UBUNTU ONLY: Check Install, Confirm No Errors ]'
                 S apt-get -f install
             # OR
-            elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+            elif [[ "$OS_CHOICE" == "centos" ]]; then
                 VERIFY_CENTOS
                 echo '[ WARNING: Use Only ONE Of The Following Two CentOS Options, EITHER CPAN OR perlbrew_install.sh, But NOT More Than One! ]'
                 C 'Please read the warning above.  Seriously.'
@@ -1373,7 +1398,7 @@ if [ $MENU_CHOICE -le 21 ]; then
             echo '[ Re-Check Version Of ExtUtils::MakeMaker, Must Be v7.04 Or Newer ]'
             B 'perl -MExtUtils::MakeMaker\ 999'
 
-        elif [ $PERL_INSTALL_CHOICE -eq 'c' ]; then
+        elif [ $PERL_INSTALL_CHOICE == 'c' ] || [ $PERL_INSTALL_CHOICE == 'source-cpanm' ]; then
 
             echo '21c. [[[ LINUX, INSTALL SYSTEM-WIDE PERL FROM SOURCE & CPANM ]]]'
             echo '[ WARNING: Choose ONLY ONE Of The Following Two Methods: Manual Build, Or Tokuhirom Perl-Build ]'
@@ -1392,17 +1417,17 @@ if [ $MENU_CHOICE -le 21 ]; then
             echo '[ EITHER OPTION: Install cpanminus ]'
             S perl -MCPAN -e 'install App::cpanminus'
 
-        elif [ $PERL_INSTALL_CHOICE -eq 'd' ]; then
+        elif [ $PERL_INSTALL_CHOICE == 'd' ] || [ $PERL_INSTALL_CHOICE == 'system-cpanm' ]; then
 
             echo '21d. [[[ LINUX, INSTALL SYSTEM-WIDE SYSTEM PERL & CPANM ]]]'
-            if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+            if [[ "$OS_CHOICE" == "ubuntu" ]]; then
                 VERIFY_UBUNTU
                 echo '[ UBUNTU ONLY: Install Perl & CPANM ]'
                 S apt-get install perl cpanminus
                 echo '[ UBUNTU ONLY: Check Install, Confirm No Errors ]'
                 S apt-get -f install
             # OR
-            elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+            elif [[ "$OS_CHOICE" == "centos" ]]; then
                 VERIFY_CENTOS 
                 echo '[ CENTOS ONLY: Install Perl & CPANM Dependencies ]'
                 S yum install perl-core perl-libs perl-devel perl-CPAN curl
@@ -1411,7 +1436,8 @@ if [ $MENU_CHOICE -le 21 ]; then
                 echo '[ CENTOS ONLY: Check Install, Confirm No Errors; WARNING! MAKE TAKE HOURS TO RUN! ]'
                 S yum check
             fi
-
+        else
+            echo 'ERROR: Unrecognized Value For PERL_INSTALL_CHOICE, "' $PERL_INSTALL_CHOICE '"'
         fi
     elif [ $MACHINE_CHOICE -eq 1 ]; then
         echo "Nothing To Do On Existing Machine!"
@@ -1419,7 +1445,7 @@ if [ $MENU_CHOICE -le 21 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 24 ]; then
+if [ $SECTION_CHOICE -le 24 ]; then
     echo  '24. [[[ LINUX, PACKAGE RPERL DEPENDENCIES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -1428,10 +1454,10 @@ if [ $MENU_CHOICE -le 24 ]; then
         # [[[ FPM ]]]
         # [[[ FPM ]]]
         # fpm, install deps
-        if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+        if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             VERIFY_UBUNTU
             S apt-get install ruby ruby-dev rubygems build-essential
-        elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+        elif [[ "$OS_CHOICE" == "centos" ]]; then
             VERIFY_CENTOS
             S yum install ruby-devel gcc make rpm-build rubygems perl-generators
         fi
@@ -1455,11 +1481,11 @@ if [ $MENU_CHOICE -le 24 ]; then
         B repoquery --provides perl-IO-Compress  # package installed or not
 
         # fpm, install dev version
-        if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+        if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             S apt-get install bsdtar
-        elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+        elif [[ "$OS_CHOICE" == "centos" ]]; then
             S yum install bsdtar
-        elif [[ "$OS_CHOICE" == "MACOSX" ]]; then
+        elif [[ "$OS_CHOICE" == "macosx" ]]; then
             VERIFY_MACOSX
             S xcode-select --install  # Mac OS 10.9 (Mavericks)
         fi
@@ -1478,9 +1504,9 @@ if [ $MENU_CHOICE -le 24 ]; then
         B fpm --version
 
         # fpm, build RPerl package w/out deps
-        if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+        if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             B reset; rm -Rf ~/cpantofpm_tmp/* ~/cpantofpm_packages/*; cd ~/cpantofpm_packages/; time fpm --no-cpan-test --cpan-verbose --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/cpantofpm_tmp/ -s cpan -t deb --deb-?? RPerl
-        elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+        elif [[ "$OS_CHOICE" == "centos" ]]; then
             B reset; rm -Rf ~/cpantofpm_tmp/* ~/cpantofpm_packages/*; cd ~/cpantofpm_packages/; time fpm --no-cpan-test --cpan-verbose --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/cpantofpm_tmp/ -s cpan -t rpm --rpm-ba RPerl
         fi
 
@@ -1523,9 +1549,9 @@ if [ $MENU_CHOICE -le 24 ]; then
         # [[[ CPANtoFPM ]]]
         # [[[ CPANtoFPM ]]]
         # cpantofpm, install deps
-        if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+        if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             S apt-get install expect  # for unbuffer
-        elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+        elif [[ "$OS_CHOICE" == "centos" ]]; then
             S yum install expect  # for unbuffer
         fi
 
@@ -1556,20 +1582,20 @@ if [ $MENU_CHOICE -le 24 ]; then
         B cd; rm ./cpantofpm ; vi ./cpantofpm ; chmod a+x ./cpantofpm
 
         # cpantofpm, build RPerl package w/ deps
-        if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+        if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             B reset; rm -Rf ~/cpantofpm_tmp/* ~/cpantofpm_packages/*; cd ~/cpantofpm_packages/; time ~/cpantofpm -t deb RPerl
-        elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+        elif [[ "$OS_CHOICE" == "centos" ]]; then
             B reset; rm -Rf ~/cpantofpm_tmp/* ~/cpantofpm_packages/*; cd ~/cpantofpm_packages/; time ~/cpantofpm -t rpm RPerl
         fi
 
         # [[[ AStyle ]]]
         # [[[ AStyle ]]]
         # [[[ AStyle ]]]
-        if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+        if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             # DEB START HERE: create packages
             # DEB START HERE: create packages
             # DEB START HERE: create packages
-        elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+        elif [[ "$OS_CHOICE" == "centos" ]]; then
             CD ~/cpantofpm_packages/x86_64/
             B wget https://github.com/wbraswell/astyle-mirror/raw/master/backup/astyle-2.05.1-1.el7.centos.x86_64.rpm
             CD ~/cpantofpm_packages/SRPMS/
@@ -1592,11 +1618,11 @@ if [ $MENU_CHOICE -le 24 ]; then
         CD ~/
         B mkdir -p ~/fpm_tmp_work && rm -Rf ~/fpm_tmp_work/*
 
-        if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+        if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             # DEB START HERE: create packages
             # DEB START HERE: create packages
             # DEB START HERE: create packages
-        elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+        elif [[ "$OS_CHOICE" == "centos" ]]; then
             B reset; time fpm --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/fpm_tmp_work/ -s dir -t rpm --rpm-ba -p libpcre2-VERSION_ARCH.rpm     -n libpcre2     -v 10.31 -C ~/fpm_tmp_install usr/local/lib usr/local/bin usr/local/share
             B rm libpcre2-10.31_x86_64.rpm  # prefer file naming uniformity with '-1' in all file names
             B cp ~/fpm_tmp_work/package-rpm-build-*/RPMS/x86_64/libpcre2-10.31-1.x86_64.rpm ~/cpantofpm_packages/x86_64/
@@ -1615,11 +1641,11 @@ if [ $MENU_CHOICE -le 24 ]; then
         # [[[ JPCRE2 ]]]
         # [[[ JPCRE2 ]]]
         # [[[ JPCRE2 ]]]
-        if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+        if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             # DEB START HERE: create packages
             # DEB START HERE: create packages
             # DEB START HERE: create packages
-        elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+        elif [[ "$OS_CHOICE" == "centos" ]]; then
             S rpm -i ~/cpantofpm_packages/x86_64/libpcre2-10.31-1.x86_64.rpm
             S rpm -i ~/cpantofpm_packages/x86_64/libpcre2-dev-10.31-1.x86_64.rpm
         fi
@@ -1636,11 +1662,11 @@ if [ $MENU_CHOICE -le 24 ]; then
         CD ~/
         B mkdir -p ~/fpm_tmp_work && rm -Rf ~/fpm_tmp_work/*
 
-        if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+        if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             # DEB START HERE: create packages
             # DEB START HERE: create packages
             # DEB START HERE: create packages
-        elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+        elif [[ "$OS_CHOICE" == "centos" ]]; then
             B reset; time fpm --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/fpm_tmp_work/ -s dir -t rpm --rpm-ba -p libjpcre2-dev_VERSION_ARCH.rpm -n libjpcre2-dev -v 10.31.02-2 -d "libpcre2 >= 10.31" -d "libpcre2-dev >= 10.31" -C ~/fpm_tmp_install usr/local/include usr/local/share/doc
             B rm libjpcre2-dev_10.31.02_2_x86_64.rpm  # prefer file naming uniformity with '-1' in all file names
             B cp ~/fpm_tmp_work/package-rpm-build-*/RPMS/x86_64/libjpcre2-dev-10.31.02_2-1.x86_64.rpm ~/cpantofpm_packages/x86_64/
@@ -1666,11 +1692,11 @@ if [ $MENU_CHOICE -le 24 ]; then
         CD ~/
         B mkdir -p ~/fpm_tmp_work && rm -Rf ~/fpm_tmp_work/*
 
-        if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+        if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             # DEB START HERE: create packages
             # DEB START HERE: create packages
             # DEB START HERE: create packages
-        elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+        elif [[ "$OS_CHOICE" == "centos" ]]; then
             B reset; time fpm --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/fpm_tmp_work/ -s dir -t rpm --rpm-ba -p pluto-polycc-VERSION_ARCH.rpm     -n pluto-polycc     -v 0.11.4 -C ~/fpm_tmp_install usr/local/lib usr/local/bin usr/local/share
             B rm pluto-polycc-0.11.4_x86_64.rpm  # prefer file naming uniformity with '-1' in all file names
             B cp ~/fpm_tmp_work/package-rpm-build-*/RPMS/x86_64/pluto-polycc-0.11.4-1.x86_64.rpm ~/cpantofpm_packages/x86_64/
@@ -1690,11 +1716,11 @@ if [ $MENU_CHOICE -le 24 ]; then
         # [[[ BSON ]]]
         # [[[ BSON ]]]
 
-        if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+        if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             # DEB START HERE: create packages
             # DEB START HERE: create packages
             # DEB START HERE: create packages
-        elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+        elif [[ "$OS_CHOICE" == "centos" ]]; then
             echo '[ CENTOS ONLY: Build RPerl Dependencies, MongoDB C++ Driver Prerequisites, BSON libbson ]'
             # perl-interpreter is a dummy package for CentOS 7 compatibility with Fedora source packages libbson & mongo-c-driver
             S yum install rpm-build libtool cyrus-sasl-lib cyrus-sasl-devel snappy-devel perl-interpreter python-sphinx
@@ -1727,11 +1753,11 @@ if [ $MENU_CHOICE -le 24 ]; then
         # [[[ MongoDB C Driver ]]]
         # [[[ MongoDB C Driver ]]]
         # [[[ MongoDB C Driver ]]]
-        if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+        if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             # DEB START HERE: create packages
             # DEB START HERE: create packages
             # DEB START HERE: create packages
-        elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+        elif [[ "$OS_CHOICE" == "centos" ]]; then
             echo '[ CENTOS ONLY: Build RPerl Dependencies, MongoDB C++ Driver Prerequisites, MongoDB C Driver ]'
 #            B wget http://dl.fedoraproject.org/pub/fedora/linux/updates/27/SRPMS/Packages/m/mongo-c-driver-1.9.3-1.fc27.src.rpm  # DEV NOTE: prefer GitHub mirror below
 #            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver-1.9.3-1.fc27.src.rpm  # DEV NOTE: prefer our own GitHub mirror for uniformity
@@ -1760,7 +1786,7 @@ if [ $MENU_CHOICE -le 24 ]; then
         # [[[ MongoDB C++ Driver ]]]
         # [[[ MongoDB C++ Driver ]]]
         # [[[ MongoDB C++ Driver ]]]
-        if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+        if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             # DEB START HERE: create packages
             # DEB START HERE: create packages
             # DEB START HERE: create packages
@@ -1806,7 +1832,7 @@ if [ $MENU_CHOICE -le 24 ]; then
 
             # END UBUNTU MANUAL BUILD, MONGOCXX C++ DRIVER
 
-        elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+        elif [[ "$OS_CHOICE" == "centos" ]]; then
 #            # DEV NOTE: prefer pre-built RPMs below
 #            echo '[ CENTOS ONLY: Build RPerl Dependencies, MongoDB C++ Driver Prerequisites, Fix Broken CMake Files ]'
 #            # NEED ANSWER: can we fix this CMake error permanently by including --enable-static in configure for both libbson & mongo-c-driver above???
@@ -1854,9 +1880,9 @@ if [ $MENU_CHOICE -le 24 ]; then
         # [[[ RPM, YUM REPOSITORY ]]]
 
         # server, install deps, RUN ONCE ONLY
-        if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+        if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             S apt-get install createrepo yum-utils gnupg2 gnupg-agent rng-tools
-        elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+        elif [[ "$OS_CHOICE" == "centos" ]]; then
             S yum install createrepo yum-utils gnupg2 rng-tools
         fi
 
@@ -1935,7 +1961,7 @@ if [ $MENU_CHOICE -le 24 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 25 ]; then
+if [ $SECTION_CHOICE -le 25 ]; then
     echo '25. [[[ LINUX, INSTALL RPERL DEPENDENCIES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -1959,7 +1985,7 @@ if [ $MENU_CHOICE -le 25 ]; then
         # CentOS 7, perl-libs,  /usr/lib64/perl5/CORE/libperl.so
         # CentOS 7, perl-devel, /usr/lib64/perl5/CORE/perl.h     /usr/bin/h2xs  and other *.h files
 
-        if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+        if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             VERIFY_UBUNTU
             echo '[ UBUNTU ONLY: Add Non-Base APT Repositories ]'
             S add-apt-repository \"deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main universe restricted multiverse\"
@@ -1990,7 +2016,7 @@ if [ $MENU_CHOICE -le 25 ]; then
             echo '[ UBUNTU ONLY: Check Install, Confirm No Errors ]'
             S apt-get -f install
         # OR
-        elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+        elif [[ "$OS_CHOICE" == "centos" ]]; then
             VERIFY_CENTOS
 
 
@@ -2095,6 +2121,15 @@ if [ $MENU_CHOICE -le 25 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
+
+
+# START HERE: do not re-prompt for OS_CHOICE if provided as command-line arg; manage RPERL_INSTALL_CHOICE & RPERL_DEPS_PACKAGE_CHOICE as w/ PERL_INSTALL_CHOICE above; accept current section & disable P() prompting as command-line args
+# START HERE: do not re-prompt for OS_CHOICE if provided as command-line arg; manage RPERL_INSTALL_CHOICE & RPERL_DEPS_PACKAGE_CHOICE as w/ PERL_INSTALL_CHOICE above; accept current section & disable P() prompting as command-line args
+# START HERE: do not re-prompt for OS_CHOICE if provided as command-line arg; manage RPERL_INSTALL_CHOICE & RPERL_DEPS_PACKAGE_CHOICE as w/ PERL_INSTALL_CHOICE above; accept current section & disable P() prompting as command-line args
+
+
+
+
 # SECTION 26 VARIABLES
 RPERL_INSTALL_CHOICE='__EMPTY__'
 
@@ -2104,7 +2139,7 @@ GITHUB_FIRST_NAME='__EMPTY__'
 GITHUB_LAST_NAME='__EMPTY__'
 RPERL_REPO_DIRECTORY='__EMPTY__'
 
-if [ $MENU_CHOICE -le 26 ]; then
+if [ $SECTION_CHOICE -le 26 ]; then
     echo '26. [[[ PERL, INSTALL RPERL ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -2138,11 +2173,11 @@ if [ $MENU_CHOICE -le 26 ]; then
             echo '26a. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA PACKAGES.RPERL.ORG ]]]'
             echo
 
-            if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+            if [[ "$OS_CHOICE" == "ubuntu" ]]; then
                 # DEB START HERE: create packages
                 # DEB START HERE: create packages
                 # DEB START HERE: create packages
-            elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+            elif [[ "$OS_CHOICE" == "centos" ]]; then
                 S yum install pygpgme  # check GPG signatures of repo metadata & packages
                 S yum-config-manager --add-repo https://packages.rperl.org/centos7-perl-cpan.repo
                 S yum-config-manager --enable centos7-perl-cpan
@@ -2216,14 +2251,14 @@ if [ $MENU_CHOICE -le 26 ]; then
                 echo '[ SECURE GIT ONLY: SSH Key File(s) Already Exist, Skipping Key Generation ]'
             fi
 
-            if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+            if [[ "$OS_CHOICE" == "ubuntu" ]]; then
                 VERIFY_UBUNTU
                 echo '[ SECURE GIT ON UBUNTU ONLY: Install Keychain Key Manager For OpenSSH ]'
                 S apt-get install keychain
                 echo '[ UBUNTU ONLY: Check Install, Confirm No Errors ]'
                 S apt-get -f install
             # OR
-            elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+            elif [[ "$OS_CHOICE" == "centos" ]]; then
                 VERIFY_CENTOS 
                 C '[ SECURE GIT ON NON-CENTOS ONLY: Not Currently Supported ]'
     #            echo '[ SECURE GIT ON CENTOS ONLY: Install Keychain Key Manager For OpenSSH ]'
@@ -2290,7 +2325,7 @@ RPERL_DEBUG='__EMPTY__'
 RPERL_WARNINGS='__EMPTY__'
 RPERL_INSTALL_DIRECTORY='__EMPTY__'
 
-if [ $MENU_CHOICE -le 28 ]; then
+if [ $SECTION_CHOICE -le 28 ]; then
     echo '28. [[[ RPERL, RUN COMPILER TESTS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -2376,7 +2411,7 @@ fi
 PHYSICSPERL_ENABLE_GRAPHICS='__EMPTY__'
 PHYSICSPERL_NBODY_STEPS='__EMPTY__'
 
-if [ $MENU_CHOICE -le 29 ]; then
+if [ $SECTION_CHOICE -le 29 ]; then
     echo '29. [[[ RPERL, INSTALL RPERL APPS & RUN DEMOS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -2447,7 +2482,7 @@ if [ $MENU_CHOICE -le 29 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 30 ]; then
+if [ $SECTION_CHOICE -le 30 ]; then
     echo '30. [[[ UBUNTU LINUX, INSTALL NFS ]]]'
     echo
     VERIFY_UBUNTU
@@ -2506,7 +2541,7 @@ if [ $MENU_CHOICE -le 30 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 31 ]; then
+if [ $SECTION_CHOICE -le 31 ]; then
     echo '31. [[[ UBUNTU LINUX, INSTALL APACHE & MOD_PERL ]]]'
     echo
     VERIFY_UBUNTU
@@ -2564,7 +2599,7 @@ fi
 # SECTION 32 VARIABLES
 ADMIN_EMAIL='__EMPTY__'
 
-if [ $MENU_CHOICE -le 32 ]; then
+if [ $SECTION_CHOICE -le 32 ]; then
     echo '32. [[[ APACHE, CONFIGURE DOMAIN(S) ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -2646,7 +2681,7 @@ if [ $MENU_CHOICE -le 32 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 33 ]; then
+if [ $SECTION_CHOICE -le 33 ]; then
     echo '33. [[[ UBUNTU LINUX, INSTALL MYSQL & PHPMYADMIN ]]]'
     echo
     VERIFY_UBUNTU
@@ -2667,7 +2702,7 @@ fi
 MCRYPT_INI='__EMPTY__'
 MCRYPT_SO='__EMPTY__'
 
-if [ $MENU_CHOICE -le 34 ]; then
+if [ $SECTION_CHOICE -le 34 ]; then
     echo '34. [[[ APACHE & MYSQL, CONFIGURE PHPMYADMIN ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -2760,7 +2795,7 @@ if [ $MENU_CHOICE -le 34 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 35 ]; then
+if [ $SECTION_CHOICE -le 35 ]; then
     echo '35. [[[ UBUNTU LINUX, INSTALL WEBMIN ]]]'
     echo
     VERIFY_UBUNTU
@@ -2783,7 +2818,7 @@ if [ $MENU_CHOICE -le 35 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 36 ]; then
+if [ $SECTION_CHOICE -le 36 ]; then
     echo '36. [[[ UBUNTU LINUX, INSTALL POSTFIX ]]]'
     echo
     VERIFY_UBUNTU
@@ -2839,7 +2874,7 @@ if [ $MENU_CHOICE -le 36 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 37 ]; then
+if [ $SECTION_CHOICE -le 37 ]; then
     echo '37. [[[ PERL, INSTALL LATEST CATALYST ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -2853,7 +2888,7 @@ if [ $MENU_CHOICE -le 37 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 38 ]; then
+if [ $SECTION_CHOICE -le 38 ]; then
     echo '38. [[[ UBUNTU LINUX, INSTALL NON-LATEST CATALYST ]]]'
     echo
     VERIFY_UBUNTU
@@ -2869,7 +2904,7 @@ if [ $MENU_CHOICE -le 38 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 39 ]; then
+if [ $SECTION_CHOICE -le 39 ]; then
     echo '39. [[[ PERL, CHECK CATALYST VERSIONS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -2901,7 +2936,7 @@ fi
 # SECTION 40 VARIABLES
 MYSQL_ROOTPASS='__EMPTY__'
 
-if [ $MENU_CHOICE -le 40 ]; then
+if [ $SECTION_CHOICE -le 40 ]; then
     echo '40. [[[ PERL, INSTALL RAPIDAPP ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -2940,7 +2975,7 @@ if [ $MENU_CHOICE -le 40 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 41 ]; then
+if [ $SECTION_CHOICE -le 41 ]; then
     echo '41. [[[ UBUNTU LINUX, INSTALL SHINYCMS DEPENDENCIES ]]]'
     echo
     VERIFY_UBUNTU
@@ -2971,7 +3006,7 @@ if [ $MENU_CHOICE -le 41 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 42 ]; then
+if [ $SECTION_CHOICE -le 42 ]; then
     echo  '42. [[[ PERL SHINYCMS, INSTALL SHINYCMS DEPENDENCIES & SHINYCMS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -3011,7 +3046,7 @@ SITE_NAME_DEFAULT='__EMPTY__'
 ADMIN_FIRST_NAME='__EMPTY__'
 ADMIN_LAST_NAME='__EMPTY__'
 
-if [ $MENU_CHOICE -le 43 ]; then
+if [ $SECTION_CHOICE -le 43 ]; then
     echo  '43. [[[ PERL SHINYCMS, CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -3111,7 +3146,7 @@ if [ $MENU_CHOICE -le 43 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 44 ]; then
+if [ $SECTION_CHOICE -le 44 ]; then
     echo  '44. [[[ PERL SHINYCMS, BUILD DEMO DATABASE & RUN TESTS ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -3146,7 +3181,7 @@ fi
 DOMAIN_NAME_UNDERSCORES_NO_USER='__EMPTY__'
 DOMAIN_NAME_UNDERSCORES_YES_USER='__EMPTY__'
 
-if [ $MENU_CHOICE -le 45 ]; then
+if [ $SECTION_CHOICE -le 45 ]; then
     echo  '45. [[[ PERL SHINYCMS, BACKUP & RESTORE DATABASE ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -3195,7 +3230,7 @@ if [ $MENU_CHOICE -le 45 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 46 ]; then
+if [ $SECTION_CHOICE -le 46 ]; then
     echo  '46. [[[ PERL SHINYCMS, CONFIGURE APACHE MOD_FASTCGI ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -3311,7 +3346,7 @@ END_HEREDOC
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 47 ]; then
+if [ $SECTION_CHOICE -le 47 ]; then
     echo  '47. [[[ PERL SHINYCMS, CONFIGURE APACHE MOD_PERL ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -3378,7 +3413,7 @@ END_HEREDOC
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 48 ]; then
+if [ $SECTION_CHOICE -le 48 ]; then
     echo  '48. [[[ PERL SHINYCMS, CREATE APACHE DIRECTORIES & ENABLE STATIC PAGE ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -3394,7 +3429,7 @@ if [ $MENU_CHOICE -le 48 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 49 ]; then
+if [ $SECTION_CHOICE -le 49 ]; then
     echo  '49. [[[ PERL SHINYCMS, CONFIGURE APACHE PERMISSIONS & ENABLE DYNAMIC PAGES ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -3431,7 +3466,7 @@ if [ $MENU_CHOICE -le 49 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $MENU_CHOICE -le 50 ]; then
+if [ $SECTION_CHOICE -le 50 ]; then
     echo  '50. [[[ PERL SHINYCMS, CONFIGURE SHINY ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
@@ -3461,14 +3496,14 @@ if [ $MENU_CHOICE -le 50 ]; then
 #    CURRENT_SECTION_COMPLETE  # final section!
 fi
 
-if [ $MENU_CHOICE -le 60 ]; then
+if [ $SECTION_CHOICE -le 60 ]; then
     echo '60. [[[ LINUX, INSTALL MONGODB ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
 
         echo '[ Install MongoDB Enterprise Edition ]'
 
-        if [[ "$OS_CHOICE" == "UBUNTU" ]]; then
+        if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             VERIFY_UBUNTU
             
             echo '[ UBUNTU ONLY: OFFICIAL MONGODB INSTALLATION DOCS    https://docs.mongodb.com/manual/tutorial/install-mongodb-enterprise-on-ubuntu/ ]'
@@ -3500,7 +3535,7 @@ if [ $MENU_CHOICE -le 60 ]; then
             echo '[ UBUNTU ONLY: Optional, Stop MongoDB Enterprise Service ]'
             S service mongod stop
         # OR
-        elif [[ "$OS_CHOICE" == "CENTOS" ]]; then
+        elif [[ "$OS_CHOICE" == "centos" ]]; then
             VERIFY_CENTOS
 
             echo '[ CENTOS ONLY: OFFICIAL MONGODB INSTALLATION DOCS    https://docs.mongodb.com/manual/tutorial/install-mongodb-enterprise-on-red-hat/ ]'
@@ -3542,7 +3577,7 @@ fi
 # SECTION 70 VARIABLES
 LOCAL_HOSTNAME='__EMPTY__'
 
-if [ $MENU_CHOICE -le 70 ]; then
+if [ $SECTION_CHOICE -le 70 ]; then
     echo  '70. [[[ PERL CLOUDFORFREE, FOOOOOO ]]]'
     echo
     if [ $MACHINE_CHOICE -eq 0 ]; then
