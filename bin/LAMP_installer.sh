@@ -1,7 +1,13 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.245_000'
+VERSION='0.300_000'
+
+
+# START HERE: sync w/ rperl_installer.sh
+# START HERE: sync w/ rperl_installer.sh
+# START HERE: sync w/ rperl_installer.sh
+
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -28,26 +34,31 @@ USER_INPUT=''
 CURRENT_SECTION=0
 
 # command-line arguments
+HELP_CHOICE="no"       # DEFAULT NO
+DEVELOPER_CHOICE="no"  # DEFAULT NO
 SECTION_CHOICE="__EMPTY__"
 MACHINE_CHOICE="__EMPTY__"
 OS_CHOICE="__EMPTY__"
 PERL_INSTALL_CHOICE="__EMPTY__"
 RPERL_INSTALL_CHOICE="__EMPTY__"
-RPERL_DEPS_PACKAGE_CHOICE="__EMPTY__"
 
 # block comment template
 : <<'END_COMMENT'
     foo bar bat
 END_COMMENT
 
-
-
-
-
 # command-line arguments AKA options
 for i in "$@"
 do
 case $i in
+    -?|-h|--help)
+    HELP_CHOICE="yes"
+    shift
+    ;;
+    -d=*|--developer=*)
+    DEVELOPER_CHOICE="${i#*=}"
+    shift
+    ;;
     -s=*|--section=*)
     SECTION_CHOICE="${i#*=}"
     shift
@@ -68,14 +79,6 @@ case $i in
     RPERL_INSTALL_CHOICE="${i#*=}"
     shift
     ;;
-    -rdp=*|--rperl-deps-package=*)
-    RPERL_DEPS_PACKAGE_CHOICE="${i#*=}"
-    shift
-    ;;
-#    --some-arg)  # argument w/out value, set value to 'YES'
-#    SOME_ARG_CHOICE=YES
-#    shift
-#    ;;
     *)
           # unknown argument, ignore
     ;;
@@ -83,15 +86,45 @@ esac
 done
 
 echo 'Received the following command-line arguments AKA options:'
+echo "HELP_CHOICE               = ${HELP_CHOICE}"
+echo "DEVELOPER_CHOICE          = ${DEVELOPER_CHOICE}"
 echo "SECTION_CHOICE            = ${SECTION_CHOICE}"
 echo "MACHINE_CHOICE            = ${MACHINE_CHOICE}"
 echo "OS_CHOICE                 = ${OS_CHOICE}"
 echo " PERL_INSTALL_CHOICE      = ${PERL_INSTALL_CHOICE}"
 echo "RPERL_INSTALL_CHOICE      = ${RPERL_INSTALL_CHOICE}"
-echo "RPERL_DEPS_PACKAGE_CHOICE = ${RPERL_DEPS_PACKAGE_CHOICE}"
+echo
 
-
-
+if [ $HELP_CHOICE == 'yes' ]; then
+    echo 'LAMP Installer Script'
+    echo 'Usage:'
+    echo '        LAMP_installer.sh [ARGUMENTS]'
+    echo
+    echo 'Arguments:'
+    echo '    -? ...OR... -h ...OR... --help'
+    echo '        Print this (relatively) brief help message for command-line usage.'
+    echo
+    echo '    -d=[yes|no] ...OR... --developer=[yes|no]'
+    echo '        Execute commands for developer sections, or not.'
+    echo
+    echo '    -s=INTEGER ...OR... --section=INTEGER'
+    echo '        Execute commands starting at specified section number.'
+    echo
+    echo '    -m=[new|existing] ...OR... --machine=[new|existing]'
+    echo '        Execute commands for new or existing machine.'
+    echo
+    echo '    -os=[ubuntu|centos] ...OR... --operating-system=[ubuntu|centos]'
+    echo '        Execute commands for specified operating system.'
+    echo
+    echo '    -pi=[locallib|perlbrew|source|system] ...OR... --perl-install=[locallib|perlbrew|source|system]'
+    echo '        Execute commands for specified Perl installation option.'
+    echo
+    echo '    -ri=[packages|cpanm-single|cpanm-system|cpan-single|cpan-system|github-secure-git|github-public-git|github-public-zip] ...OR...'
+    echo '    -rperl-install=[packages|cpanm-single|cpanm-system|cpan-single|cpan-system|github-secure-git|github-public-git|github-public-zip]'
+    echo '        Execute commands for specified RPerl installation option.'
+    echo
+    exit
+fi
 
 CURRENT_SECTION_COMPLETE () {
     echo
@@ -345,11 +378,11 @@ if [ $SECTION_CHOICE == '__EMPTY__' ]; then
     echo  '         <<< PERL & RPERL SECTIONS >>>'
     echo  '20. [[[        LINUX,   INSTALL  PERL DEPENDENCIES ]]]'
     echo  '21. [[[        LINUX,   INSTALL  PERL & CPANM ]]]'
-    echo  '24. [[[        LINUX,   PACKAGE RPERL DEPENDENCIES ]]]'
-    echo  '25. [[[        LINUX,   INSTALL RPERL DEPENDENCIES ]]]'
-    echo  '26. [[[  PERL,          INSTALL RPERL ]]]'
-    echo  '28. [[[ RPERL,          RUN COMPILER TESTS ]]]'
-    echo  '29. [[[ RPERL,          INSTALL RPERL APPS & RUN DEMOS ]]]'
+    echo  '22. [[[        LINUX,   PACKAGE RPERL DEPENDENCIES, DEVELOPERS ONLY ]]]'
+    echo  '23. [[[        LINUX,   INSTALL RPERL DEPENDENCIES ]]]'
+    echo  '24. [[[  PERL,          INSTALL RPERL ]]]'
+    echo  '25. [[[ RPERL,          RUN COMPILER TESTS ]]]'
+    echo  '26. [[[ RPERL,          INSTALL RPERL APPS & RUN DEMOS ]]]'
     echo
     echo  '         <<< SERVICE SECTIONS >>>'
     echo  '30. [[[ UBUNTU LINUX,   INSTALL NFS ]]]'
@@ -376,7 +409,7 @@ if [ $SECTION_CHOICE == '__EMPTY__' ]; then
     echo
     echo  '60. [[[        LINUX,   INSTALL MONGODB ]]]'
     echo
-    echo  '70. [[[ PERL CLOUDFORFREE, FOOOOOO ]]]'
+    echo  '70. [[[ PERL CLOUDFORFREE, INSTALL ]]]'
     echo
 
     while true; do
@@ -439,7 +472,7 @@ DOMAIN_NAME='__EMPTY__'
 if [ $SECTION_CHOICE -le 0 ]; then
     echo '0. [[[ LINUX, CONFIGURE OPERATING SYSTEM USERS ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '0. [[[ NEW MACHINE; SERVER; REMOTE CLOUD HOST ]]]'
         echo '[ Reset root Password ]'
         S passwd  # NEED FIX: disable root account???
@@ -462,7 +495,7 @@ if [ $SECTION_CHOICE -le 0 ]; then
         echo '[ Take Note Of IP Address For Use On Existing Machine ]'
         B ifconfig
         C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine Now..."
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo '1. [[[ EXISTING MACHINE; CLIENT; LOCAL USER SYSTEM ]]]'
         C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
         D $USERNAME "new machine's username" `whoami`
@@ -498,7 +531,7 @@ fi
 if [ $SECTION_CHOICE -le 1 ]; then
     echo '1. [[[ LINUX, CONFIGURE CLOUD NETWORKING ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
         S mv /tmp/hosts /etc/hosts
         D $EDITOR 'preferred text editor' 'vi'
@@ -526,7 +559,7 @@ if [ $SECTION_CHOICE -le 1 ]; then
         echo 'nameserver 8.8.4.4'
         echo
         S reboot
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         P $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)"
         DOMAIN_NAME=$USER_INPUT
         B scp /etc/hosts $DOMAIN_NAME:/tmp/hosts
@@ -542,7 +575,7 @@ if [ $SECTION_CHOICE -le 2 ]; then
     echo '2. [[[ UBUNTU LINUX, USB INSTALL, FIX BROKEN SWAP DEVICE ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ WARNING: This section only applies to Ubuntu installed from a USB drive! ]'
         C 'Please read the warning above.  Seriously.'
         echo '[ During Installation, Swap May Be Created On /dev/sda5 Device, Determine Device ]'
@@ -561,7 +594,7 @@ if [ $SECTION_CHOICE -le 2 ]; then
         S swapoff -a
         S swapon -a
         S swapon -s
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
         echo
     fi
@@ -572,13 +605,13 @@ if [ $SECTION_CHOICE -le 3 ]; then
     echo '3. [[[ UBUNTU LINUX, FIX BROKEN LOCALE ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ NOTE: Check For The Following Error When You Run The Next Command... "perl: warning: Setting locale failed." ]'
         B 'perl -e exit'
         echo '[ If You Saw The locale Error, Then Run The Next 2 Commands To Generate & Reconfigure Locales ]'
         S locale-gen en_US.UTF-8
         S dpkg-reconfigure locales
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -588,11 +621,11 @@ if [ $SECTION_CHOICE -le 4 ]; then
     echo '4. [[[ UBUNTU LINUX, INSTALL EXPERIMENTAL UBUNTU SDK BEFORE OTHER PACKAGES ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ WARNING: THIS SECTION IS EXPERIMENTAL!  This should NOT be done if you are not sure about what you are doing!!! ]'
         C 'Please read the warning above.  Seriously.'
         S apt-get install ubuntu-sdk
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -606,7 +639,7 @@ if [ $SECTION_CHOICE -le 5 ]; then
     echo '5. [[[ UBUNTU LINUX, UPGRADE ENTIRE OPERATING SYSTEM OR ALL PACKAGES ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ WARNING: THIS SECTION IS EXPERIMENTAL!  This should NOT be done if you are not sure about what you are doing!!! ]'
         echo '[ WARNING: You should probably not mix do-release-upgrade with the following apt-get & aptitude commands. ]'
         C 'Please read the warnings above.  Seriously.'
@@ -631,7 +664,7 @@ if [ $SECTION_CHOICE -le 5 ]; then
         echo '[ Clean Unneeded Files & Reboot ]'
         S apt-get autoremove
         S reboot
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -640,30 +673,34 @@ fi
 if [ $SECTION_CHOICE -le 6 ]; then
     echo '6. [[[ LINUX, INSTALL BASE CLI OPERATING SYSTEM PACKAGES ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
 
         if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             VERIFY_UBUNTU
-            echo '[ UBUNTU ONLY: Check Install, Confirm No Errors ]'
+            echo '[ Check Install, Confirm No Errors ]'
             S apt-get update
             S apt-get -f install
-            echo '[ UBUNTU ONLY: General Tools: g++ make ssh perl cpan perl-doc vim git htop linuxlogo lynx traceroute screen ifconfig ]'
-            echo '[ UBUNTU ONLY: LAMP University Tools Requirements: zip unzip ]'
+            echo '[ General Tools: g++ make ssh perl cpan perl-doc vim git htop linuxlogo lynx traceroute screen ifconfig ]'
+            echo '[ LAMP University Tools Requirements: zip unzip ]'
             S apt-get install g++ make ssh perl perl-doc vim git htop linuxlogo lynx traceroute screen net-tools zip unzip
-            echo '[ UBUNTU ONLY: Check Install, Confirm No Errors ]'
+            echo '[ Check Install, Confirm No Errors ]'
             S apt-get -f install
         # OR
         elif [[ "$OS_CHOICE" == "centos" ]]; then
             VERIFY_CENTOS
-            echo '[ CENTOS ONLY: Check Install, Confirm No Errors; WARNING! MAKE TAKE HOURS TO RUN! ]'
-            S yum check
-            echo '[ CENTOS ONLY: General Tools: g++ make ssh perl cpan perl-doc vim git htop linuxlogo lynx traceroute screen ifconfig ]'
-            echo '[ CENTOS ONLY: LAMP University Tools Requirements: zip unzip ]'
+            if [ $DEVELOPER_CHOICE == 'yes' ]; then
+                echo '[ Check Install, Confirm No Errors; WARNING! MAY TAKE HOURS TO RUN! ]'
+                S yum check
+            fi
+            echo '[ General Tools: g++ make ssh perl cpan perl-doc vim git htop linuxlogo lynx traceroute screen ifconfig ]'
+            echo '[ LAMP University Tools Requirements: zip unzip ]'
             S yum install gcc-c++ make openssh openssh-clients perl perl-core perl-CPAN perl-Pod-Perldoc vim-enhanced git lynx traceroute screen net-tools zip unzip
             S yum install epel-release
             S yum install htop linux_logo
-            echo '[ CENTOS ONLY: Check Install, Confirm No Errors; WARNING! MAKE TAKE HOURS TO RUN! ]'
-            S yum check
+            if [ $DEVELOPER_CHOICE == 'yes' ]; then
+                echo '[ Check Install, Confirm No Errors; WARNING! MAY TAKE HOURS TO RUN! ]'
+                S yum check
+            fi
         fi
 
         echo '[ Configure SSH, Keep Connections Alive, Required Over Some VPN & Proxy Connections ]'
@@ -696,7 +733,7 @@ END_HEREDOC
         S "echo '$SSH_CLIENTALIVE' >> /etc/ssh/sshd_config"  # DEV NOTE: must wrap redirects in quotes
         S service sshd restart
 
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -706,7 +743,7 @@ if [ $SECTION_CHOICE -le 7 ]; then
     echo '7. [[[ UBUNTU LINUX, INSTALL & TEST CLAMAV ANTI-VIRUS ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ NOTE: ClamAV should be skipped on low-memory systems. ]'
         C 'Please read the note above.'
         S apt-get install clamav clamav-daemon 
@@ -726,7 +763,7 @@ if [ $SECTION_CHOICE -le 7 ]; then
         S /etc/init.d/clamav-freshclam start
         S /etc/init.d/clamav-freshclam status
         S clamdscan -V
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -735,7 +772,7 @@ fi
 if [ $SECTION_CHOICE -le 8 ]; then
     echo '8. [[[ LINUX, INSTALL LAMP UNIVERSITY TOOLS ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         B wget https://github.com/wbraswell/lampuniversity.org/archive/master.zip
         B mv master.zip lampuniversity.org-master.zip
         B unzip lampuniversity.org-master.zip
@@ -746,7 +783,7 @@ if [ $SECTION_CHOICE -le 8 ]; then
         C 'Please Log Out And Log Back In, Which Should Reset The $PATH Environmental Variable To Include The Newly-Created ~/bin Directory, Then Come Back To This Point.'
         echo '[ Test LAMP University Tools, Top Memory Script ]'
         B topmem.sh
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -756,7 +793,7 @@ if [ $SECTION_CHOICE -le 9 ]; then
     echo '9. [[[ UBUNTU LINUX, INSTALL HEIRLOOM TOOLS ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ NOTE: Only install the Heirloom Tools if you specifically need bdiff or one of the other tools. ]'
         C 'Please read the note above.'
         S apt-get install zlib1g-dev libncurses5-dev libssl-dev
@@ -767,7 +804,7 @@ if [ $SECTION_CHOICE -le 9 ]; then
         S rm -Rf ubuntu-heirloom-master*
         echo '[ Test Heirloom Tools, bdiff Script ]'
         B /usr/5bin/bdiff
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -777,7 +814,7 @@ if [ $SECTION_CHOICE -le 10 ]; then
     echo '10. [[[ UBUNTU LINUX, INSTALL BROADCOM B43 WIFI ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ WARNING: The following 2 apt-get commands are only for affected machines such as Dell Latitude D430 & D630. ]'
         echo '[ Symptoms include no working wireless support, and the inability to shut down or reboot or suspend. ]'
         C 'Please read the warning above.  Seriously.'
@@ -786,7 +823,7 @@ if [ $SECTION_CHOICE -le 10 ]; then
         echo '[ WARNING: The following 1 apt-get command is only for affected machines with a network card containing the Realtek 8812 chipset such as a D-Link DWA-182. ]'
         S apt-get install rtl8812au-dkms
         S reboot
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -801,7 +838,7 @@ if [ $SECTION_CHOICE -le 11 ]; then
     echo '11. [[[ UBUNTU LINUX, PERFORMANCE BENCHMARKING ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ Linux Logo Basic Performance Data ]'
         B linuxlogo
         echo '[ CPU Miner Advanced Performance Benchmark ]'
@@ -816,7 +853,7 @@ if [ $SECTION_CHOICE -le 11 ]; then
         P $CPUMINER_PASSWORD "CPU Miner Password"
         CPUMINER_PASSWORD=$USER_INPUT
         B "cd cpuminer; ./minerd --url=http://$CPUMINER_SERVER --userpass=$CPUMINER_USERNAME:$CPUMINER_PASSWORD"
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -829,7 +866,7 @@ if [ $SECTION_CHOICE -le 12 ]; then
     echo '12. [[[ UBUNTU LINUX, INSTALL BASE GUI OPERATING SYSTEM PACKAGES ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
         D $UBUNTU_RELEASE_NAME 'Ubuntu release name (trusty, xenial, etc.)' 'xenial'
@@ -858,7 +895,7 @@ if [ $SECTION_CHOICE -le 12 ]; then
         S apt-get update
         echo '[ Check Install, Confirm No Errors ]'
         S apt-get -f install
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -868,7 +905,7 @@ if [ $SECTION_CHOICE -le 13 ]; then
     echo '13. [[[ UBUNTU LINUX, INSTALL EXTRA GUI OPERATING SYSTEM PACKAGES ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ Google Chrome, Add Package Repository ]'
         S 'wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -'
         S 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
@@ -892,7 +929,7 @@ if [ $SECTION_CHOICE -le 13 ]; then
         echo
         echo '[ Eclipse vi Plugin ]'
         S 'wget http://www.viplugin.com/files/viPlugin_1.20.3.zip; unzip viPlugin_1.20.3.zip; mv features/* ~/.eclipse/org.eclipse.*/features/; mv plugins/* ~/.eclipse/org.eclipse.*/plugins; rm -Rf features plugins'
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -906,7 +943,7 @@ if [ $SECTION_CHOICE -le 14 ]; then
     echo
     VERIFY_UBUNTU
 
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '14.0 [ VNC Server, Install VNC ]'
         S apt-get install x11vnc
 
@@ -915,12 +952,12 @@ if [ $SECTION_CHOICE -le 14 ]; then
             # __OR__
 #        S x11vnc -wait 50 -noxdamage -passwd PASSWORD -display :0 -forever -o /var/log/x11vnc.log -bg  # run at startup, put this inside startup file
 
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo '14.0 [ VNC Client, Install VNC ]'
         S apt-get install ssvnc
     fi
 
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         C 'Please run section 14.0 on the existing local machine before proceeding.'
         echo '14.1a [ If VNC Server has Private IP via NAT, and '
         echo '        If VNC Client has Private IP via NAT with SSH Pinhole AKA Port Forwarding'
@@ -933,7 +970,7 @@ if [ $SECTION_CHOICE -le 14 ]; then
         LOCAL_USERNAME=$USER_INPUT
         B ssh -R 19999:localhost:22 $LOCAL_USERNAME@$LOCAL_HOSTNAME
 
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         C 'Please run sections 14.0 & 14.1 on the new remote machine before proceeding.'
         echo '14.1a [ If VNC Server has Private IP via NAT, and '
         echo '        If VNC Client has Private IP via NAT with SSH Pinhole AKA Port Forwarding'
@@ -960,7 +997,7 @@ if [ $SECTION_CHOICE -le 14 ]; then
     fi
 
 
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         C "Please Run LAMP Installer Section $CURRENT_SECTION On Existing Machine First..."
         echo '[ Test X-Windows Single-Session Connection ]'
         P $LOCAL_HOSTNAME "Existing Machine's Local Hostname"
@@ -977,7 +1014,7 @@ if [ $SECTION_CHOICE -le 14 ]; then
         B 'echo -e "\n# enable output to XPRA persistent X server\nexport DISPLAY=:100.0\n" >> ~/.bashrc'
         echo '[ Optionally Stop xpra Service ]'
         B xpra stop
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         C "Please configure your local firewall to open port 6000 for both UDP & TCP..."
         echo '[ Determine Display Manager, Either gdm OR lightdm ]'
         B 'ps aux | grep gdm'
@@ -1048,7 +1085,7 @@ if [ $SECTION_CHOICE -le 15 ]; then
     echo '15. [[[ UBUNTU LINUX, INSTALL VIRTUALBOX GUEST ADDITIONS ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ WARNING: This sections is only for use with Ubuntu Linux installed inside a VirtualBox VM! ]'
         C 'Please read the warning above.  Seriously.'
         S apt-get install dkms
@@ -1056,7 +1093,7 @@ if [ $SECTION_CHOICE -le 15 ]; then
         P $ISO_MOUNT_POINT "ISO Mount Point, Directory's Full Path"
         ISO_MOUNT_POINT=$USER_INPUT
         S "cd $ISO_MOUNT_POINT; sh ./VBoxLinuxAdditions.run"
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -1066,7 +1103,7 @@ if [ $SECTION_CHOICE -le 16 ]; then
     echo '16. [[[ UBUNTU LINUX, UNINSTALL HUD & BLUETOOTH & MODEMMANAGER & GVFS & EXTRA GUI PACKAGES ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ Uninstall HUD To Free System Memory ]'
         S apt-get purge hud
         echo '[ Uninstall Bluetooth Support To Free System Memory ]'
@@ -1086,7 +1123,7 @@ if [ $SECTION_CHOICE -le 16 ]; then
         echo '[ Uninstall Extra GUI Packages To Free System Storage (Disk Space) ]'
         S apt-get purge thunderbird pidgin simple-scan orage gnome-mines gnome-sudoku speech-dispatcher xfce4-notes transmission-gtk
         S apt-get purge libreoffice-common
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -1096,7 +1133,7 @@ if [ $SECTION_CHOICE -le 17 ]; then
     echo '17. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER & CONFIGURE SPACE TELESCOPE IMAGES ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ WARNING: The following command is only for affected machines. ]'
         echo '[ Symptoms include the mouse cursor disappears after screensaver. (CTRL-ALT-F1 for temporary fix.) ]'
         C 'Please read the warning above.  Seriously.'
@@ -1114,7 +1151,7 @@ if [ $SECTION_CHOICE -le 17 ]; then
         echo '-> Advanced Tab -> Image Manipulation -> Choose Random Image -> Browse -> Select Image Folder ~/.xscreensaver_glslideshow/top100'
         echo
         C 'Follow the directions above.'
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -1124,7 +1161,7 @@ if [ $SECTION_CHOICE -le 18 ]; then
     echo '18. [[[ UBUNTU LINUX, CONFIGURE XFCE WINDOW MANAGER ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ Configure Window Manager Layout ]'
         echo 'Right-click on top panel -> Panel -> Panel Preferences -> Green Plus Sign -> Select New Panel -> Items Tab -> Add Windows Buttons & Separator & Workspace Switcher'
         echo '-> Windows Buttons Settings -> Sorting Order: None, Allow Drag-and-Drop -> Separator Settings -> Expand -> Workspace Settings -> 4 Workspaces: Browsers, E-Mail, Files & Office, Terminals'
@@ -1144,7 +1181,7 @@ if [ $SECTION_CHOICE -le 18 ]; then
         C 'Follow the directions above.'
         echo '[ Remove Unused Directories ]'
         B rm -Rf ~/Videos/ ~/Templates/ ~/Public/ ~/Pictures/ ~/Music/ ~/Documents/
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -1158,7 +1195,7 @@ if [ $SECTION_CHOICE -le 19 ]; then
     echo '19. [[[ UBUNTU LINUX, ENABLE AUTOMATIC SECURITY UPDATES ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo 'Follow the directions below.'
         echo
         echo 'enable security updates only'
@@ -1168,7 +1205,7 @@ if [ $SECTION_CHOICE -le 19 ]; then
         echo 'enable Ubuntu (main & universe) repositories only, disable other (restricted & multiverse)'  # NEED ANSWER: why disable security updates from restricted & multiverse repos?
         echo
         S update-manager
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -1177,7 +1214,7 @@ fi
 if [ $SECTION_CHOICE -le 20 ]; then
     echo '20. [[[ LINUX, INSTALL PERL DEPENDENCIES ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ Overview Of Perl Dependencies In This Section ]'
         echo '[ CPAN: The Comprehensive Perl Archive Network, Required For Installing Perl Software ]'
         echo '[ Perl Debug: Symbols For The Perl Interpreter, Optional For Perl Core & XS & RPerl Debugging ]'
@@ -1189,31 +1226,33 @@ if [ $SECTION_CHOICE -le 20 ]; then
 
         if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             VERIFY_UBUNTU
-            echo '[ UBUNTU ONLY: Install Perl Debugging Symbols System-Wide ]'
+            echo '[ Install Perl Debugging Symbols System-Wide ]'
             S apt-get install perl-debug
-            echo '[ UBUNTU ONLY: Install git ]'
+            echo '[ Install git ]'
             S apt-get install git
-            echo '[ UBUNTU ONLY: Install make ]'
+            echo '[ Install make ]'
             S apt-get install make
-            echo '[ UBUNTU ONLY: Install cURL ]'
+            echo '[ Install cURL ]'
             S apt-get install curl
-            echo '[ UBUNTU ONLY: Check Install, Confirm No Errors ]'
+            echo '[ Check Install, Confirm No Errors ]'
             S apt-get -f install
         # OR
         elif [[ "$OS_CHOICE" == "centos" ]]; then
             VERIFY_CENTOS
-            echo '[ CENTOS ONLY: Install CPAN ]'
+            echo '[ Install CPAN ]'
             S yum install perl-core perl-CPAN
-            echo '[ CENTOS ONLY: Install Perl Debugging Symbols System-Wide ]'
+            echo '[ Install Perl Debugging Symbols System-Wide ]'
             echo '[ NOT CURRENTLY AVAILABLE FOR CENTOS ]'
-            echo '[ CENTOS ONLY: Install git ]'
+            echo '[ Install git ]'
             S yum install git
-            echo '[ CENTOS ONLY: Install make ]'
+            echo '[ Install make ]'
             S yum install make
-            echo '[ CENTOS ONLY: Install cURL ]'
+            echo '[ Install cURL ]'
             S yum install curl
-            echo '[ CENTOS ONLY: Check Install, Confirm No Errors; WARNING! MAKE TAKE HOURS TO RUN! ]'
-            S yum check
+            if [ $DEVELOPER_CHOICE == 'yes' ]; then
+                echo '[ Check Install, Confirm No Errors; WARNING! MAY TAKE HOURS TO RUN! ]'
+                S yum check
+            fi
         fi
 
         echo '[ Check cURL Installation ]'
@@ -1247,7 +1286,7 @@ if [ $SECTION_CHOICE -le 20 ]; then
         echo '[ Check Perl Version To Determine Which Of The Following Sections To Choose ]'
         B perl -v
 
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -1259,41 +1298,43 @@ fi
 if [ $SECTION_CHOICE -le 21 ]; then
     echo '21. [[[ LINUX, INSTALL PERL & CPANM ]]]'
 
-    if [ $MACHINE_CHOICE -eq 0 ]; then
-        echo 'Please carefully read the following instructions, in order to choose a Perl installation option...'
-        echo
-        echo '21a. [[[ LINUX, INSTALL SINGLE-USER PERL LOCAL::LIB & CPANM ]]]'
-        echo '    [ You SHOULD Use This Instead Of Perlbrew Or Perl From Source Or System Perl In Sections 21b & 21c & 21d, Unless You Have No Choice ]'
-        echo '    [ This Option Will Contain All Perl Code In Your Home Directory Under The ~/perl5 Subdirectory ]'
-        echo '    [ This Option May  Not Work With Older Versions Of Debian GNU/Linux Which Include A Broken Perl v5.14, Use Perlbrew in Section 21b Instead ]'
-        echo '    [ This Option Will Not Work With Older Versions Of Perl Which Are Not At Least v5.10 Or Newer, Use Perlbrew in Section 21b Instead ]'
-        echo
-        echo '__OR__ '
-        echo
-        echo '21b. [[[ LINUX, INSTALL SINGLE-USER PERLBREW & CPANM ]]]'
-        echo '    [ You SHOULD NOT Use This Instead Of local::lib In Section 21a, Unless You Have No Choice ]'
-        echo '    [ This Option WILL Work With Older Versions Of Debian GNU/Linux Which Include A Broken Perl v5.14 ]'
-        echo '    [ This Option WILL Work With Older Versions Of Perl Which Are Not At Least v5.10 Or Newer ]'
-        echo
-        echo '__OR__ '
-        echo
-        echo '21c. [[[ LINUX, INSTALL SYSTEM-WIDE PERL FROM SOURCE & CPANM ]]]'
-        echo '    [ You SHOULD NOT Use This Instead Of local::lib In Section 21a, Unless You Have No Choice ]'
-        echo
-        echo '__OR__ '
-        echo
-        echo '21d. [[[ LINUX, INSTALL SYSTEM-WIDE SYSTEM PERL & CPANM ]]]'
-        echo '[ You SHOULD NOT Use This Instead Of local::lib In Section 21a, Unless You Have No Choice ]'
-        echo '[ This Option Will Install Both Perl & cpanminus System-Wide ]'
-        echo '[ Also, All Future CPAN Distributions Will Install System-Wide In A Hard-To Control Manner ]'
-        echo
-        C 'Please read the warnings above.  Seriously.'
-        echo
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
+        if [ $PERL_INSTALL_CHOICE == '__EMPTY__' ]; then
+            echo 'Please carefully read the following instructions, in order to choose a Perl installation option...'
+            echo
+            echo '21a. [[[ LINUX, INSTALL SINGLE-USER PERL LOCAL::LIB & CPANM ]]]'
+            echo '    [ You SHOULD Use This Instead Of Perlbrew Or Perl From Source Or System Perl In Sections 21b & 21c & 21d, Unless You Have No Choice ]'
+            echo '    [ This Option Will Contain All Perl Code In Your Home Directory Under The ~/perl5 Subdirectory ]'
+            echo '    [ This Option May  Not Work With Older Versions Of Debian GNU/Linux Which Include A Broken Perl v5.14, Use Perlbrew in Section 21b Instead ]'
+            echo '    [ This Option Will Not Work With Older Versions Of Perl Which Are Not At Least v5.10 Or Newer, Use Perlbrew in Section 21b Instead ]'
+            echo
+            echo '__OR__ '
+            echo
+            echo '21b. [[[ LINUX, INSTALL SINGLE-USER PERLBREW & CPANM ]]]'
+            echo '    [ You SHOULD NOT Use This Instead Of local::lib In Section 21a, Unless You Have No Choice ]'
+            echo '    [ This Option WILL Work With Older Versions Of Debian GNU/Linux Which Include A Broken Perl v5.14 ]'
+            echo '    [ This Option WILL Work With Older Versions Of Perl Which Are Not At Least v5.10 Or Newer ]'
+            echo
+            echo '__OR__ '
+            echo
+            echo '21c. [[[ LINUX, INSTALL SYSTEM-WIDE PERL FROM SOURCE & CPANM ]]]'
+            echo '    [ You SHOULD NOT Use This Instead Of local::lib In Section 21a, Unless You Have No Choice ]'
+            echo
+            echo '__OR__ '
+            echo
+            echo '21d. [[[ LINUX, INSTALL SYSTEM-WIDE SYSTEM PERL & CPANM ]]]'
+            echo '[ You SHOULD NOT Use This Instead Of local::lib In Section 21a, Unless You Have No Choice ]'
+            echo '[ This Option Will Install Both Perl & cpanminus System-Wide ]'
+            echo '[ Also, All Future CPAN Distributions Will Install System-Wide In A Hard-To Control Manner ]'
+            echo
+            C 'Please read the warnings above.  Seriously.'
+            echo
 
-        P $PERL_INSTALL_CHOICE "Perl Installation Option (either single letter or hyphenated words): [a] locallib-cpanm, [b] perlbrew-cpanm, [c] source-cpanm, [d] system-cpanm"
-        PERL_INSTALL_CHOICE=$USER_INPUT
+            P $PERL_INSTALL_CHOICE $'letter or word for a Perl installation option:\n[a] locallib\n[b] perlbrew\n[c] source\n[d] system\n'
+            PERL_INSTALL_CHOICE=$USER_INPUT
+        fi
 
-        if [ $PERL_INSTALL_CHOICE == 'a' ] || [ $PERL_INSTALL_CHOICE == 'locallib-cpanm' ]; then
+        if [ $PERL_INSTALL_CHOICE == 'a' ] || [ $PERL_INSTALL_CHOICE == 'locallib' ]; then
 
             echo '21a. [[[ LINUX, INSTALL SINGLE-USER PERL LOCAL::LIB & CPANM ]]]'
             echo '[ Install local::lib & CPANM in ~/perl5 ]'
@@ -1323,7 +1364,7 @@ if [ $SECTION_CHOICE -le 21 ]; then
             echo '[ If Not, Please Log Out & Log Back In, Then Return To This Point & Check Again ]'
             B 'set | grep perl5'
 
-        elif [ $PERL_INSTALL_CHOICE == 'b' ] || [ $PERL_INSTALL_CHOICE == 'perlbrew-cpanm' ]; then
+        elif [ $PERL_INSTALL_CHOICE == 'b' ] || [ $PERL_INSTALL_CHOICE == 'perlbrew' ]; then
 
             echo '21b. [[[ LINUX, INSTALL SINGLE-USER PERLBREW & CPANM ]]]'
             echo '[ You Should Use Ubuntu Or CentOS Instead Of curl Below, Unless You Are Not In Ubuntu Or CentOS, Or You Have No Choice ]'
@@ -1333,10 +1374,10 @@ if [ $SECTION_CHOICE -le 21 ]; then
             if [[ "$OS_CHOICE" == "ubuntu" ]]; then
                 VERIFY_UBUNTU
 
-                echo '[ UBUNTU ONLY: Install Perlbrew ]'
+                echo '[ Install Perlbrew ]'
                 S apt-get install perlbrew
 
-                echo '[ UBUNTU ONLY: Check Install, Confirm No Errors ]'
+                echo '[ Check Install, Confirm No Errors ]'
                 S apt-get -f install
             # OR
             elif [[ "$OS_CHOICE" == "centos" ]]; then
@@ -1363,8 +1404,10 @@ if [ $SECTION_CHOICE -le 21 ]; then
                 echo '[ CENTOS & perlbrew_install.sh ONLY: Run perlbrew_install.sh Script  ]'
                 B chmod a+x ./perlbrew_install.sh && ./perlbrew_install.sh
     
-                echo '[ CENTOS ONLY: Check Install, Confirm No Errors; WARNING! MAKE TAKE HOURS TO RUN! ]'
-                S yum check
+                if [ $DEVELOPER_CHOICE == 'yes' ]; then
+                    echo '[ Check Install, Confirm No Errors; WARNING! MAY TAKE HOURS TO RUN! ]'
+                    S yum check
+                fi
             fi
 
             # OR
@@ -1398,7 +1441,7 @@ if [ $SECTION_CHOICE -le 21 ]; then
             echo '[ Re-Check Version Of ExtUtils::MakeMaker, Must Be v7.04 Or Newer ]'
             B 'perl -MExtUtils::MakeMaker\ 999'
 
-        elif [ $PERL_INSTALL_CHOICE == 'c' ] || [ $PERL_INSTALL_CHOICE == 'source-cpanm' ]; then
+        elif [ $PERL_INSTALL_CHOICE == 'c' ] || [ $PERL_INSTALL_CHOICE == 'source' ]; then
 
             echo '21c. [[[ LINUX, INSTALL SYSTEM-WIDE PERL FROM SOURCE & CPANM ]]]'
             echo '[ WARNING: Choose ONLY ONE Of The Following Two Methods: Manual Build, Or Tokuhirom Perl-Build ]'
@@ -1417,38 +1460,46 @@ if [ $SECTION_CHOICE -le 21 ]; then
             echo '[ EITHER OPTION: Install cpanminus ]'
             S perl -MCPAN -e 'install App::cpanminus'
 
-        elif [ $PERL_INSTALL_CHOICE == 'd' ] || [ $PERL_INSTALL_CHOICE == 'system-cpanm' ]; then
+        elif [ $PERL_INSTALL_CHOICE == 'd' ] || [ $PERL_INSTALL_CHOICE == 'system' ]; then
 
             echo '21d. [[[ LINUX, INSTALL SYSTEM-WIDE SYSTEM PERL & CPANM ]]]'
             if [[ "$OS_CHOICE" == "ubuntu" ]]; then
                 VERIFY_UBUNTU
-                echo '[ UBUNTU ONLY: Install Perl & CPANM ]'
+                echo '[ Install Perl & CPANM ]'
                 S apt-get install perl cpanminus
-                echo '[ UBUNTU ONLY: Check Install, Confirm No Errors ]'
+                echo '[ Check Install, Confirm No Errors ]'
                 S apt-get -f install
             # OR
             elif [[ "$OS_CHOICE" == "centos" ]]; then
                 VERIFY_CENTOS 
-                echo '[ CENTOS ONLY: Install Perl & CPANM Dependencies ]'
+                echo '[ Install Perl & CPANM Dependencies ]'
                 S yum install perl-core perl-libs perl-devel perl-CPAN curl
-                echo '[ CENTOS ONLY: Install CPANM System-Wide ]'
+                echo '[ Install CPANM System-Wide ]'
                 S 'curl -L http://cpanmin.us | perl - --sudo App::cpanminus'
-                echo '[ CENTOS ONLY: Check Install, Confirm No Errors; WARNING! MAKE TAKE HOURS TO RUN! ]'
-                S yum check
+                if [ $DEVELOPER_CHOICE == 'yes' ]; then
+                    echo '[ Check Install, Confirm No Errors; WARNING! MAY TAKE HOURS TO RUN! ]'
+                    S yum check
+                fi
             fi
         else
-            echo 'ERROR: Unrecognized Value For PERL_INSTALL_CHOICE, "' $PERL_INSTALL_CHOICE '"'
+            echo "ERROR: Unrecognized value for PERL_INSTALL_CHOICE, '${PERL_INSTALL_CHOICE}', please see '--help' option for valid values"
         fi
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 24 ]; then
-    echo  '24. [[[ LINUX, PACKAGE RPERL DEPENDENCIES ]]]'
+if [ $SECTION_CHOICE -le 22 ] && [ $DEVELOPER_CHOICE != 'yes' ]; then
+    echo  '22. [[[ LINUX, PACKAGE RPERL DEPENDENCIES ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    echo 'SKIPPING!  Developer Sections Disabled'
+    echo
+    CURRENT_SECTION_COMPLETE
+elif [ $SECTION_CHOICE -le 22 ]; then
+    echo  '22. [[[ LINUX, PACKAGE RPERL DEPENDENCIES ]]]'
+    echo
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
 
         # [[[ FPM ]]]
         # [[[ FPM ]]]
@@ -1595,6 +1646,7 @@ if [ $SECTION_CHOICE -le 24 ]; then
             # DEB START HERE: create packages
             # DEB START HERE: create packages
             # DEB START HERE: create packages
+            echo 'NEED DEB COMMANDS HERE'
         elif [[ "$OS_CHOICE" == "centos" ]]; then
             CD ~/cpantofpm_packages/x86_64/
             B wget https://github.com/wbraswell/astyle-mirror/raw/master/backup/astyle-2.05.1-1.el7.centos.x86_64.rpm
@@ -1622,6 +1674,7 @@ if [ $SECTION_CHOICE -le 24 ]; then
             # DEB START HERE: create packages
             # DEB START HERE: create packages
             # DEB START HERE: create packages
+            echo 'NEED DEB COMMANDS HERE'
         elif [[ "$OS_CHOICE" == "centos" ]]; then
             B reset; time fpm --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/fpm_tmp_work/ -s dir -t rpm --rpm-ba -p libpcre2-VERSION_ARCH.rpm     -n libpcre2     -v 10.31 -C ~/fpm_tmp_install usr/local/lib usr/local/bin usr/local/share
             B rm libpcre2-10.31_x86_64.rpm  # prefer file naming uniformity with '-1' in all file names
@@ -1645,6 +1698,7 @@ if [ $SECTION_CHOICE -le 24 ]; then
             # DEB START HERE: create packages
             # DEB START HERE: create packages
             # DEB START HERE: create packages
+            echo 'NEED DEB COMMANDS HERE'
         elif [[ "$OS_CHOICE" == "centos" ]]; then
             S rpm -i ~/cpantofpm_packages/x86_64/libpcre2-10.31-1.x86_64.rpm
             S rpm -i ~/cpantofpm_packages/x86_64/libpcre2-dev-10.31-1.x86_64.rpm
@@ -1666,6 +1720,7 @@ if [ $SECTION_CHOICE -le 24 ]; then
             # DEB START HERE: create packages
             # DEB START HERE: create packages
             # DEB START HERE: create packages
+            echo 'NEED DEB COMMANDS HERE'
         elif [[ "$OS_CHOICE" == "centos" ]]; then
             B reset; time fpm --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/fpm_tmp_work/ -s dir -t rpm --rpm-ba -p libjpcre2-dev_VERSION_ARCH.rpm -n libjpcre2-dev -v 10.31.02-2 -d "libpcre2 >= 10.31" -d "libpcre2-dev >= 10.31" -C ~/fpm_tmp_install usr/local/include usr/local/share/doc
             B rm libjpcre2-dev_10.31.02_2_x86_64.rpm  # prefer file naming uniformity with '-1' in all file names
@@ -1696,6 +1751,7 @@ if [ $SECTION_CHOICE -le 24 ]; then
             # DEB START HERE: create packages
             # DEB START HERE: create packages
             # DEB START HERE: create packages
+            echo 'NEED DEB COMMANDS HERE'
         elif [[ "$OS_CHOICE" == "centos" ]]; then
             B reset; time fpm --verbose --debug-workspace --maintainer 'William N. Braswell, Jr. <william.braswell@NOSPAM.autoparallel.com>' --workdir ~/fpm_tmp_work/ -s dir -t rpm --rpm-ba -p pluto-polycc-VERSION_ARCH.rpm     -n pluto-polycc     -v 0.11.4 -C ~/fpm_tmp_install usr/local/lib usr/local/bin usr/local/share
             B rm pluto-polycc-0.11.4_x86_64.rpm  # prefer file naming uniformity with '-1' in all file names
@@ -1720,8 +1776,9 @@ if [ $SECTION_CHOICE -le 24 ]; then
             # DEB START HERE: create packages
             # DEB START HERE: create packages
             # DEB START HERE: create packages
+            echo 'NEED DEB COMMANDS HERE'
         elif [[ "$OS_CHOICE" == "centos" ]]; then
-            echo '[ CENTOS ONLY: Build RPerl Dependencies, MongoDB C++ Driver Prerequisites, BSON libbson ]'
+            echo '[ Build RPerl Dependencies, MongoDB C++ Driver Prerequisites, BSON libbson ]'
             # perl-interpreter is a dummy package for CentOS 7 compatibility with Fedora source packages libbson & mongo-c-driver
             S yum install rpm-build libtool cyrus-sasl-lib cyrus-sasl-devel snappy-devel perl-interpreter python-sphinx
 
@@ -1757,8 +1814,9 @@ if [ $SECTION_CHOICE -le 24 ]; then
             # DEB START HERE: create packages
             # DEB START HERE: create packages
             # DEB START HERE: create packages
+            echo 'NEED DEB COMMANDS HERE'
         elif [[ "$OS_CHOICE" == "centos" ]]; then
-            echo '[ CENTOS ONLY: Build RPerl Dependencies, MongoDB C++ Driver Prerequisites, MongoDB C Driver ]'
+            echo '[ Build RPerl Dependencies, MongoDB C++ Driver Prerequisites, MongoDB C Driver ]'
 #            B wget http://dl.fedoraproject.org/pub/fedora/linux/updates/27/SRPMS/Packages/m/mongo-c-driver-1.9.3-1.fc27.src.rpm  # DEV NOTE: prefer GitHub mirror below
 #            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver-1.9.3-1.fc27.src.rpm  # DEV NOTE: prefer our own GitHub mirror for uniformity
             B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver-1.9.3-1.el7.centos.src.rpm  # DEV NOTE: prefer our own re-built source RPMs for uniformity
@@ -1834,7 +1892,7 @@ if [ $SECTION_CHOICE -le 24 ]; then
 
         elif [[ "$OS_CHOICE" == "centos" ]]; then
 #            # DEV NOTE: prefer pre-built RPMs below
-#            echo '[ CENTOS ONLY: Build RPerl Dependencies, MongoDB C++ Driver Prerequisites, Fix Broken CMake Files ]'
+#            echo '[ Build RPerl Dependencies, MongoDB C++ Driver Prerequisites, Fix Broken CMake Files ]'
 #            # NEED ANSWER: can we fix this CMake error permanently by including --enable-static in configure for both libbson & mongo-c-driver above???
 #            # CMake Error at /lib64/cmake/libbson-1.0/libbson-1.0-config.cmake:28 (message): File or directory //include/libbson-1.0 referenced by variable BSON_INCLUDE_DIRS does not exist !
 #            B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson-1.0-config.cmake
@@ -1843,7 +1901,7 @@ if [ $SECTION_CHOICE -le 24 ]; then
 #            B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/libmongoc-1.0-config.cmake
 #            S mv ./libmongoc-1.0-config.cmake /lib64/cmake/libmongoc-1.0/libmongoc-1.0-config.cmake
 
-            echo '[ CENTOS ONLY: Build RPerl Dependencies, MongoDB C++ Driver ]'
+            echo '[ Build RPerl Dependencies, MongoDB C++ Driver ]'
             S yum install cmake3
 
 #            # DEV NOTE: prefer already-fixed tarball below
@@ -1955,16 +2013,16 @@ if [ $SECTION_CHOICE -le 24 ]; then
 # DEB START HERE: set up server, set up client, install
 # DEB START HERE: set up server, set up client, install
 
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 25 ]; then
-    echo '25. [[[ LINUX, INSTALL RPERL DEPENDENCIES ]]]'
+if [ $SECTION_CHOICE -le 23 ]; then
+    echo '23. [[[ LINUX, INSTALL RPERL DEPENDENCIES ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ Overview Of RPerl Dependencies In This Section ]'
         echo '[ GCC: gcc & g++ Required For Compiling ]'
         echo '[ libc: libcrypt.(a|so) Required For Compiling ]'
@@ -1987,33 +2045,33 @@ if [ $SECTION_CHOICE -le 25 ]; then
 
         if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             VERIFY_UBUNTU
-            echo '[ UBUNTU ONLY: Add Non-Base APT Repositories ]'
+            echo '[ Add Non-Base APT Repositories ]'
             S add-apt-repository \"deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main universe restricted multiverse\"
-            echo '[ UBUNTU ONLY: Update APT Repositories ]'
+            echo '[ Update APT Repositories ]'
             S apt-get update
-            echo '[ UBUNTU ONLY: Install RPerl Dependencies ]'
+            echo '[ Install RPerl Dependencies ]'
             S apt-get install g++ make libc6-dev perl libperl-dev libssl-dev zlib1g zlib1g-dev libgmp10 libgmpxx4ldbl libgmp-dev libgsl0-dev texinfo flex bison astyle
 
-            echo '[ UBUNTU ONLY: Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, pkg-config ]'
+            echo '[ Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, pkg-config ]'
             S apt-get install pkg-config
 
 # DEB START HERE: build & use our own libbson & libmongoc & libmongocxx packages, remove use of Bionic repo below
 # DEB START HERE: build & use our own libbson & libmongoc & libmongocxx packages, remove use of Bionic repo below
 # DEB START HERE: build & use our own libbson & libmongoc & libmongocxx packages, remove use of Bionic repo below
 
-            echo "[ UBUNTU ONLY: Install RPerl Dependencies, MongoDB C & C++ Drivers; Must Use Latest libbson & libmongoc From Bionic v18.04 Repositories ]"
-            echo "[ UBUNTU ONLY: Install RPerl Dependencies, MongoDB C & C++ Drivers; In Xenial v16.04, Temporarily Replace All Occurrences Of 'xenial' With 'bionic' (Same For Other Non-Bionic Releases), Skip If Already Using Bionic Or Newer ]"
+            echo "[ Install RPerl Dependencies, MongoDB C & C++ Drivers; Must Use Latest libbson & libmongoc From Bionic v18.04 Repositories ]"
+            echo "[ Install RPerl Dependencies, MongoDB C & C++ Drivers; In Xenial v16.04, Temporarily Replace All Occurrences Of 'xenial' With 'bionic' (Same For Other Non-Bionic Releases), Skip If Already Using Bionic Or Newer ]"
             S $EDITOR /etc/apt/sources.list
-            echo "[ UBUNTU ONLY: Install RPerl Dependencies, MongoDB C & C++ Drivers; Update To Bionic v18.04 Repositories, Skip If Already Using Bionic Or Newer ]"
+            echo "[ Install RPerl Dependencies, MongoDB C & C++ Drivers; Update To Bionic v18.04 Repositories, Skip If Already Using Bionic Or Newer ]"
             S apt-get update
-            echo "[ UBUNTU ONLY: Install RPerl Dependencies, MongoDB C & C++ Drivers; Install libbson & libmongoc From Bionic v18.04 Repositories ]"
+            echo "[ Install RPerl Dependencies, MongoDB C & C++ Drivers; Install libbson & libmongoc From Bionic v18.04 Repositories ]"
             S apt-get install libbson-1.0-0 libbson-dev libmongoc-1.0-0 libmongoc-dev
-            echo "[ UBUNTU ONLY: Install RPerl Dependencies, MongoDB C & C++ Drivers; In Xenial v16.04, Replace All Occurrences Of 'bionic' With Original 'xenial' (Same For Other Non-Bionic Releases), Skip If Already Using Bionic Or Newer ]"
+            echo "[ Install RPerl Dependencies, MongoDB C & C++ Drivers; In Xenial v16.04, Replace All Occurrences Of 'bionic' With Original 'xenial' (Same For Other Non-Bionic Releases), Skip If Already Using Bionic Or Newer ]"
             S $EDITOR /etc/apt/sources.list
-            echo "[ UBUNTU ONLY: Install RPerl Dependencies, MongoDB C & C++ Drivers; Update To Original Non-Bionic Repositories, Skip If Already Using Bionic Or Newer ]"
+            echo "[ Install RPerl Dependencies, MongoDB C & C++ Drivers; Update To Original Non-Bionic Repositories, Skip If Already Using Bionic Or Newer ]"
             S apt-get update
 
-            echo '[ UBUNTU ONLY: Check Install, Confirm No Errors ]'
+            echo '[ Check Install, Confirm No Errors ]'
             S apt-get -f install
         # OR
         elif [[ "$OS_CHOICE" == "centos" ]]; then
@@ -2025,25 +2083,25 @@ if [ $SECTION_CHOICE -le 25 ]; then
 # RPM START HERE: remove wget & rpm below w/ yum via packages.rperl.org
 
 
-            echo '[ CENTOS ONLY: Install RPerl Dependencies ]'
+            echo '[ Install RPerl Dependencies ]'
             S yum install gcc-c++ make glibc-devel perl-core perl-libs perl-devel openssl-devel zlib zlib-static zlib-devel gmp gmp-static gmp-devel gsl gsl-devel texinfo flex bison
-            echo '[ CENTOS ONLY: Install RPerl Dependencies, GCC/G++ GDB Debugging Symbols ]'
+            echo '[ Install RPerl Dependencies, GCC/G++ GDB Debugging Symbols ]'
 #            S debuginfo-install cracklib-2.9.0-11.el7.x86_64 cyrus-sasl-lib-2.1.26-21.el7.x86_64 glibc-2.17-196.el7_4.2.x86_64 keyutils-libs-1.5.8-3.el7.x86_64 krb5-libs-1.15.1-8.el7.x86_64 libcom_err-1.42.9-10.el7.x86_64 libgcc-4.8.5-16.el7_4.2.x86_64 libselinux-2.5-11.el7.x86_64 libstdc++-4.8.5-16.el7_4.2.x86_64 nspr-4.13.1-1.0.el7_3.x86_64 nss-3.28.4-15.el7_4.x86_64 nss-softokn-freebl-3.28.3-8.el7_4.x86_64 nss-util-3.28.4-3.el7.x86_64 openldap-2.4.44-5.el7.x86_64 openssl-libs-1.0.2k-8.el7.x86_64 pcre-8.32-17.el7.x86_64 postgresql96-libs-9.6.8-1PGDG.rhel7.x86_64 zlib-1.2.7-17.el7.x86_64
             S debuginfo-install cracklib cyrus-sasl-lib glibc keyutils-libs krb5-libs libcom_err libgcc libselinux libstdc++ nspr nss nss-softokn-freebl nss-util openldap openssl-libs pcre postgresql96-libs zlib
 
-            echo '[ CENTOS ONLY: Download & Install RPerl Dependency AStyle ]'
+            echo '[ Download & Install RPerl Dependency AStyle ]'
             B wget https://github.com/wbraswell/astyle-mirror/raw/master/backup/astyle-2.05.1-1.el7.centos.x86_64.rpm
             S rpm -v -i ./astyle-2.05.1-1.el7.centos.x86_64.rpm
-            echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, pkg-config ]'
+            echo '[ Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, pkg-config ]'
             S yum install pkgconfig
 
             # OLD VERSIONS, DO NOT USE!  libbson v1.3.5-5.el7, mongo-c-driver-libs v1.3.6-1.el7, mongo-c-driver v1.3.6-1.el7
             # must have new versions for MongoDB C++ driver compatibility
             # "For mongocxx-3.2.x, libmongoc 1.8.2 or later is required."    https://mongodb.github.io/mongo-cxx-driver/mongocxx-v3/installation/
-#            echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, MongoDB C Driver ]'
+#            echo '[ Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, MongoDB C Driver ]'
 #            S yum install pkgconfig mongo-c-driver
 
-            echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, BSON libbson ]'
+            echo '[ Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, BSON libbson ]'
 
             # DEV NOTE: use our own pre-built RPMs from GitHub mirror, for speed & reliability & convenience
             B wget https://github.com/wbraswell/libbson-mirror/raw/master/libbson-1.9.3-1.el7.centos.x86_64.rpm
@@ -2053,7 +2111,7 @@ if [ $SECTION_CHOICE -le 25 ]; then
             B rm ./libbson-1.9.3-1.el7.centos.x86_64.rpm
             B rm ./libbson-devel-1.9.3-1.el7.centos.x86_64.rpm
 
-            echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, MongoDB C Driver ]'
+            echo '[ Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, MongoDB C Driver ]'
 
             # DEV NOTE: prefer our own pre-built RPMs from GitHub mirror, for speed & reliability & convenience
             B wget https://github.com/wbraswell/mongo-c-driver-mirror/raw/master/mongo-c-driver-libs-1.9.3-1.el7.centos.x86_64.rpm
@@ -2068,7 +2126,7 @@ if [ $SECTION_CHOICE -le 25 ]; then
             B rm ./mongo-c-driver-1.9.3-1.el7.centos.x86_64.rpm
             B rm ./mongo-c-driver-devel-1.9.3-1.el7.centos.x86_64.rpm
 
-            echo '[ CENTOS ONLY: Install RPerl Dependencies, MongoDB C++ Driver ]'
+            echo '[ Install RPerl Dependencies, MongoDB C++ Driver ]'
 
             # DEV NOTE: prefer our own pre-built RPMs from GitHub mirror, for speed & reliability & convenience
             B wget https://github.com/wbraswell/mongo-cxx-driver-mirror/raw/master/mongo-cxx-driver-libs-3.2.0-1.el7.centos.x86_64.rpm
@@ -2081,8 +2139,10 @@ if [ $SECTION_CHOICE -le 25 ]; then
             B rm ./mongo-cxx-driver-3.2.0-1.el7.centos.x86_64.rpm
             B rm ./mongo-cxx-driver-devel-3.2.0-1.el7.centos.x86_64.rpm
 
-            echo '[ CENTOS ONLY: Check Install, Confirm No Errors; WARNING! MAKE TAKE HOURS TO RUN! ]'
-            S yum check
+            if [ $DEVELOPER_CHOICE == 'yes' ]; then
+                echo '[ Check Install, Confirm No Errors; WARNING! MAY TAKE HOURS TO RUN! ]'
+                S yum check
+            fi
         # OR
         elif [[ "$OS_CHOICE" == "OTHER" ]]; then
             echo '[ WARNING: Do NOT Use Manual Build Options Below, Unless You Are Not In Ubuntu Or CentOS, Or You Have No Choice! ]'
@@ -2115,68 +2175,91 @@ if [ $SECTION_CHOICE -le 25 ]; then
         echo '[ Check AStyle Version, Must Be v2.05.1 Or Newer; If Automatic Install Options Fail Or Are Too Old, Then Restart Installer & Select OTHER Operating System For Manual Build Option ]'
         B astyle -V
 
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
 fi
 
+# SECTION 24 VARIABLES
+#RPERL_INSTALL_CHOICE='__EMPTY__'  # this is now a global variable for command-line args, see top of file
 
-
-# START HERE: do not re-prompt for OS_CHOICE if provided as command-line arg; manage RPERL_INSTALL_CHOICE & RPERL_DEPS_PACKAGE_CHOICE as w/ PERL_INSTALL_CHOICE above; accept current section & disable P() prompting as command-line args
-# START HERE: do not re-prompt for OS_CHOICE if provided as command-line arg; manage RPERL_INSTALL_CHOICE & RPERL_DEPS_PACKAGE_CHOICE as w/ PERL_INSTALL_CHOICE above; accept current section & disable P() prompting as command-line args
-# START HERE: do not re-prompt for OS_CHOICE if provided as command-line arg; manage RPERL_INSTALL_CHOICE & RPERL_DEPS_PACKAGE_CHOICE as w/ PERL_INSTALL_CHOICE above; accept current section & disable P() prompting as command-line args
-
-
-
-
-# SECTION 26 VARIABLES
-RPERL_INSTALL_CHOICE='__EMPTY__'
-
-# SECTION 26b VARIABLES
+# SECTION 24b VARIABLES
 GITHUB_EMAIL='__EMPTY__'
 GITHUB_FIRST_NAME='__EMPTY__'
 GITHUB_LAST_NAME='__EMPTY__'
 RPERL_REPO_DIRECTORY='__EMPTY__'
 
-if [ $SECTION_CHOICE -le 26 ]; then
-    echo '26. [[[ PERL, INSTALL RPERL ]]]'
+if [ $SECTION_CHOICE -le 24 ]; then
+    echo '24. [[[ PERL, INSTALL RPERL ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
+        if [ $RPERL_INSTALL_CHOICE == '__EMPTY__' ]; then
+            echo 'Please carefully read the following instructions, in order to choose an RPerl installation option...'
+            echo
+            echo '24a. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA PACKAGES.RPERL.ORG ]]]'
+            echo '    [ You Should Use This Instead Of Stable Via CPAN Or Unstable Via GitHub In The Following Sub-Sections, Unless You Are An RPerl System Developer ]'
+            echo '    [ This Option Will Install The Latest Stable Public Release Of RPerl, Pre-Built & Pre-Compiled ]'
+            echo
+            echo '__OR__ '
+            echo
+            echo '24b. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPANM, SINGLE-USER ]]]'
+            echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 24a, Unless You Are An RPerl System Developer ]'
+            echo '    [ This Option Will Install The Latest Stable Public Release Of RPerl, Built & Compiled On Your System, Using `cpanm` For Your Single User Only ]'
+            echo
+            echo '__OR__ '
+            echo
+            echo '24c. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPANM, SYSTEM-WIDE ]]]'
+            echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 24a, Unless You Are An RPerl System Developer ]'
+            echo '    [ This Option Will Install The Latest Stable Public Release Of RPerl, Built & Compiled On Your System, Using `cpanm` For The Entire System ]'
+            echo
+            echo '__OR__ '
+            echo
+            echo '24d. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPAN, SINGLE-USER ]]]'
+            echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 24a, Unless You Are An RPerl System Developer ]'
+            echo '    [ This Option Will Install The Latest Stable Public Release Of RPerl, Built & Compiled On Your System, Using `cpan` For Your Single User Only ]'
+            echo
+            echo '__OR__ '
+            echo
+            echo '24e. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPAN, SYSTEM-WIDE ]]]'
+            echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 24a, Unless You Are An RPerl System Developer ]'
+            echo '    [ This Option Will Install The Latest Stable Public Release Of RPerl, Built & Compiled On Your System, Using `cpan` For The Entire System ]'
+            echo
+            echo '__OR__ '
+            echo
+            echo '24f. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB, SINGLE-USER, SECURE GIT ]]]'
+            echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 24a, Unless You Are An RPerl System Developer ]'
+            echo '    [ This Option Will Install The Latest Unstable Development Release Of RPerl, Built & Compiled On Your System, Using Secure Github For Your Single User Only ]'
+            echo
+            echo '__OR__ '
+            echo
+            echo '24g. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB, SINGLE-USER, PUBLIC GIT ]]]'
+            echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 24a, Unless You Are An RPerl System Developer ]'
+            echo '    [ This Option Will Install The Latest Unstable Development Release Of RPerl, Built & Compiled On Your System, Using Public Github For Your Single User Only ]'
+            echo
+            echo '__OR__ '
+            echo
+            echo '24h. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB, SINGLE-USER, PUBLIC ZIP ]]]'
+            echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 24a, Unless You Are An RPerl System Developer ]'
+            echo '    [ This Option Will Install The Latest Unstable Development Release Of RPerl, Built & Compiled On Your System, Using Public Github For Your Single User Only ]'
 
-        echo 'Please carefully read the following instructions, in order to choose an RPerl installation option...'
-        echo
-        echo '26a. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA PACKAGES.RPERL.ORG ]]]'
-        echo '    [ You Should Use This Instead Of Stable Via CPAN In Section 26b Or Unstable Via GitHub In Section 26c, Unless You Are An RPerl System Developer ]'
-        echo '    [ This Option Will Install The Latest Stable Public Release Of RPerl, Pre-Built & Pre-Compiled ]'
-        echo
-        echo '__OR__ '
-        echo
-        echo '26b. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPAN ]]]'
-        echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 26a, Unless You Are An RPerl System Developer ]'
-        echo '    [ This Option Will Install The Latest Stable Public Release Of RPerl, Built & Compiled On Your System ]'
-        echo
-        echo '__OR__ '
-        echo
-        echo '26c. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB ]]]'
-        echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 26a, Unless You Are An RPerl System Developer ]'
-        echo '    [ This Option Will Install The Latest Unstable Development Release Of RPerl, Built & Compiled On Your System ]'
-        echo
-        C 'Please read the warnings above.  Seriously.'
-        echo
+            C 'Please read the warnings above.  Seriously.'
+            echo
 
-        P $RPERL_INSTALL_CHOICE "RPerl Installation Option: a, b, c"
-        RPERL_INSTALL_CHOICE=$USER_INPUT
+            P $RPERL_INSTALL_CHOICE $'letter or word for an RPerl installation option:\n[a] packages\n[b] cpanm-single\n[c] cpanm-system\n[d] cpan-single\n[e] cpan-system\n[f] github-secure-git\n[g] github-public-git\n[h] github-public-zip\n'
+            RPERL_INSTALL_CHOICE=$USER_INPUT
+        fi
 
-        if [ $RPERL_INSTALL_CHOICE -eq 'a' ]; then
+        if [ $RPERL_INSTALL_CHOICE == 'a' ] || [ $RPERL_INSTALL_CHOICE == 'packages' ]; then
 
-            echo '26a. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA PACKAGES.RPERL.ORG ]]]'
+            echo '24a. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA PACKAGES.RPERL.ORG ]]]'
             echo
 
             if [[ "$OS_CHOICE" == "ubuntu" ]]; then
                 # DEB START HERE: create packages
                 # DEB START HERE: create packages
                 # DEB START HERE: create packages
+                echo 'NEED DEB COMMANDS HERE'
             elif [[ "$OS_CHOICE" == "centos" ]]; then
                 S yum install pygpgme  # check GPG signatures of repo metadata & packages
                 S yum-config-manager --add-repo https://packages.rperl.org/centos7-perl-cpan.repo
@@ -2194,38 +2277,51 @@ if [ $SECTION_CHOICE -le 26 ]; then
                 S yum history undo last
             fi
 
-        elif [ $RPERL_INSTALL_CHOICE -eq 'b' ]; then
+        elif [ $RPERL_INSTALL_CHOICE == 'b' ] || [ $RPERL_INSTALL_CHOICE == 'cpanm-single' ]; then
 
-            echo '26b. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPAN ]]]'
+            echo '24b. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPANM, SINGLE-USER ]]]'
             echo
-            echo '[ You Should Use Single-User Instead Of System-Wide Below, Unless local::lib Or Perlbrew Is Not Installed Or You Have No Choice ]'
-            echo '[ WARNING: Use Only ONE Of The Following Two Options, EITHER Single-User OR System-Wide, But NOT Both! ]'
-            C 'Please read the warning above.  Seriously.'
-            echo '[ SINGLE-USER ONLY: Install Problematic RPerl Dependency IO::Socket::SSL, Skip Tests ]'
+            echo '[ You Should Only Use This If local::lib Or Perlbrew Is Installed For Your User ]'
+            echo '[ Install Problematic RPerl Dependency IO::Socket::SSL, Skip Tests ]'
             B cpanm -v --notest IO::Socket::SSL
-            echo '[ SINGLE-USER ONLY: Install RPerl ]'
+            echo '[ Install RPerl ]'
             B cpanm -v RPerl
-            # OR
-            echo '[ SYSTEM-WIDE ONLY: Install Problematic RPerl Dependency IO::Socket::SSL, Skip Tests ]'
+
+        elif [ $RPERL_INSTALL_CHOICE == 'c' ] || [ $RPERL_INSTALL_CHOICE == 'cpanm-system' ]; then
+
+            echo '24c. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPANM, SYSTEM-WIDE ]]]'
+            echo
+            echo '[ You Should Only Use This If local::lib Or Perlbrew Is NOT Installed For Your User ]'
+            echo '[ Install Problematic RPerl Dependency IO::Socket::SSL, Skip Tests ]'
             S cpanm -v --notest IO::Socket::SSL
-            echo '[ SYSTEM-WIDE ONLY: Install RPerl ]'
+            echo '[ Install RPerl ]'
             S cpanm -v RPerl
 
-            echo '[ EITHER OPTION: If cpanm Is Not Installed, Exit This Installer & Manually Try cpan Instead ]'
-            echo '[ Copy The Command From The Following Line For Single-User Option ]'
-            echo '$ cpan RPerl'
-            echo
-            echo '[ Copy The Command From The Following Line For System-Wide Option ]'
-            echo '$ sudo cpan RPerl'
-            echo
+        elif [ $RPERL_INSTALL_CHOICE == 'd' ] || [ $RPERL_INSTALL_CHOICE == 'cpan-single' ]; then
 
-        elif [ $RPERL_INSTALL_CHOICE -eq 'c' ]; then
-
-            echo '26c. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB ]]]'
+            echo '24d. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPAN, SINGLE-USER ]]]'
             echo
-            echo '[ If You Want To Upload Code To GitHub, Then You Must Use Secure Git Instead Of Public Git Or Public Zip Below ]'
-            echo '[ WARNING: Use Only ONE Of The Following Three Options, EITHER Secure OR Public Git OR Public Zip, But NOT More Than One! ]'
-            C 'Please read the warning above.  Seriously.'
+            echo '[ You Should Only Use This If local::lib Or Perlbrew Is Installed For Your User, And You Do NOT Have CPANM Installed ]'
+            echo '[ Install Problematic RPerl Dependency IO::Socket::SSL ]'
+            B cpan -v IO::Socket::SSL
+            echo '[ Install RPerl ]'
+            B cpan -v RPerl
+
+        elif [ $RPERL_INSTALL_CHOICE == 'e' ] || [ $RPERL_INSTALL_CHOICE == 'cpan-system' ]; then
+
+            echo '24e. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPAN, SYSTEM-WIDE ]]]'
+            echo
+            echo '[ You Should Only Use This If local::lib Or Perlbrew Is NOT Installed For Your User, And You Do NOT Have CPANM Installed ]'
+            echo '[ Install Problematic RPerl Dependency IO::Socket::SSL ]'
+            S cpan -v IO::Socket::SSL
+            echo '[ Install RPerl ]'
+            S cpan -v RPerl
+
+        elif [ $RPERL_INSTALL_CHOICE == 'f' ] || [ $RPERL_INSTALL_CHOICE == 'github-secure-git' ]; then
+
+            echo '24f. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB, SINGLE-USER, SECURE GIT ]]]'
+            echo
+            echo '[ If You Want To Upload Code To GitHub, Then You Must Use Secure Git Instead Of Public Git Or Public Zip ]'
 
             D $EDITOR 'preferred text editor' 'vi'
             EDITOR=$USER_INPUT
@@ -2243,92 +2339,125 @@ if [ $SECTION_CHOICE -le 26 ]; then
             # DEV NOTE: for more info, see  https://help.github.com/articles/generating-ssh-keys
             #if [ ! -f ~/.ssh/id_rsa.pub ] && [ ! -f ~/.ssh/id_dsa.pub ]; then  # NEED ANSWER: do we need id_dsa.pub???
             if [ ! -f ~/.ssh/id_rsa.pub ]; then
-                echo '[ SECURE GIT ONLY: Generate SSH Keys, Do Create Secure Key Passphrase When Prompted ]'
+                echo '[ Generate SSH Keys, Do Create Secure Key Passphrase When Prompted ]'
                 echo '[ WARNING: Be Sure To Record Your Secure Key Passphrase & Store It In A Safe Place ]'
                 C 'Please read the warning above.  Seriously.'
                 B "ssh-keygen -t rsa -C '$GITHUB_EMAIL'; eval `ssh-agent -s` ssh-add ~/.ssh/id_rsa; ssh-agent -k"
             else
-                echo '[ SECURE GIT ONLY: SSH Key File(s) Already Exist, Skipping Key Generation ]'
+                echo '[ SSH Key File(s) Already Exist, Skipping Key Generation ]'
             fi
 
             if [[ "$OS_CHOICE" == "ubuntu" ]]; then
                 VERIFY_UBUNTU
-                echo '[ SECURE GIT ON UBUNTU ONLY: Install Keychain Key Manager For OpenSSH ]'
+                echo '[ Install Keychain Key Manager For OpenSSH ]'
                 S apt-get install keychain
-                echo '[ UBUNTU ONLY: Check Install, Confirm No Errors ]'
+                echo '[ Check Install, Confirm No Errors ]'
                 S apt-get -f install
             # OR
             elif [[ "$OS_CHOICE" == "centos" ]]; then
                 VERIFY_CENTOS 
-                C '[ SECURE GIT ON NON-CENTOS ONLY: Not Currently Supported ]'
-    #            echo '[ SECURE GIT ON CENTOS ONLY: Install Keychain Key Manager For OpenSSH ]'
-    #            S rpm --import http://mirror.ghettoforge.org/distributions/gf/RPM-GPG-KEY-gf.el7
-    #            S rpm -Uvh http://mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el7.noarch.rpm 
-    #            S yum clean all
-    #            S yum install keychain
-    #            echo '[ CENTOS ONLY: Check Install, Confirm No Errors; WARNING! MAKE TAKE HOURS TO RUN! ]'
-    #            S yum check
+
+# RPM START HERE: why doesn't the below command set work?
+# RPM START HERE: why doesn't the below command set work?
+# RPM START HERE: why doesn't the below command set work?
+
+                C '[ SECURE GIT ON CENTOS: Not Currently Supported ]'
+#                echo '[ Install Keychain Key Manager For OpenSSH ]'
+#                S rpm --import http://mirror.ghettoforge.org/distributions/gf/RPM-GPG-KEY-gf.el7
+#                S rpm -Uvh http://mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el7.noarch.rpm 
+#                S yum clean all
+#                S yum install keychain
+#                if [ $DEVELOPER_CHOICE == 'yes' ]; then
+#                    echo '[ Check Install, Confirm No Errors; WARNING! MAY TAKE HOURS TO RUN! ]'
+#                    S yum check
+#                fi
             else
-                C '[ SECURE GIT ON NON-UBUNTU AND NON-CENTOS ONLY: Please See Your Operating System Documentation To Install Keychain Key Manager For OpenSSH ]'
+                C '[ SECURE GIT ON NON-UBUNTU AND NON-CENTOS: Please See Your Operating System Documentation To Install Keychain Key Manager For OpenSSH ]'
             fi
 
-            echo '[ SECURE GIT ONLY: Enable Keychain ]'
+            echo '[ Enable Keychain ]'
             echo '[ NOTE: Do Not Run The Following Step If You Already Copied Your Own Pre-Existing LAMP University .bashrc File In Section 0 ]'
             B 'echo -e "\n# SSH Keys; for GitHub, etc.\nif [ -f /usr/bin/keychain ] && [ -f \$HOME/.ssh/id_rsa ]; then\n    /usr/bin/keychain \$HOME/.ssh/id_rsa\n    source \$HOME/.keychain/\$HOSTNAME-sh\nfi\n" >> ~/.bashrc;'
             SOURCE ~/.bashrc
-            echo '[ SECURE GIT ONLY: How To Enable SSH Key On GitHub... ]'
-            echo '[ SECURE GIT ONLY: Copy Data Produced By The Next Command ]'
-            echo '[ SECURE GIT ONLY: Then Browse To https://github.com/settings/ssh ]'
-            echo "[ SECURE GIT ONLY: Then Click 'Add SSH Key', Paste Copied Key Data, Title '$USERNAME@$HOSTNAME', Click 'Save' ]"
+            echo '[ How To Enable SSH Key On GitHub... ]'
+            echo '[ Copy Data Produced By The Next Command ]'
+            echo '[ Then Browse To https://github.com/settings/ssh ]'
+            echo "[ Then Click 'Add SSH Key', Paste Copied Key Data, Title '$USERNAME@$HOSTNAME', Click 'Save' ]"
             echo
             B 'cat ~/.ssh/id_rsa.pub'
             echo
-            C '[ SECURE GIT ONLY: Please Follow The Instructions Above ]'
-            echo '[ SECURE GIT ONLY: Test SSH Key On GitHub, Enter Passphrase When Prompted, Confirm Automatic Reply Greeting From GitHub Server ]'
+            C '[ Please Follow The Instructions Above ]'
+            echo '[ Test SSH Key On GitHub, Enter Passphrase When Prompted, Confirm Automatic Reply Greeting From GitHub Server ]'
             B ssh -T git@github.com
-            echo '[ SECURE GIT ONLY: Configure GitHub Account Setting On Local Machine ]'
+            echo '[ Configure GitHub Account Setting On Local Machine ]'
             echo '[ NOTE: Do Not Repeat The 3 Following git config Steps If You Already Copied Your Own Pre-Existing .gitconfig File In Section 0 ]'
             B git config --global user.email "$GITHUB_EMAIL"
             B git config --global user.name "$GITHUB_FIRST_NAME $GITHUB_LAST_NAME"
             B git config --global core.editor "$EDITOR"
-            echo '[ SECURE GIT ONLY: Clone (Download) RPerl Repository Onto New Machine ]'
+            echo '[ Clone (Download) RPerl Repository Onto New Machine ]'
             B git clone git@github.com:wbraswell/rperl.git $RPERL_REPO_DIRECTORY
-            # OR
-            echo '[ PUBLIC GIT ONLY: Clone (Download) RPerl Repository Onto New Machine ]'
+
+        elif [ $RPERL_INSTALL_CHOICE == 'g' ] || [ $RPERL_INSTALL_CHOICE == 'github-public-git' ]; then
+
+            echo '24g. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB, SINGLE-USER, PUBLIC GIT ]]]'
+            echo
+            echo '[ If You Want To Upload Code To GitHub, Then You Must Use Secure Git Instead Of Public Git Or Public Zip ]'
+
+            D $RPERL_REPO_DIRECTORY 'directory where the RPerl repository should be downloaded (different than final RPerl installation directory)' "~/rperl-latest"
+            RPERL_REPO_DIRECTORY=$USER_INPUT
+
+            echo '[ Clone (Download) RPerl Repository Onto New Machine ]'
             B git clone https://github.com/wbraswell/rperl.git $RPERL_REPO_DIRECTORY
-            # OR
-            echo '[ PUBLIC ZIP ONLY: Download RPerl Repository Onto New Machine ]'
+
+        elif [ $RPERL_INSTALL_CHOICE == 'h' ] || [ $RPERL_INSTALL_CHOICE == 'github-public-zip' ]; then
+
+            echo '24h. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB, SINGLE-USER, PUBLIC ZIP ]]]'
+            echo
+            echo '[ If You Want To Upload Code To GitHub, Then You Must Use Secure Git Instead Of Public Git Or Public Zip ]'
+
+            D $RPERL_REPO_DIRECTORY 'directory where the RPerl repository should be downloaded (different than final RPerl installation directory)' "~/rperl-latest"
+            RPERL_REPO_DIRECTORY=$USER_INPUT
+
+            echo '[ Download RPerl Repository Onto New Machine ]'
             B "wget https://github.com/wbraswell/rperl/archive/master.zip; unzip master.zip; mv rperl-master $RPERL_REPO_DIRECTORY; rm master.zip"
 
-            echo '[ ALL OPTIONS: Install Problematic RPerl Dependency IO::Socket::SSL, Skip Tests ]'
+        else
+            echo "ERROR: Unrecognized value for RPERL_INSTALL_CHOICE, '${RPERL_INSTALL_CHOICE}', please see '--help' option for valid values"
+        fi
+ 
+        # avoid duplication of code for building Git options
+        if [ $RPERL_INSTALL_CHOICE == 'f' ] || [ $RPERL_INSTALL_CHOICE == 'github-secure-git' ] ||
+           [ $RPERL_INSTALL_CHOICE == 'g' ] || [ $RPERL_INSTALL_CHOICE == 'github-public-git' ] ||
+           [ $RPERL_INSTALL_CHOICE == 'h' ] || [ $RPERL_INSTALL_CHOICE == 'github-public-zip' ]; then
+            echo '[ ALL GIT OPTIONS: Install Problematic RPerl Dependency IO::Socket::SSL, Skip Tests ]'
             B cpanm -v --notest IO::Socket::SSL
-            echo '[ ALL OPTIONS: Install RPerl Dependencies Via CPAN ]'
+            echo '[ ALL GIT OPTIONS: Install RPerl Dependencies Via CPAN ]'
             CD $RPERL_REPO_DIRECTORY
             B 'perl Makefile.PL; cpanm --installdeps .'
-            echo '[ ALL OPTIONS: Build & Test RPerl ]'
+            echo '[ ALL GIT OPTIONS: Build & Test RPerl ]'
             B 'make; make test'
-            echo '[ ALL OPTIONS: Build & Test RPerl, Optional Verbose Output ]'
+            echo '[ ALL GIT OPTIONS: Build & Test RPerl, Optional Verbose Output ]'
             B 'make; make test TEST_VERBOSE=1'
-            echo '[ ALL OPTIONS: Install RPerl ]'
+            echo '[ ALL GIT OPTIONS: Install RPerl ]'
             B 'make install'
         fi
 
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
 fi
 
-# SECTION 28 VARIABLES
+# SECTION 25 VARIABLES
 RPERL_VERBOSE='__EMPTY__'
 RPERL_DEBUG='__EMPTY__'
 RPERL_WARNINGS='__EMPTY__'
 RPERL_INSTALL_DIRECTORY='__EMPTY__'
 
-if [ $SECTION_CHOICE -le 28 ]; then
-    echo '28. [[[ RPERL, RUN COMPILER TESTS ]]]'
+if [ $SECTION_CHOICE -le 25 ]; then
+    echo '25. [[[ RPERL, RUN COMPILER TESTS ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $RPERL_VERBOSE 'RPERL_VERBOSE additional user output, 0 for off, 1 for on' '1'
         export RPERL_VERBOSE=$USER_INPUT
         D $RPERL_DEBUG 'RPERL_DEBUG additional system output, 0 for off, 1 for on' '1'
@@ -2401,20 +2530,20 @@ if [ $SECTION_CHOICE -le 28 ]; then
 
         echo '[ Test Command Sequence #2, Bubble Sort Timing Test: Clean New Compiled Files ]'
         B ../script/demo/unlink_bubble.sh
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
 fi
 
-# SECTION 29 VARIABLES
+# SECTION 26 VARIABLES
 PHYSICSPERL_ENABLE_GRAPHICS='__EMPTY__'
 PHYSICSPERL_NBODY_STEPS='__EMPTY__'
 
-if [ $SECTION_CHOICE -le 29 ]; then
-    echo '29. [[[ RPERL, INSTALL RPERL APPS & RUN DEMOS ]]]'
+if [ $SECTION_CHOICE -le 26 ]; then
+    echo '26. [[[ RPERL, INSTALL RPERL APPS & RUN DEMOS ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $RPERL_VERBOSE 'RPERL_VERBOSE additional user output, 0 for off, 1 for on' '1'
         export RPERL_VERBOSE=$USER_INPUT
         D $RPERL_DEBUG 'RPERL_DEBUG additional system output, 0 for off, 1 for on' '1'
@@ -2476,7 +2605,7 @@ if [ $SECTION_CHOICE -le 29 ]; then
         B rperl -V -nop lib/PhysicsPerl/Astro/System.pm
         echo '[ Test Command Sequence #0, PhysicsPerl N-Body Timing Test: Ultra Fast Automatically Compiled CPPOPS_CPPTYPES_SSE Mode, ~13 Seconds For 50M Steps Without Graphics ]'
         B script/demo/n_body.pl $PHYSICSPERL_NBODY_STEPS $PHYSICSPERL_ENABLE_GRAPHICS
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -2486,7 +2615,7 @@ if [ $SECTION_CHOICE -le 30 ]; then
     echo '30. [[[ UBUNTU LINUX, INSTALL NFS ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ Install NFS Service ]'
         S apt-get install nfs-kernel-server nfs-common
         S mkdir /nfs_exported
@@ -2511,7 +2640,7 @@ if [ $SECTION_CHOICE -le 30 ]; then
         echo '[ Test NFS Service, Part 2, Check & Delete "howdy" ]'
         S cat /nfs_exported/howdy.txt
         S rm /nfs_exported/howdy.txt
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         C "Please Run LAMP Installer Section $CURRENT_SECTION On New Machine First..."
         echo '[ Install NFS Client (Via Service Package) ]'
         S apt-get install nfs-kernel-server nfs-common
@@ -2545,7 +2674,7 @@ if [ $SECTION_CHOICE -le 31 ]; then
     echo '31. [[[ UBUNTU LINUX, INSTALL APACHE & MOD_PERL ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
         D $USERNAME "new machine's username" `whoami`
@@ -2590,7 +2719,7 @@ if [ $SECTION_CHOICE -le 31 ]; then
         echo '[ SSL & https Support, Apache Certbot Certificates, Test Automatic Renewal ]'
         S certbot renew --dry-run
 
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -2602,7 +2731,7 @@ ADMIN_EMAIL='__EMPTY__'
 if [ $SECTION_CHOICE -le 32 ]; then
     echo '32. [[[ APACHE, CONFIGURE DOMAIN(S) ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
         D $USERNAME "new machine's username" `whoami`
@@ -2675,7 +2804,7 @@ if [ $SECTION_CHOICE -le 32 ]; then
         echo
         C 'Please load the URL above in your web browser.'
 
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -2685,14 +2814,14 @@ if [ $SECTION_CHOICE -le 33 ]; then
     echo '33. [[[ UBUNTU LINUX, INSTALL MYSQL & PHPMYADMIN ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ Do NOT configure Apache automatically ]'
         echo '[ DO     configure database with dbconfig-common ]'
         echo
         S apt-get install mysql-server mysql-client libmysqlclient-dev phpmyadmin
         echo '[ UBUNTU v16.04 OR NEWER ONLY: Install Additional PHP Package ]'
         S apt-get install php-mbstring
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -2705,7 +2834,7 @@ MCRYPT_SO='__EMPTY__'
 if [ $SECTION_CHOICE -le 34 ]; then
     echo '34. [[[ APACHE & MYSQL, CONFIGURE PHPMYADMIN ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
         D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
@@ -2789,7 +2918,7 @@ if [ $SECTION_CHOICE -le 34 ]; then
         C "Please load the URL above in your web browser, and log in using the 'root' mysql user & password."
         echo '[ If Your Browser Received The Subdomain Apache Page Instead Of phpMyAdmin, Then Disable DOMAIN_NAME_ONLY Line In Apache Site Config File ]'
         S "$EDITOR /etc/apache2/sites-available/$DOMAIN_NAME.conf"
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -2799,7 +2928,7 @@ if [ $SECTION_CHOICE -le 35 ]; then
     echo '35. [[[ UBUNTU LINUX, INSTALL WEBMIN ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
         D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
@@ -2812,7 +2941,7 @@ if [ $SECTION_CHOICE -le 35 ]; then
         S apt-get update
         S apt-get install webmin
         C "Please Visit https://$DOMAIN_NAME:10000 To Ensure Webmin Is Enabled."
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -2822,7 +2951,7 @@ if [ $SECTION_CHOICE -le 36 ]; then
     echo '36. [[[ UBUNTU LINUX, INSTALL POSTFIX ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
         D $USERNAME "new machine's username" `whoami`
@@ -2868,7 +2997,7 @@ if [ $SECTION_CHOICE -le 36 ]; then
         C 'Follow the directions above.'
         S apt-get install mailutils
         B mail
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -2877,12 +3006,12 @@ fi
 if [ $SECTION_CHOICE -le 37 ]; then
     echo '37. [[[ PERL, INSTALL LATEST CATALYST ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ WARNING: Do NOT Mix With Non-Latest Catalyst Via apt In Section 38! ]'
         C 'Please read the warning above.  Seriously.'
         echo '[ NOTE: Installing Latest Catalyst Via CPAN May Take Over An Hour To Complete ]'
         B cpanm Task::Catalyst Catalyst::Devel
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -2892,13 +3021,13 @@ if [ $SECTION_CHOICE -le 38 ]; then
     echo '38. [[[ UBUNTU LINUX, INSTALL NON-LATEST CATALYST ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ WARNING: Do NOT Mix With Latest Catalyst Via CPAN In Section 37! ]'
         C 'Please read the warning above.  Seriously.'
         S apt-get install libmodule-install-perl libcatalyst-engine-apache-perl
         S service apache2 restart
         S apt-get install libcatalyst-devel-perl libcatalyst-modules-perl
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -2907,7 +3036,7 @@ fi
 if [ $SECTION_CHOICE -le 39 ]; then
     echo '39. [[[ PERL, CHECK CATALYST VERSIONS ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         B dpkg -p libcatalyst-perl
         # NEED ANSWER: why do we have the following step for creating missing @INC directories???
         echo
@@ -2927,7 +3056,7 @@ if [ $SECTION_CHOICE -le 39 ]; then
         B 'perl -MHTML::FormFu\ 999'
         B 'perl -MTemplate\ 999'
         B 'perl -MDBD::mysql\ 999'
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -2939,7 +3068,7 @@ MYSQL_ROOTPASS='__EMPTY__'
 if [ $SECTION_CHOICE -le 40 ]; then
     echo '40. [[[ PERL, INSTALL RAPIDAPP ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
         echo '[ You Should Use mysql & cpanm Instead Of git clone Below, Unless You Want The Experimental Version Or Have No Choice ]'
@@ -2969,7 +3098,7 @@ if [ $SECTION_CHOICE -le 40 ]; then
         B git clone https://github.com/vanstyn/BlueBox.git ~/BlueBox-latest
         B 'cd ~/BlueBox-latest; perl Makefile.PL; cpanm --installdeps .'  # DEV NOTE: no make or test here, either
         B script/bluebox_server.pl
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -2979,12 +3108,12 @@ if [ $SECTION_CHOICE -le 41 ]; then
     echo '41. [[[ UBUNTU LINUX, INSTALL SHINYCMS DEPENDENCIES ]]]'
     echo
     VERIFY_UBUNTU
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
         D $UBUNTU_RELEASE_NAME 'Ubuntu release name (trusty, xenial, etc.)' 'xenial'
         UBUNTU_RELEASE_NAME=$USER_INPUT
-        echo '[ WARNING: Prerequisite Dependencies Include Full LAMP Stack (Sections 0 - 11, 21 - 24); mod_perl (Section 31) OR mod_fastcgi (This Section); Postfix (Section 36); And Expat, etc (This Section). ]'
+        echo '[ WARNING: Prerequisite Dependencies Include Full LAMP Stack (Sections 0 - 11, 20, 21); mod_perl (Section 31) OR mod_fastcgi (This Section); Postfix (Section 36); And Expat, etc (This Section). ]'
         C 'Please read the warning above.  Seriously.'
         echo '[ Install Expat, etc ]'
         S sudo apt-get install expat libexpat1-dev libxml2-dev zlib1g-dev
@@ -3000,7 +3129,7 @@ if [ $SECTION_CHOICE -le 41 ]; then
         S $EDITOR /etc/apt/sources.list
         S apt-get update
         S apt-get -f install
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -3009,7 +3138,7 @@ fi
 if [ $SECTION_CHOICE -le 42 ]; then
     echo  '42. [[[ PERL SHINYCMS, INSTALL SHINYCMS DEPENDENCIES & SHINYCMS ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
         D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
@@ -3028,7 +3157,7 @@ if [ $SECTION_CHOICE -le 42 ]; then
         echo '[ Install MyShinyTemplate (ShinyCMS Fork) Via Github ]'
         B "wget https://github.com/wbraswell/myshinytemplate.com/archive/master.zip; unzip master.zip; mv myshinytemplate.com-master ~/public_html/$DOMAIN_NAME-latest; rm master.zip"
         B "cd ~/public_html/$DOMAIN_NAME-latest; perl Makefile.PL; cpanm --installdeps .; cpanm --installdeps ."
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -3049,7 +3178,7 @@ ADMIN_LAST_NAME='__EMPTY__'
 if [ $SECTION_CHOICE -le 43 ]; then
     echo  '43. [[[ PERL SHINYCMS, CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
         D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
@@ -3140,7 +3269,7 @@ if [ $SECTION_CHOICE -le 43 ]; then
         B 'find | grep myshiny'
         B 'find | grep MyShiny'
         B 'find | grep template_user'
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -3149,7 +3278,7 @@ fi
 if [ $SECTION_CHOICE -le 44 ]; then
     echo  '44. [[[ PERL SHINYCMS, BUILD DEMO DATABASE & RUN TESTS ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
         DOMAIN_NAME=$USER_INPUT
         CD ~/public_html/$DOMAIN_NAME-latest
@@ -3171,7 +3300,7 @@ if [ $SECTION_CHOICE -le 44 ]; then
         echo '[ End Testing Web Server When Passwords Have Been Successfully Changed ]'
         echo
         B ./script/shinycms_server.pl
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -3184,7 +3313,7 @@ DOMAIN_NAME_UNDERSCORES_YES_USER='__EMPTY__'
 if [ $SECTION_CHOICE -le 45 ]; then
     echo  '45. [[[ PERL SHINYCMS, BACKUP & RESTORE DATABASE ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
         DOMAIN_NAME=$USER_INPUT
         DOMAIN_NAME_UNDERSCORES=${DOMAIN_NAME//./_}  # replace dots with underscores
@@ -3224,7 +3353,7 @@ if [ $SECTION_CHOICE -le 45 ]; then
 
         echo '[ Restore Database, DO Include ShinyCMS User & Password Data, Import Raw sql File ]'
         B "mysql --user=$MYSQL_USERNAME --password='$MYSQL_PASSWORD' $DOMAIN_NAME_UNDERSCORES < $DOMAIN_NAME_UNDERSCORES_YES_USER.sql"
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -3233,7 +3362,7 @@ fi
 if [ $SECTION_CHOICE -le 46 ]; then
     echo  '46. [[[ PERL SHINYCMS, CONFIGURE APACHE MOD_FASTCGI ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ You SHOULD Use This Section Instead Of Apache mod_perl In Section 47, Unless You Have No Choice ]'
         echo '[ WARNING: Do NOT Mix With Apache mod_perl In Section 47! ]'
         C 'Please read the warning above.  Seriously.'
@@ -3340,7 +3469,7 @@ END_HEREDOC
         S ln -s /home/$USERNAME/public_html/$DOMAIN_NAME-latest/modified/fastcgi_$DOMAIN_NAME-init.d /etc/init.d
         S reboot
 
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -3349,7 +3478,7 @@ fi
 if [ $SECTION_CHOICE -le 47 ]; then
     echo  '47. [[[ PERL SHINYCMS, CONFIGURE APACHE MOD_PERL ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ You Should NOT Use This Section Instead Of Apache mod_fastcgi In Section 46, Unless You Have No Choice ]'
         echo '[ WARNING: Do NOT Mix With Apache mod_fastcgi In Section 46! ]'
         C 'Please read the warning above.  Seriously.'
@@ -3407,7 +3536,7 @@ END_HEREDOC
 #        S "echo '$APACHE_CONFIG_OUTPUT' > /etc/apache2/sites-available/$DOMAIN_NAME.conf"  # DEV NOTE: content too long to fit inside a variable?
         S $EDITOR /etc/apache2/sites-available/$DOMAIN_NAME.conf
         S "echo \"<b>ERROR 502:</b> mod_perl Process Not Running, Please Inform Site Administrator <a href='mailto:$ADMIN_EMAIL'>$ADMIN_FIRST_NAME $ADMIN_LAST_NAME</a>\" > /home/$USERNAME/public_html/$DOMAIN_NAME-latest/modified/offline.html"
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -3416,14 +3545,14 @@ fi
 if [ $SECTION_CHOICE -le 48 ]; then
     echo  '48. [[[ PERL SHINYCMS, CREATE APACHE DIRECTORIES & ENABLE STATIC PAGE ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
         DOMAIN_NAME=$USER_INPUT
         S mkdir -p /srv/www/$DOMAIN_NAME/public_html
         S mkdir /srv/www/$DOMAIN_NAME/logs
         S "echo '$DOMAIN_NAME lives!' > /srv/www/$DOMAIN_NAME/public_html/index.html"
         S a2ensite $DOMAIN_NAME
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -3432,7 +3561,7 @@ fi
 if [ $SECTION_CHOICE -le 49 ]; then
     echo  '49. [[[ PERL SHINYCMS, CONFIGURE APACHE PERMISSIONS & ENABLE DYNAMIC PAGES ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
         D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
@@ -3460,7 +3589,7 @@ if [ $SECTION_CHOICE -le 49 ]; then
 #        echo "[ Ensure Only User $USERNAME Can Read Files Which May Contain Passwords ]"
 #        B chmod -R go-rwx ~/.:100-fakexinerama ~/.bash_logout ~/bin ~/.config ~/.dbus ~/.gitconfig ~/LAMP_installer.sh ~/.local ~/perl5 ~/.viminfo ~/.Xauthority ~/.xsession-errors ~/.bash_history ~/.bashrc ~/.cache ~/.cpanm ~/.fakexinerama ~/.gkrellm2 ~/.lesshst ~/.mysql_history ~/.profile ~/.ssh ~/.vimrc ~/.xpra
         S service apache2 reload
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
     CURRENT_SECTION_COMPLETE
@@ -3469,7 +3598,7 @@ fi
 if [ $SECTION_CHOICE -le 50 ]; then
     echo  '50. [[[ PERL SHINYCMS, CONFIGURE SHINY ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
         DOMAIN_NAME=$USER_INPUT
         DOMAIN_NAME_UNDERSCORES=${DOMAIN_NAME//./_}  # replace dots with underscores
@@ -3490,7 +3619,7 @@ if [ $SECTION_CHOICE -le 50 ]; then
         echo 'Admin area -> Pages -> List Templates -> Edit Homepage -> Delete "video_url" Element -> Update'
         echo
         C "Please follow the directions above..."
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
 #    CURRENT_SECTION_COMPLETE  # final section!
@@ -3499,71 +3628,71 @@ fi
 if [ $SECTION_CHOICE -le 60 ]; then
     echo '60. [[[ LINUX, INSTALL MONGODB ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
 
         echo '[ Install MongoDB Enterprise Edition ]'
 
         if [[ "$OS_CHOICE" == "ubuntu" ]]; then
             VERIFY_UBUNTU
             
-            echo '[ UBUNTU ONLY: OFFICIAL MONGODB INSTALLATION DOCS    https://docs.mongodb.com/manual/tutorial/install-mongodb-enterprise-on-ubuntu/ ]'
-            echo '[ UBUNTU ONLY: Import The Public Key Used By The Package Management System ]'
+            echo '[ OFFICIAL MONGODB INSTALLATION DOCS    https://docs.mongodb.com/manual/tutorial/install-mongodb-enterprise-on-ubuntu/ ]'
+            echo '[ Import The Public Key Used By The Package Management System ]'
             S apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0C49F3730359A14518585931BC711F9BA15703C6
 
-            echo '[ UBUNTU ONLY: Create APT Source Entry For Downloading & Installing MongoDB ]'
+            echo '[ Create APT Source Entry For Downloading & Installing MongoDB ]'
             # DEV NOTE: must wrap redirect in quotes
             S "echo 'deb [ arch=amd64,arm64,ppc64el,s390x ] http://repo.mongodb.com/apt/ubuntu xenial/mongodb-enterprise/3.4 multiverse' > /etc/apt/sources.list.d/mongodb-enterprise.list"
 
-            echo '[ UBUNTU ONLY: Reload Local Package Database ]'
+            echo '[ Reload Local Package Database ]'
             S apt-get update
  
-            echo '[ UBUNTU ONLY: Install MongoDB Enterprise Edition, Allow aptitude To Downgrade libsnmp30 & snmpd If Necessary ]'
+            echo '[ Install MongoDB Enterprise Edition, Allow aptitude To Downgrade libsnmp30 & snmpd If Necessary ]'
             S aptitude install mongodb-enterprise
                 # The following packages have unmet dependencies: snmp : Depends: libsnmp30 (= 5.7.3+dfsg-1ubuntu4) but 5.7.3+dfsg-1ubuntu4.1 is installed.
 #            S apt-get install mongodb-enterprise
                 # The following packages have unmet dependencies: mongodb-enterprise : Depends: mongodb-enterprise-server but it is not going to be installed  (ALSO mongodb-enterprise-mongos & mongodb-enterprise-tools)
 
-            echo '[ UBUNTU ONLY: Start MongoDB Enterprise Service ]'
+            echo '[ Start MongoDB Enterprise Service ]'
             S service mongod start
 
-            echo '[ UBUNTU ONLY: Verify That MongoDB Has Started Successfully By Checking The Contents Of The Log File'
+            echo '[ Verify That MongoDB Has Started Successfully By Checking The Contents Of The Log File'
             echo 'At /var/log/mongodb/mongod.log for a line (TYPICALLY THE LAST LINE) reading:'
             echo '    [initandlisten] waiting for connections on port <port>'
             echo 'Where <port> Is The Port Configured In /etc/mongod.conf, 27017 By Default ]'
             B less /var/log/mongodb/mongod.log
 
-            echo '[ UBUNTU ONLY: Optional, Stop MongoDB Enterprise Service ]'
+            echo '[ Optional, Stop MongoDB Enterprise Service ]'
             S service mongod stop
         # OR
         elif [[ "$OS_CHOICE" == "centos" ]]; then
             VERIFY_CENTOS
 
-            echo '[ CENTOS ONLY: OFFICIAL MONGODB INSTALLATION DOCS    https://docs.mongodb.com/manual/tutorial/install-mongodb-enterprise-on-red-hat/ ]'
-            echo '[ CENTOS ONLY: Create YUM Repo Entry For Downloading & Installing MongoDB ]'
+            echo '[ OFFICIAL MONGODB INSTALLATION DOCS    https://docs.mongodb.com/manual/tutorial/install-mongodb-enterprise-on-red-hat/ ]'
+            echo '[ Create YUM Repo Entry For Downloading & Installing MongoDB ]'
             # DEV NOTE: must wrap redirect in quotes
             S 'printf "[mongodb-enterprise]\nname=MongoDB Enterprise Repository\nbaseurl=https://repo.mongodb.com/yum/redhat/\$releasever/mongodb-enterprise/3.6/\$basearch/\ngpgcheck=1\nenabled=1\ngpgkey=https://www.mongodb.org/static/pgp/server-3.6.asc" > /etc/yum.repos.d/mongodb-enterprise.repo'
 
-            echo '[ CENTOS ONLY: Install MongoDB Enterprise Edition ]'
+            echo '[ Install MongoDB Enterprise Edition ]'
             S yum install -y mongodb-enterprise
 
-            echo '[ CENTOS ONLY: Pre-Configure MongoDB Enterprise Edition, Disable SELinux OR SEE OTHER INFO IN OFFICIAL MONGODB INSTALLATION DOCS ]'
+            echo '[ Pre-Configure MongoDB Enterprise Edition, Disable SELinux OR SEE OTHER INFO IN OFFICIAL MONGODB INSTALLATION DOCS ]'
             echo 'SELINUX=disabled' >> /etc/selinux/config 
 
-            echo '[ CENTOS ONLY: Start MongoDB Enterprise Service ]'
+            echo '[ Start MongoDB Enterprise Service ]'
             S service mongod start
 
-            echo '[ CENTOS ONLY: Verify That MongoDB Has Started Successfully By Checking The Contents Of The Log File'
+            echo '[ Verify That MongoDB Has Started Successfully By Checking The Contents Of The Log File'
             echo 'At /var/log/mongodb/mongod.log for a line (TYPICALLY THE LAST LINE) reading:'
             echo '    [initandlisten] waiting for connections on port <port>'
             echo 'Where <port> Is The Port Configured In /etc/mongod.conf, 27017 By Default ]'
             B less /var/log/mongodb/mongod.log
 
-            echo '[ CENTOS ONLY: Optional, Stop MongoDB Enterprise Service ]'
+            echo '[ Optional, Stop MongoDB Enterprise Service ]'
             S service mongod stop
         fi
         clear
 
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
 #   CURRENT_SECTION_COMPLETE  # NEED UN-COMMENT WHEN THIS IS NO LONGER THE FINAL SECTION
@@ -3578,9 +3707,9 @@ fi
 LOCAL_HOSTNAME='__EMPTY__'
 
 if [ $SECTION_CHOICE -le 70 ]; then
-    echo  '70. [[[ PERL CLOUDFORFREE, FOOOOOO ]]]'
+    echo  '70. [[[ PERL CLOUDFORFREE, INSTALL ]]]'
     echo
-    if [ $MACHINE_CHOICE -eq 0 ]; then
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $USERNAME "new machine's username" `whoami`
         USERNAME=$USER_INPUT
 
@@ -3819,7 +3948,7 @@ S service apache2 reload
 
 
 
-    elif [ $MACHINE_CHOICE -eq 1 ]; then
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
 #    CURRENT_SECTION_COMPLETE  # final section!
