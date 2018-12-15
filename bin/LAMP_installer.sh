@@ -1,12 +1,12 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.300_000'
+VERSION='0.310_000'
 
 
-# START HERE: sync w/ rperl_installer.sh
-# START HERE: sync w/ rperl_installer.sh
-# START HERE: sync w/ rperl_installer.sh
+# START HERE: test section 26, sync w/ rperl_installer.sh
+# START HERE: test section 26, sync w/ rperl_installer.sh
+# START HERE: test section 26, sync w/ rperl_installer.sh
 
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -2464,7 +2464,7 @@ if [ $SECTION_CHOICE -le 25 ]; then
         export RPERL_DEBUG=$USER_INPUT
         D $RPERL_WARNINGS 'RPERL_WARNINGS additional user & system warnings, 0 for off, 1 for on' '0'
         export RPERL_WARNINGS=$USER_INPUT
-        D $RPERL_INSTALL_DIRECTORY 'directory where RPerl is currently installed' "~/perl5/lib/perl5"
+        D $RPERL_INSTALL_DIRECTORY 'directory where RPerl is currently installed (do NOT include trailing "/lib/" directory)' "~/perl5/lib/perl5"
         RPERL_INSTALL_DIRECTORY=$USER_INPUT
 
         echo '[ These RPerl Test Commands Must Be Executed From Within The RPerl Installation Directory ]'
@@ -2474,7 +2474,7 @@ if [ $SECTION_CHOICE -le 25 ]; then
         B rperl -?
 
         echo '[ Test Command Sequence #1, OO Inheritance Test: Clean Pre-Existing Compiled Files ]'
-        B rm -Rf _Inline RPerl/Algorithm.pmc RPerl/Algorithm.h RPerl/Algorithm.cpp RPerl/Algorithm/Sort.pmc RPerl/Algorithm/Sort.h RPerl/Algorithm/Sort.cpp RPerl/Algorithm/Sort/Bubble.pmc RPerl/Algorithm/Sort/Bubble.h RPerl/Algorithm/Sort/Bubble.cpp
+        B rm -Rf _Inline lib/RPerl/Algorithm.pmc lib/RPerl/Algorithm.h lib/RPerl/Algorithm.cpp lib/RPerl/Algorithm/Sort.pmc lib/RPerl/Algorithm/Sort.h lib/RPerl/Algorithm/Sort.cpp lib/RPerl/Algorithm/Sort/Bubble.pmc lib/RPerl/Algorithm/Sort/Bubble.h lib/RPerl/Algorithm/Sort/Bubble.cpp
 
         RPERL_CODE='use RPerl::Algorithm::Sort::Bubble; my $o = RPerl::Algorithm::Sort::Bubble->new(); $o->inherited_Bubble("logan"); $o->inherited_Sort("wolvie"); $o->inherited_Algorithm("claws");'
 
@@ -2482,27 +2482,31 @@ if [ $SECTION_CHOICE -le 25 ]; then
         B "perl -e '$RPERL_CODE'"
     
         echo '[ Test Command Sequence #1, OO Inheritance Test: Compile First Of Three Files ]'
-        B rperl -V -nop RPerl/Algorithm.pm
+        B rperl -nop lib/RPerl/Algorithm.pm
         echo '[ Test Command Sequence #1, OO Inheritance Test: One Of Three Files Are Compiled, Output Should Be PERLOPS_PERLTYPES, PERLOPS_PERLTYPES, CPPOPS_CPPTYPES ]'
         B "perl -e '$RPERL_CODE'"
+        echo '[ Test Command Sequence #1, OO Inheritance Test: Uncompile First Of Three Files ]'
+        B rperl -u lib/RPerl/Algorithm.pm
 
         echo '[ Test Command Sequence #1, OO Inheritance Test: Compile Second Of Three Files ]'
-        B rperl -V -nop RPerl/Algorithm/Sort.pm
+        B rperl -nop lib/RPerl/Algorithm/Sort.pm
         echo '[ Test Command Sequence #1, OO Inheritance Test: Two Of Three Files Are Compiled, Output Should Be PERLOPS_PERLTYPES, CPPOPS_CPPTYPES, CPPOPS_CPPTYPES ]'
         B "perl -e '$RPERL_CODE'"
+        echo '[ Test Command Sequence #1, OO Inheritance Test: Uncompile Second Of Three Files ]'
+        B rperl -u lib/RPerl/Algorithm/Sort.pm
 
         echo '[ Test Command Sequence #1, OO Inheritance Test: Compile Third Of Three Files ]'
-        B rperl -V -nop RPerl/Algorithm/Sort/Bubble.pm
+        B rperl -nop lib/RPerl/Algorithm/Sort/Bubble.pm
         echo '[ Test Command Sequence #1, OO Inheritance Test: All Three Files Are Compiled, Output Should Be CPPOPS_CPPTYPES, CPPOPS_CPPTYPES, CPPOPS_CPPTYPES ]'
         B "perl -e '$RPERL_CODE'"
+        echo '[ Test Command Sequence #1, OO Inheritance Test: Uncompile Third Of Three Files ]'
+        B rperl -u lib/RPerl/Algorithm/Sort/Bubble.pm
 
         echo '[ Test Command Sequence #1, OO Inheritance Test: Clean New Compiled Files ]'
-        B rm -Rf _Inline RPerl/Algorithm.pmc RPerl/Algorithm.h RPerl/Algorithm.cpp RPerl/Algorithm/Sort.pmc RPerl/Algorithm/Sort.h RPerl/Algorithm/Sort.cpp RPerl/Algorithm/Sort/Bubble.pmc RPerl/Algorithm/Sort/Bubble.h RPerl/Algorithm/Sort/Bubble.cpp
-
-        # NEED FIX: sequence 1 & sequence 2 directories don't match, also installed vs uninstalled directories don't match
+        B rm -Rf _Inline lib/RPerl/Algorithm.pmc lib/RPerl/Algorithm.h lib/RPerl/Algorithm.cpp lib/RPerl/Algorithm/Sort.pmc lib/RPerl/Algorithm/Sort.h lib/RPerl/Algorithm/Sort.cpp lib/RPerl/Algorithm/Sort/Bubble.pmc lib/RPerl/Algorithm/Sort/Bubble.h lib/RPerl/Algorithm/Sort/Bubble.cpp
 
         echo '[ Test Command Sequence #2, Bubble Sort Timing Test: Clean Pre-Existing Compiled Files ]'
-        B ../script/demo/unlink_bubble.sh
+        B ./script/demo/unlink_bubble.sh
 
         RPERL_CODE='use RPerl::Algorithm::Sort::Bubble; my $a = [reverse 0 .. 5000]; use Time::HiRes qw(time); my $start = time; my $s = RPerl::Algorithm::Sort::Bubble::integer_bubblesort($a); my $elapsed = time - $start; print Dumper($s); print "elapsed: " . $elapsed . "\n";'
 
@@ -2510,26 +2514,22 @@ if [ $SECTION_CHOICE -le 25 ]; then
         B "perl -e '$RPERL_CODE'"
 
         echo '[ Test Command Sequence #2, Bubble Sort Timing Test: Fast Manually Compiled CPPOPS_PERLTYPES Mode, Link Files ]'
-        B ../script/demo/link_bubble_CPPOPS_PERLTYPES.sh
+        B ./script/demo/link_bubble_CPPOPS_PERLTYPES.sh
         echo '[ Test Command Sequence #2, Bubble Sort Timing Test: Fast Manually Compiled CPPOPS_PERLTYPES Mode, ~2.36 Seconds For 5_000 Elements, ~9.4 Seconds For 10_000 Elements ]'
         B "perl -e '$RPERL_CODE'"
 
         echo '[ Test Command Sequence #2, Bubble Sort Timing Test: Clean New Compiled Files ]'
-        B ../script/demo/unlink_bubble.sh
+        B ./script/demo/unlink_bubble.sh
+
         echo '[ Test Command Sequence #2, Bubble Sort Timing Test: Super Fast Automatically Compiled CPPOPS_CPPTYPES Mode, Compile Files ]'
-
-
-# START HERE: call to rperl command below fails to find dependencies
-# START HERE: call to rperl command below fails to find dependencies
-# START HERE: call to rperl command below fails to find dependencies
-
-
-        B rperl -V -nop RPerl/Algorithm/Sort/Bubble.pm
+        B rperl -nop lib/RPerl/Algorithm/Sort/Bubble.pm
         echo '[ Test Command Sequence #2, Bubble Sort Timing Test: Super Fast Automatically Compiled CPPOPS_CPPTYPES Mode, ~0.04 Seconds For 5_000 Elements, ~0.18 Seconds For 10_000 Elements ]'
         B "perl -e '$RPERL_CODE'"
+        echo '[ Test Command Sequence #2, Bubble Sort Timing Test: Super Fast Automatically Compiled CPPOPS_CPPTYPES Mode, Uncompile Files ]'
+        B rperl -u lib/RPerl/Algorithm/Sort/Bubble.pm
 
         echo '[ Test Command Sequence #2, Bubble Sort Timing Test: Clean New Compiled Files ]'
-        B ../script/demo/unlink_bubble.sh
+        B ./script/demo/unlink_bubble.sh
     elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
