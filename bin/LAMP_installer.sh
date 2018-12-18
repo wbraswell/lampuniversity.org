@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.320_000'
+VERSION='0.330_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -2280,8 +2280,8 @@ if [ $SECTION_CHOICE -le 24 ]; then
         elif [ $RPERL_INSTALL_CHOICE == 'b' ] || [ $RPERL_INSTALL_CHOICE == 'cpanm-single' ]; then
 
             echo '24b. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPANM, SINGLE-USER ]]]'
+            echo '[ You Should Only Use This Option 24b If local::lib Or Perlbrew Is Installed For Your User ]'
             echo
-            echo '[ You Should Only Use This If local::lib Or Perlbrew Is Installed For Your User ]'
             echo '[ Install Problematic RPerl Dependency IO::Socket::SSL, Skip Tests ]'
             B cpanm -v --notest IO::Socket::SSL
             echo '[ Install RPerl ]'
@@ -2290,8 +2290,8 @@ if [ $SECTION_CHOICE -le 24 ]; then
         elif [ $RPERL_INSTALL_CHOICE == 'c' ] || [ $RPERL_INSTALL_CHOICE == 'cpanm-system' ]; then
 
             echo '24c. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPANM, SYSTEM-WIDE ]]]'
+            echo '[ You Should Only Use This Option 24c If local::lib Or Perlbrew Is NOT Installed For Your User ]'
             echo
-            echo '[ You Should Only Use This If local::lib Or Perlbrew Is NOT Installed For Your User ]'
             echo '[ Install Problematic RPerl Dependency IO::Socket::SSL, Skip Tests ]'
             S cpanm -v --notest IO::Socket::SSL
             echo '[ Install RPerl ]'
@@ -2300,18 +2300,20 @@ if [ $SECTION_CHOICE -le 24 ]; then
         elif [ $RPERL_INSTALL_CHOICE == 'd' ] || [ $RPERL_INSTALL_CHOICE == 'cpan-single' ]; then
 
             echo '24d. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPAN, SINGLE-USER ]]]'
+            echo '[ You Should Only Use This Option 24d If local::lib Or Perlbrew Is Installed For Your User, And You Do NOT Have CPANM Installed ]'
             echo
-            echo '[ You Should Only Use This If local::lib Or Perlbrew Is Installed For Your User, And You Do NOT Have CPANM Installed ]'
             echo '[ Install Problematic RPerl Dependency IO::Socket::SSL ]'
             B cpan -v IO::Socket::SSL
+            echo '[ Install Missing Alien::GMP Dependency File::Which ]'
+            B cpan -v File::Which
             echo '[ Install RPerl ]'
             B cpan -v RPerl
 
         elif [ $RPERL_INSTALL_CHOICE == 'e' ] || [ $RPERL_INSTALL_CHOICE == 'cpan-system' ]; then
 
             echo '24e. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPAN, SYSTEM-WIDE ]]]'
+            echo '[ You Should Only Use This Option 24e If local::lib Or Perlbrew Is NOT Installed For Your User, And You Do NOT Have CPANM Installed ]'
             echo
-            echo '[ You Should Only Use This If local::lib Or Perlbrew Is NOT Installed For Your User, And You Do NOT Have CPANM Installed ]'
             echo '[ Install Problematic RPerl Dependency IO::Socket::SSL ]'
             S cpan -v IO::Socket::SSL
             echo '[ Install RPerl ]'
