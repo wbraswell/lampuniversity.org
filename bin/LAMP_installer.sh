@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.350_000'
+VERSION='0.360_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -2284,8 +2284,8 @@ if [ $SECTION_CHOICE -le 24 ]; then
             echo
             echo '[ Install Problematic RPerl Dependency IO::Socket::SSL, Skip Tests ]'
             B cpanm -v --notest IO::Socket::SSL
-            echo '[ Install Missing Alien::GMP Dependency File::Which ]'
-            B cpanm -v --notest File::Which FFI::CheckLib Alien::GMP
+            echo '[ Install Missing Alien::GMP Dependencies ]'
+            B cpanm -v --notest File::Which FFI::CheckLib Path::Tiny Alien::GMP
             echo '[ Install RPerl ]'
             B cpanm -v --notest RPerl
 
