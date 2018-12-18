@@ -1,12 +1,12 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.310_000'
+VERSION='0.320_000'
 
 
-# START HERE: test section 26, sync w/ rperl_installer.sh
-# START HERE: test section 26, sync w/ rperl_installer.sh
-# START HERE: test section 26, sync w/ rperl_installer.sh
+# START HERE: sync w/ rperl_installer.sh
+# START HERE: sync w/ rperl_installer.sh
+# START HERE: sync w/ rperl_installer.sh
 
 
 # IMPORTANT DEV NOTE: do not edit anything in this file without making the exact same changes to rperl_installer.sh!!!
@@ -2553,7 +2553,7 @@ if [ $SECTION_CHOICE -le 26 ]; then
         export RPERL_WARNINGS=$USER_INPUT
         D $PHYSICSPERL_INSTALL_DIRECTORY 'directory where PhysicsPerl is to be installed (do NOT include trailing "/lib/" directory)' "~/physicsperl-latest"
         PHYSICSPERL_INSTALL_DIRECTORY=$USER_INPUT
-        D $PHYSICSPERL_NBODY_STEPS 'number of PhysicsPerl N-Body steps to complete (more steps is longer runtime)' '1_000_000'
+        D $PHYSICSPERL_NBODY_STEPS 'number of PhysicsPerl N-Body steps to complete (more steps is longer runtime)' '100_000'
         PHYSICSPERL_NBODY_STEPS=$USER_INPUT
         D $PHYSICSPERL_ENABLE_GRAPHICS 'enabling of PhysicsPerl graphics, 0 for off, 1 for on' '0'
         PHYSICSPERL_ENABLE_GRAPHICS=$USER_INPUT
@@ -2567,69 +2567,55 @@ if [ $SECTION_CHOICE -le 26 ]; then
         echo '[ Install Latest Unstable PhysicsPerl Via Public Github ]'
         B "wget https://github.com/wbraswell/physicsperl/archive/master.zip; unzip master.zip; mv physicsperl-master ${PHYSICSPERL_INSTALL_DIRECTORY}; rm -rf master.zip"
         CD $PHYSICSPERL_INSTALL_DIRECTORY
+        echo
         echo '[ Install PhysicsPerl Dependencies Via CPAN ]'
         B cpanm --installdeps .
 
-# NEED UPDATE: add timings for all modes at 50M steps, in addition to existing 1M step timings
-# NEED UPDATE: add timings for all modes at 50M steps, in addition to existing 1M step timings
-# NEED UPDATE: add timings for all modes at 50M steps, in addition to existing 1M step timings
-
-# NEED FIX: re-enable PERLOPS_PERLTYPES_SSE option!!!
-# NEED FIX: re-enable PERLOPS_PERLTYPES_SSE option!!!
-# NEED FIX: re-enable PERLOPS_PERLTYPES_SSE option!!!
-
-#        PHYSICSPERL_ENABLE_SSE=1
-#        echo '[ Test Command Sequence #0, PhysicsPerl N-Body Timing Test: Clean Pre-Existing Compiled Files ]'
-#        B script/demo/unlink_astro.sh
-#        echo '[ Test Command Sequence #0, PhysicsPerl N-Body Timing Test: Super Slow Uncompiled PERLOPS_PERLTYPES_SSE Mode, Several Days For 50M Steps Without Graphics ]'
-#        echo '[ NOTE: This Test Could Take SEVERAL HOURS OR DAYS To Run!!! ]'
-#        B script/demo/n_body.pl $PHYSICSPERL_NBODY_STEPS $PHYSICSPERL_ENABLE_GRAPHICS $PHYSICSPERL_ENABLE_SSE
-
-        PHYSICSPERL_ENABLE_SSE=0
-        echo '[ Test Command Sequence #0, PhysicsPerl N-Body Timing Test: Clean Pre-Existing Compiled Files ]'
-        B script/demo/unlink_astro.sh
-        echo '[ Test Command Sequence #0, PhysicsPerl N-Body Timing Test: Slow Uncompiled PERLOPS_PERLTYPES Mode, 197 Seconds For 1M Steps Without Graphics ]'
+        PHYSICSPERL_ENABLE_SSE=1
+        echo '[ Test Command Sequence #0a, PhysicsPerl N-Body Timing Test: Clean Pre-Existing Compiled Files ]'
+        B rperl -u lib/PhysicsPerl/Astro/SystemSSE.pm
+#        B script/demo/unlink_astro.sh  # prefer functionally equivalent `rperl -u` for uniformity & professionalism
+        echo '[ Test Command Sequence #0a, PhysicsPerl N-Body Timing Test: Super Slow Uncompiled PERLOPS_PERLTYPES_SSE Mode, 345 Seconds For 100K Steps & 4109 Seconds (68 Minutes) For 1M Steps Without Graphics ]'
+        echo '[ NOTE: This Test Could Take SEVERAL HOURS OR DAYS To Run!!! ]'
         B script/demo/n_body.pl $PHYSICSPERL_NBODY_STEPS $PHYSICSPERL_ENABLE_GRAPHICS $PHYSICSPERL_ENABLE_SSE
 
         PHYSICSPERL_ENABLE_SSE=0
-        echo '[ Test Command Sequence #0, PhysicsPerl N-Body Timing Test: Clean New Compiled Files ]'
-        B script/demo/unlink_astro.sh
-        echo '[ Test Command Sequence #0, PhysicsPerl N-Body Timing Test: Super Fast Manually Compiled CPPOPS_CPPTYPES Mode, Link Files ]'
+        echo '[ Test Command Sequence #0b, PhysicsPerl N-Body Timing Test: Clean Pre-Existing Compiled Files ]'
+        B rperl -u lib/PhysicsPerl/Astro/System.pm
+        echo '[ Test Command Sequence #0b, PhysicsPerl N-Body Timing Test: Slow Uncompiled PERLOPS_PERLTYPES Mode, 20 Seconds For 100K Steps & 200 Seconds For 1M Steps Without Graphics ]'
+        B script/demo/n_body.pl $PHYSICSPERL_NBODY_STEPS $PHYSICSPERL_ENABLE_GRAPHICS $PHYSICSPERL_ENABLE_SSE
+
+        PHYSICSPERL_ENABLE_SSE=0
+        echo '[ Test Command Sequence #0c, PhysicsPerl N-Body Timing Test: Clean New Compiled Files ]'
+        B rperl -u lib/PhysicsPerl/Astro/System.pm
+        echo '[ Test Command Sequence #0c, PhysicsPerl N-Body Timing Test: Super Fast Manually Compiled CPPOPS_CPPTYPES Mode, Link Files ]'
         B script/demo/link_astro_CPPOPS_CPPTYPES.sh
-        echo '[ Test Command Sequence #0, PhysicsPerl N-Body Timing Test: Super Fast Manually Compiled CPPOPS_CPPTYPES Mode, 7 Seconds For 1M Steps Without Graphics ]'
+        echo '[ Test Command Sequence #0c, PhysicsPerl N-Body Timing Test: Super Fast Manually Compiled CPPOPS_CPPTYPES Mode, 0.7 Seconds For 100K Steps & 7 Seconds For 1M Steps Without Graphics ]'
         B script/demo/n_body.pl $PHYSICSPERL_NBODY_STEPS $PHYSICSPERL_ENABLE_GRAPHICS $PHYSICSPERL_ENABLE_SSE
 
-# NEED FIX: re-enable CPPOPS_CPPTYPES_SSE manual-compile option!!!
-# NEED FIX: re-enable CPPOPS_CPPTYPES_SSE manual-compile option!!!
-# NEED FIX: re-enable CPPOPS_CPPTYPES_SSE manual-compile option!!!
-
-#        PHYSICSPERL_ENABLE_SSE=1
-#        echo '[ Test Command Sequence #0, PhysicsPerl N-Body Timing Test: Clean New Compiled Files ]'
-#        B script/demo/unlink_astro.sh
-#        echo '[ Test Command Sequence #0, PhysicsPerl N-Body Timing Test: Ultra Fast Manually Compiled CPPOPS_CPPTYPES_SSE Mode, Link Files ]'
-#        B script/demo/link_astro_CPPOPS_CPPTYPES_SSE.sh
-#        echo '[ Test Command Sequence #0, PhysicsPerl N-Body Timing Test: Ultra Fast Manually Compiled CPPOPS_CPPTYPES_SSE Mode, XYZ Seconds For 1M Steps Without Graphics ]'
-#        B script/demo/n_body.pl $PHYSICSPERL_NBODY_STEPS $PHYSICSPERL_ENABLE_GRAPHICS $PHYSICSPERL_ENABLE_SSE
+        PHYSICSPERL_ENABLE_SSE=1
+        echo '[ Test Command Sequence #0d, PhysicsPerl N-Body Timing Test: Clean New Compiled Files ]'
+        B rperl -u lib/PhysicsPerl/Astro/SystemSSE.pm
+        echo '[ Test Command Sequence #0d, PhysicsPerl N-Body Timing Test: Ultra Fast Manually Compiled CPPOPS_CPPTYPES_SSE Mode, Link Files ]'
+        B script/demo/link_astro_CPPOPS_CPPTYPES_SSE.sh
+        echo '[ Test Command Sequence #0d, PhysicsPerl N-Body Timing Test: Ultra Fast Manually Compiled CPPOPS_CPPTYPES_SSE Mode, 0.12 Seconds For 100K Steps & 1.2 Seconds For 1M Steps Without Graphics ]'
+        B script/demo/n_body.pl $PHYSICSPERL_NBODY_STEPS $PHYSICSPERL_ENABLE_GRAPHICS $PHYSICSPERL_ENABLE_SSE
 
         PHYSICSPERL_ENABLE_SSE=0
-        echo '[ Test Command Sequence #0, PhysicsPerl N-Body Timing Test: Clean New Compiled Files ]'
-        B script/demo/unlink_astro.sh
-        echo '[ Test Command Sequence #0, PhysicsPerl N-Body Timing Test: Super Fast Automatically Compiled CPPOPS_CPPTYPES Mode, Compile Files ]'
+        echo '[ Test Command Sequence #0e, PhysicsPerl N-Body Timing Test: Clean New Compiled Files ]'
+        B rperl -u lib/PhysicsPerl/Astro/System.pm
+        echo '[ Test Command Sequence #0e, PhysicsPerl N-Body Timing Test: Super Fast Automatically Compiled CPPOPS_CPPTYPES Mode, Compile Files ]'
         B rperl lib/PhysicsPerl/Astro/System.pm
-        echo '[ Test Command Sequence #0, PhysicsPerl N-Body Timing Test: Super Fast Automatically Compiled CPPOPS_CPPTYPES Mode, 7 Seconds For 1M Steps Without Graphics ]'
+        echo '[ Test Command Sequence #0e, PhysicsPerl N-Body Timing Test: Super Fast Automatically Compiled CPPOPS_CPPTYPES Mode, 0.7 Seconds For 100K Steps & 7 Seconds For 1M Steps Without Graphics ]'
         B script/demo/n_body.pl $PHYSICSPERL_NBODY_STEPS $PHYSICSPERL_ENABLE_GRAPHICS $PHYSICSPERL_ENABLE_SSE
 
-# NEED FIX: re-enable CPPOPS_CPPTYPES_SSE auto-compile option!!!
-# NEED FIX: re-enable CPPOPS_CPPTYPES_SSE auto-compile option!!!
-# NEED FIX: re-enable CPPOPS_CPPTYPES_SSE auto-compile option!!!
-
-#        PHYSICSPERL_ENABLE_SSE=1
-#        echo '[ Test Command Sequence #0, PhysicsPerl N-Body Timing Test: Clean New Compiled Files ]'
-#        B script/demo/unlink_astro.sh
-#        echo '[ Test Command Sequence #0, PhysicsPerl N-Body Timing Test: Ultra Fast Automatically Compiled CPPOPS_CPPTYPES_SSE Mode, Compile Files ]'
-#        B rperl lib/PhysicsPerl/Astro/SystemSSE.pm
-#        echo '[ Test Command Sequence #0, PhysicsPerl N-Body Timing Test: Ultra Fast Automatically Compiled CPPOPS_CPPTYPES_SSE Mode, XYZ Seconds For 1M Steps Without Graphics ]'
-#        B script/demo/n_body.pl $PHYSICSPERL_NBODY_STEPS $PHYSICSPERL_ENABLE_GRAPHICS $PHYSICSPERL_ENABLE_SSE
+        PHYSICSPERL_ENABLE_SSE=1
+        echo '[ Test Command Sequence #0f, PhysicsPerl N-Body Timing Test: Clean New Compiled Files ]'
+        B rperl -u lib/PhysicsPerl/Astro/SystemSSE.pm
+        echo '[ Test Command Sequence #0f, PhysicsPerl N-Body Timing Test: Ultra Fast Automatically Compiled CPPOPS_CPPTYPES_SSE Mode, Compile Files ]'
+        B rperl lib/PhysicsPerl/Astro/SystemSSE.pm
+        echo '[ Test Command Sequence #0f, PhysicsPerl N-Body Timing Test: Ultra Fast Automatically Compiled CPPOPS_CPPTYPES_SSE Mode, 0.12 Seconds for 100K Steps & 1.2 Seconds For 1M Steps Without Graphics ]'
+        B script/demo/n_body.pl $PHYSICSPERL_NBODY_STEPS $PHYSICSPERL_ENABLE_GRAPHICS $PHYSICSPERL_ENABLE_SSE
 
     elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
