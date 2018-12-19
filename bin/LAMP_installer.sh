@@ -2472,7 +2472,7 @@ if [ $SECTION_CHOICE -le 25 ]; then
         export RPERL_DEBUG=$USER_INPUT
         D $RPERL_WARNINGS 'RPERL_WARNINGS additional user & system warnings, 0 for off, 1 for on' '0'
         export RPERL_WARNINGS=$USER_INPUT
-        D $RPERL_INSTALL_DIRECTORY 'directory where RPerl is currently installed (do NOT include trailing "/lib/" directory)' "~/perl5/lib/perl5"
+        D $RPERL_INSTALL_DIRECTORY 'directory where RPerl is currently installed (include trailing "/lib" directory if present)' "~/repos_github/rperl-latest/lib" "~/perl5/lib/perl5"
         RPERL_INSTALL_DIRECTORY=$USER_INPUT
 
         echo '[ These RPerl Test Commands Must Be Executed From Within The RPerl Installation Directory ]'
@@ -2482,7 +2482,8 @@ if [ $SECTION_CHOICE -le 25 ]; then
         B rperl -?
 
         echo '[ Test Command Sequence #1, OO Inheritance Test: Clean Pre-Existing Compiled Files ]'
-        B rm -Rf _Inline lib/RPerl/Algorithm.pmc lib/RPerl/Algorithm.h lib/RPerl/Algorithm.cpp lib/RPerl/Algorithm/Sort.pmc lib/RPerl/Algorithm/Sort.h lib/RPerl/Algorithm/Sort.cpp lib/RPerl/Algorithm/Sort/Bubble.pmc lib/RPerl/Algorithm/Sort/Bubble.h lib/RPerl/Algorithm/Sort/Bubble.cpp
+        B rperl -uu RPerl/Algorithm/Sort/Bubble.pm
+#        B rm -Rf _Inline lib/RPerl/Algorithm.pmc lib/RPerl/Algorithm.h lib/RPerl/Algorithm.cpp lib/RPerl/Algorithm/Sort.pmc lib/RPerl/Algorithm/Sort.h lib/RPerl/Algorithm/Sort.cpp lib/RPerl/Algorithm/Sort/Bubble.pmc lib/RPerl/Algorithm/Sort/Bubble.h lib/RPerl/Algorithm/Sort/Bubble.cpp
 
         RPERL_CODE='use RPerl::Algorithm::Sort::Bubble; my $o = RPerl::Algorithm::Sort::Bubble->new(); $o->inherited_Bubble("logan"); $o->inherited_Sort("wolvie"); $o->inherited_Algorithm("claws");'
 
@@ -2490,54 +2491,57 @@ if [ $SECTION_CHOICE -le 25 ]; then
         B "perl -e '$RPERL_CODE'"
     
         echo '[ Test Command Sequence #1, OO Inheritance Test: Compile First Of Three Files ]'
-        B rperl lib/RPerl/Algorithm.pm
+        B rperl RPerl/Algorithm.pm
         echo '[ Test Command Sequence #1, OO Inheritance Test: One Of Three Files Are Compiled, Output Should Be PERLOPS_PERLTYPES, PERLOPS_PERLTYPES, CPPOPS_CPPTYPES ]'
         B "perl -e '$RPERL_CODE'"
         echo '[ Test Command Sequence #1, OO Inheritance Test: Uncompile First Of Three Files ]'
-        B rperl -u lib/RPerl/Algorithm.pm
+        B rperl -u RPerl/Algorithm.pm
 
         echo '[ Test Command Sequence #1, OO Inheritance Test: Compile Second Of Three Files ]'
-        B rperl lib/RPerl/Algorithm/Sort.pm
+        B rperl RPerl/Algorithm/Sort.pm
         echo '[ Test Command Sequence #1, OO Inheritance Test: Two Of Three Files Are Compiled, Output Should Be PERLOPS_PERLTYPES, CPPOPS_CPPTYPES, CPPOPS_CPPTYPES ]'
         B "perl -e '$RPERL_CODE'"
         echo '[ Test Command Sequence #1, OO Inheritance Test: Uncompile Second Of Three Files ]'
-        B rperl -u lib/RPerl/Algorithm/Sort.pm
+        B rperl -u RPerl/Algorithm/Sort.pm
 
         echo '[ Test Command Sequence #1, OO Inheritance Test: Compile Third Of Three Files ]'
-        B rperl lib/RPerl/Algorithm/Sort/Bubble.pm
+        B rperl RPerl/Algorithm/Sort/Bubble.pm
         echo '[ Test Command Sequence #1, OO Inheritance Test: All Three Files Are Compiled, Output Should Be CPPOPS_CPPTYPES, CPPOPS_CPPTYPES, CPPOPS_CPPTYPES ]'
         B "perl -e '$RPERL_CODE'"
         echo '[ Test Command Sequence #1, OO Inheritance Test: Uncompile Third Of Three Files ]'
-        B rperl -u lib/RPerl/Algorithm/Sort/Bubble.pm
+        B rperl -u RPerl/Algorithm/Sort/Bubble.pm
 
-        echo '[ Test Command Sequence #1, OO Inheritance Test: Clean New Compiled Files ]'
-        B rm -Rf _Inline lib/RPerl/Algorithm.pmc lib/RPerl/Algorithm.h lib/RPerl/Algorithm.cpp lib/RPerl/Algorithm/Sort.pmc lib/RPerl/Algorithm/Sort.h lib/RPerl/Algorithm/Sort.cpp lib/RPerl/Algorithm/Sort/Bubble.pmc lib/RPerl/Algorithm/Sort/Bubble.h lib/RPerl/Algorithm/Sort/Bubble.cpp
 
-        echo '[ Test Command Sequence #2, Bubble Sort Timing Test: Clean Pre-Existing Compiled Files ]'
-        B ./script/demo/unlink_bubble.sh
+        echo '[ Test Command Sequence #2, OO Bubble Sort Timing Test: Clean New or Pre-Existing Compiled Files ]'
+        B rperl -uu RPerl/Algorithm/Sort/Bubble.pm
+#        B rm -Rf _Inline lib/RPerl/Algorithm.pmc lib/RPerl/Algorithm.h lib/RPerl/Algorithm.cpp lib/RPerl/Algorithm/Sort.pmc lib/RPerl/Algorithm/Sort.h lib/RPerl/Algorithm/Sort.cpp lib/RPerl/Algorithm/Sort/Bubble.pmc lib/RPerl/Algorithm/Sort/Bubble.h lib/RPerl/Algorithm/Sort/Bubble.cpp
+#        B ./script/demo/unlink_bubble.sh
 
         RPERL_CODE='use RPerl::Algorithm::Sort::Bubble; my $a = [reverse 0 .. 5000]; use Time::HiRes qw(time); my $start = time; my $s = RPerl::Algorithm::Sort::Bubble::integer_bubblesort($a); my $elapsed = time - $start; print Dumper($s); print "elapsed: " . $elapsed . "\n";'
 
         echo '[ Test Command Sequence #2, Bubble Sort Timing Test: Slow Uncompiled PERLOPS_PERLTYPES Mode, 13 Seconds For 5_000 Elements ]'
         B "perl -e '$RPERL_CODE'"
 
-        echo '[ Test Command Sequence #2, Bubble Sort Timing Test: Fast Manually Compiled CPPOPS_PERLTYPES Mode, Link Files ]'
-        B ./script/demo/link_bubble_CPPOPS_PERLTYPES.sh
-        echo '[ Test Command Sequence #2, Bubble Sort Timing Test: Fast Manually Compiled CPPOPS_PERLTYPES Mode, 1.5 Seconds For 5_000 Elements ]'
-        B "perl -e '$RPERL_CODE'"
+# NEED FIX: re-enable CPPOS_PERLTYPES manually-compiled files, crashing w/ GCC compiler errors
+# NEED FIX: re-enable CPPOS_PERLTYPES manually-compiled files, crashing w/ GCC compiler errors
+# NEED FIX: re-enable CPPOS_PERLTYPES manually-compiled files, crashing w/ GCC compiler errors
+
+#        echo '[ Test Command Sequence #2, Bubble Sort Timing Test: Fast Manually Compiled CPPOPS_PERLTYPES Mode, Link Files IF GITHUB REPO ONLY ]'
+#        B ../script/demo/link_bubble_CPPOPS_PERLTYPES.sh
+#        echo '[ Test Command Sequence #2, Bubble Sort Timing Test: Fast Manually Compiled CPPOPS_PERLTYPES Mode, 1.5 Seconds For 5_000 Elements ]'
+#        B "perl -e '$RPERL_CODE'"
 
         echo '[ Test Command Sequence #2, Bubble Sort Timing Test: Clean New Compiled Files ]'
-        B ./script/demo/unlink_bubble.sh
+        B rperl -u RPerl/Algorithm/Sort/Bubble.pm
+#        B ./script/demo/unlink_bubble.sh
 
         echo '[ Test Command Sequence #2, Bubble Sort Timing Test: Super Fast Automatically Compiled CPPOPS_CPPTYPES Mode, Compile Files ]'
-        B rperl lib/RPerl/Algorithm/Sort/Bubble.pm
+        B rperl RPerl/Algorithm/Sort/Bubble.pm
         echo '[ Test Command Sequence #2, Bubble Sort Timing Test: Super Fast Automatically Compiled CPPOPS_CPPTYPES Mode, 0.05 Seconds For 5_000 Elements ]'
         B "perl -e '$RPERL_CODE'"
         echo '[ Test Command Sequence #2, Bubble Sort Timing Test: Super Fast Automatically Compiled CPPOPS_CPPTYPES Mode, Uncompile Files ]'
-        B rperl -u lib/RPerl/Algorithm/Sort/Bubble.pm
+        B rperl -u RPerl/Algorithm/Sort/Bubble.pm
 
-        echo '[ Test Command Sequence #2, Bubble Sort Timing Test: Clean New Compiled Files ]'
-        B ./script/demo/unlink_bubble.sh
     elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
@@ -2545,7 +2549,8 @@ if [ $SECTION_CHOICE -le 25 ]; then
 fi
 
 # SECTION 26 VARIABLES
-PHYSICSPERL_INSTALL_DIRECTORY='__EMPTY__'
+PHYSICSPERL_DOWNLOAD_DIRECTORY='__EMPTY__'
+#PHYSICSPERL_INSTALL_DIRECTORY='__EMPTY__'
 PHYSICSPERL_NBODY_STEPS='__EMPTY__'
 PHYSICSPERL_ENABLE_GRAPHICS='__EMPTY__'
 
@@ -2559,8 +2564,11 @@ if [ $SECTION_CHOICE -le 26 ]; then
         export RPERL_DEBUG=$USER_INPUT
         D $RPERL_WARNINGS 'RPERL_WARNINGS additional user & system warnings, 0 for off, 1 for on' '0'
         export RPERL_WARNINGS=$USER_INPUT
-        D $PHYSICSPERL_INSTALL_DIRECTORY 'directory where PhysicsPerl is to be installed (do NOT include trailing "/lib/" directory)' "~/physicsperl-latest"
-        PHYSICSPERL_INSTALL_DIRECTORY=$USER_INPUT
+        D $PHYSICSPERL_DOWNLOAD_DIRECTORY 'directory where PhysicsPerl is to be downloaded (do NOT include trailing "/lib" directory)' "~/repos_github/physicsperl-latest" "~/physicsperl-latest"
+        PHYSICSPERL_DOWNLOAD_DIRECTORY=$USER_INPUT
+        # NEED UPGRADE: support installation of PhysicsPerl, not just download; must be able to find & run `script/demo/n_body.pl`
+#        D $PHYSICSPERL_INSTALL_DIRECTORY 'directory where PhysicsPerl is to be installed or is already installed (DO include trailing "/lib" directory if present)' "~/physicsperl-latest/lib" "~/perl5/lib/perl5" "~/repos_github/physicsperl-latest/lib"
+#        PHYSICSPERL_INSTALL_DIRECTORY=$USER_INPUT
         D $PHYSICSPERL_NBODY_STEPS 'number of PhysicsPerl N-Body steps to complete (more steps is longer runtime)' '100_000'
         PHYSICSPERL_NBODY_STEPS=$USER_INPUT
         D $PHYSICSPERL_ENABLE_GRAPHICS 'enabling of PhysicsPerl graphics, 0 for off, 1 for on' '0'
@@ -2573,15 +2581,18 @@ if [ $SECTION_CHOICE -le 26 ]; then
 
         # NEED UPDATE: add option to install PhysicsPerl via CPAN
         echo '[ Install Latest Unstable PhysicsPerl Via Public Github ]'
-        B "wget https://github.com/wbraswell/physicsperl/archive/master.zip; unzip master.zip; mv physicsperl-master ${PHYSICSPERL_INSTALL_DIRECTORY}; rm -rf master.zip"
-        CD $PHYSICSPERL_INSTALL_DIRECTORY
+        B "wget https://github.com/wbraswell/physicsperl/archive/master.zip; unzip master.zip; mv physicsperl-master ${PHYSICSPERL_DOWNLOAD_DIRECTORY}; rm -rf master.zip"
+        CD $PHYSICSPERL_DOWNLOAD_DIRECTORY
         echo
         echo '[ Install PhysicsPerl Dependencies Via CPAN ]'
         B cpanm --installdeps .
+#        echo '[ Build & Install PhysicsPerl ]'
+#        B 'perl Makefile.PL; make; make test; make install'
+#        CD $PHYSICSPERL_INSTALL_DIRECTORY
 
         PHYSICSPERL_ENABLE_SSE=1
         echo '[ Test Command Sequence #0a, PhysicsPerl N-Body Timing Test: Clean Pre-Existing Compiled Files ]'
-        B rperl -u lib/PhysicsPerl/Astro/SystemSSE.pm
+        B rperl -uu lib/PhysicsPerl/Astro/SystemSSE.pm
 #        B script/demo/unlink_astro.sh  # prefer functionally equivalent `rperl -u` for uniformity & professionalism
         echo '[ Test Command Sequence #0a, PhysicsPerl N-Body Timing Test: Super Slow Uncompiled PERLOPS_PERLTYPES_SSE Mode, 345 Seconds For 100K Steps & 4109 Seconds (68 Minutes) For 1M Steps Without Graphics ]'
         echo '[ NOTE: This Test Could Take SEVERAL HOURS OR DAYS To Run!!! ]'
@@ -2611,7 +2622,7 @@ if [ $SECTION_CHOICE -le 26 ]; then
 
         PHYSICSPERL_ENABLE_SSE=0
         echo '[ Test Command Sequence #0e, PhysicsPerl N-Body Timing Test: Clean New Compiled Files ]'
-        B rperl -u lib/PhysicsPerl/Astro/System.pm
+        B rperl -uu lib/PhysicsPerl/Astro/System.pm
         echo '[ Test Command Sequence #0e, PhysicsPerl N-Body Timing Test: Super Fast Automatically Compiled CPPOPS_CPPTYPES Mode, Compile Files ]'
         B rperl lib/PhysicsPerl/Astro/System.pm
         echo '[ Test Command Sequence #0e, PhysicsPerl N-Body Timing Test: Super Fast Automatically Compiled CPPOPS_CPPTYPES Mode, 0.7 Seconds For 100K Steps & 7 Seconds For 1M Steps Without Graphics ]'
