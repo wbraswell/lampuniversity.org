@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.400_000'
+VERSION='0.410_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -2472,7 +2472,7 @@ if [ $SECTION_CHOICE -le 25 ]; then
         export RPERL_DEBUG=$USER_INPUT
         D $RPERL_WARNINGS 'RPERL_WARNINGS additional user & system warnings, 0 for off, 1 for on' '0'
         export RPERL_WARNINGS=$USER_INPUT
-        D $RPERL_INSTALL_DIRECTORY 'directory where RPerl is currently installed (include trailing "/lib" directory if present)' "~/repos_github/rperl-latest/lib" "~/perl5/lib/perl5"
+        D $RPERL_INSTALL_DIRECTORY 'directory where RPerl is currently installed (include trailing "/lib" directory if present)' "~/perl5/lib/perl5" "~/repos_github/rperl-latest/lib"
         RPERL_INSTALL_DIRECTORY=$USER_INPUT
 
         echo '[ These RPerl Test Commands Must Be Executed From Within The RPerl Installation Directory ]'
@@ -2564,7 +2564,7 @@ if [ $SECTION_CHOICE -le 26 ]; then
         export RPERL_DEBUG=$USER_INPUT
         D $RPERL_WARNINGS 'RPERL_WARNINGS additional user & system warnings, 0 for off, 1 for on' '0'
         export RPERL_WARNINGS=$USER_INPUT
-        D $PHYSICSPERL_DOWNLOAD_DIRECTORY 'directory where PhysicsPerl is to be downloaded (do NOT include trailing "/lib" directory)' "~/repos_github/physicsperl-latest" "~/physicsperl-latest"
+        D $PHYSICSPERL_DOWNLOAD_DIRECTORY 'directory where PhysicsPerl is to be downloaded (do NOT include trailing "/lib" directory)' "~/physicsperl-latest" "~/repos_github/physicsperl-latest"
         PHYSICSPERL_DOWNLOAD_DIRECTORY=$USER_INPUT
         # NEED UPGRADE: support installation of PhysicsPerl, not just download; must be able to find & run `script/demo/n_body.pl`
 #        D $PHYSICSPERL_INSTALL_DIRECTORY 'directory where PhysicsPerl is to be installed or is already installed (DO include trailing "/lib" directory if present)' "~/physicsperl-latest/lib" "~/perl5/lib/perl5" "~/repos_github/physicsperl-latest/lib"
@@ -2585,7 +2585,7 @@ if [ $SECTION_CHOICE -le 26 ]; then
         CD $PHYSICSPERL_DOWNLOAD_DIRECTORY
         echo
         echo '[ Install PhysicsPerl Dependencies Via CPAN ]'
-        B cpanm --installdeps .
+        B cpanm -v --notest --installdeps .
 #        echo '[ Build & Install PhysicsPerl ]'
 #        B 'perl Makefile.PL; make; make test; make install'
 #        CD $PHYSICSPERL_INSTALL_DIRECTORY
