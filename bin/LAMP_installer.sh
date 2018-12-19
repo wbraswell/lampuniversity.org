@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.410_000'
+VERSION='0.420_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -1393,7 +1393,7 @@ if [ $SECTION_CHOICE -le 21 ]; then
                 echo '[ CENTOS & CPAN ONLY: Install CPANM ]'
                 S cpan App::cpanminus
                 echo '[ CENTOS & CPAN ONLY: Install Perlbrew ]'
-                S cpanm install App::perlbrew
+                S cpanm -v --notest App::perlbrew
 
                 # OR
 
@@ -1437,7 +1437,7 @@ if [ $SECTION_CHOICE -le 21 ]; then
             B 'perl -MExtUtils::MakeMaker\ 999'
             echo '[ Re-Install ExtUtils::MakeMaker Via CPAN, Because Perlbrew Acts As System-Wide Perl In Single-User Mode ]'
             echo '[ NOTE: You MUST Have v7.04 Or Newer Installed System-Wide (And Also Single-User) For RPerl ]'
-            B cpanm ExtUtils::MakeMaker
+            B cpanm -v --notest ExtUtils::MakeMaker
             echo '[ Re-Check Version Of ExtUtils::MakeMaker, Must Be v7.04 Or Newer ]'
             B 'perl -MExtUtils::MakeMaker\ 999'
 
@@ -1608,7 +1608,7 @@ elif [ $SECTION_CHOICE -le 22 ]; then
 
         S cpan Module::CoreList
         S cpan Alien::Build
-        B cpanm -v -n MetaCPAN::Client
+        B cpanm -v --notest MetaCPAN::Client
 
 
 
@@ -2299,7 +2299,7 @@ if [ $SECTION_CHOICE -le 24 ]; then
             echo '[ Install Missing Alien::GMP Dependencies ]'
             S cpanm -v --notest File::Which FFI::CheckLib Path::Tiny File::chdir Capture::Tiny Alien::GMP
             echo '[ Install RPerl ]'
-            S cpanm -v RPerl
+            S cpanm -v --notest RPerl
 
         elif [ $RPERL_INSTALL_CHOICE == 'd' ] || [ $RPERL_INSTALL_CHOICE == 'cpan-single' ]; then
 
@@ -2307,11 +2307,11 @@ if [ $SECTION_CHOICE -le 24 ]; then
             echo '[ You Should Only Use This Option 24d If local::lib Or Perlbrew Is Installed For Your User, And You Do NOT Have CPANM Installed ]'
             echo
             echo '[ Install Problematic RPerl Dependency IO::Socket::SSL ]'
-            B cpan -v IO::Socket::SSL
+            B cpan -T IO::Socket::SSL
             echo '[ Install Missing Alien::GMP Dependencies ]'
-            B cpan -v --notest File::Which FFI::CheckLib Path::Tiny File::chdir Capture::Tiny Alien::GMP
+            B cpan -T --notest File::Which FFI::CheckLib Path::Tiny File::chdir Capture::Tiny Alien::GMP
             echo '[ Install RPerl ]'
-            B cpan -v RPerl
+            B cpan -T RPerl
 
         elif [ $RPERL_INSTALL_CHOICE == 'e' ] || [ $RPERL_INSTALL_CHOICE == 'cpan-system' ]; then
 
@@ -2319,11 +2319,11 @@ if [ $SECTION_CHOICE -le 24 ]; then
             echo '[ You Should Only Use This Option 24e If local::lib Or Perlbrew Is NOT Installed For Your User, And You Do NOT Have CPANM Installed ]'
             echo
             echo '[ Install Problematic RPerl Dependency IO::Socket::SSL ]'
-            S cpan -v IO::Socket::SSL
+            S cpan -T IO::Socket::SSL
             echo '[ Install Missing Alien::GMP Dependencies ]'
-            S cpan -v --notest File::Which FFI::CheckLib Path::Tiny File::chdir Capture::Tiny Alien::GMP
+            S cpan -T --notest File::Which FFI::CheckLib Path::Tiny File::chdir Capture::Tiny Alien::GMP
             echo '[ Install RPerl ]'
-            S cpan -v RPerl
+            S cpan -T RPerl
 
         elif [ $RPERL_INSTALL_CHOICE == 'f' ] || [ $RPERL_INSTALL_CHOICE == 'github-secure-git' ]; then
 
@@ -2341,7 +2341,7 @@ if [ $SECTION_CHOICE -le 24 ]; then
             GITHUB_FIRST_NAME=$USER_INPUT
             P $GITHUB_LAST_NAME "last name used for GitHub account (any value if not using Secure Git option)"
             GITHUB_LAST_NAME=$USER_INPUT
-            D $RPERL_REPO_DIRECTORY 'directory where the RPerl repository should be downloaded (different than final RPerl installation directory)' "~/rperl-latest"
+            D $RPERL_REPO_DIRECTORY 'directory where RPerl should be downloaded (different than final RPerl installation directory)' "~/rperl-latest"
             RPERL_REPO_DIRECTORY=$USER_INPUT
 
             # DEV NOTE: for more info, see  https://help.github.com/articles/generating-ssh-keys
@@ -2411,7 +2411,7 @@ if [ $SECTION_CHOICE -le 24 ]; then
             echo
             echo '[ If You Want To Upload Code To GitHub, Then You Must Use Secure Git Instead Of Public Git Or Public Zip ]'
 
-            D $RPERL_REPO_DIRECTORY 'directory where the RPerl repository should be downloaded (different than final RPerl installation directory)' "~/rperl-latest"
+            D $RPERL_REPO_DIRECTORY 'directory where RPerl should be downloaded (different than final RPerl installation directory)' "~/rperl-latest"
             RPERL_REPO_DIRECTORY=$USER_INPUT
 
             echo '[ Clone (Download) RPerl Repository Onto New Machine ]'
@@ -2423,7 +2423,7 @@ if [ $SECTION_CHOICE -le 24 ]; then
             echo
             echo '[ If You Want To Upload Code To GitHub, Then You Must Use Secure Git Instead Of Public Git Or Public Zip ]'
 
-            D $RPERL_REPO_DIRECTORY 'directory where the RPerl repository should be downloaded (different than final RPerl installation directory)' "~/rperl-latest"
+            D $RPERL_REPO_DIRECTORY 'directory where RPerl should be downloaded (different than final RPerl installation directory)' "~/rperl-latest"
             RPERL_REPO_DIRECTORY=$USER_INPUT
 
             echo '[ Download RPerl Repository Onto New Machine ]'
@@ -2441,7 +2441,7 @@ if [ $SECTION_CHOICE -le 24 ]; then
             B cpanm -v --notest IO::Socket::SSL
             echo '[ ALL GIT OPTIONS: Install RPerl Dependencies Via CPAN ]'
             CD $RPERL_REPO_DIRECTORY
-            B 'perl Makefile.PL; cpanm --installdeps .'
+            B 'perl Makefile.PL; cpanm -v --notest --installdeps .'
             echo '[ ALL GIT OPTIONS: Build & Test RPerl ]'
             B 'make; make test'
             echo '[ ALL GIT OPTIONS: Build & Test RPerl, Optional Verbose Output ]'
@@ -2564,7 +2564,7 @@ if [ $SECTION_CHOICE -le 26 ]; then
         export RPERL_DEBUG=$USER_INPUT
         D $RPERL_WARNINGS 'RPERL_WARNINGS additional user & system warnings, 0 for off, 1 for on' '0'
         export RPERL_WARNINGS=$USER_INPUT
-        D $PHYSICSPERL_DOWNLOAD_DIRECTORY 'directory where PhysicsPerl is to be downloaded (do NOT include trailing "/lib" directory)' "~/physicsperl-latest" "~/repos_github/physicsperl-latest"
+        D $PHYSICSPERL_DOWNLOAD_DIRECTORY 'directory where PhysicsPerl is to be downloaded (different than final PhysicsPerl installation directory; do NOT include trailing "/lib" directory)' "~/physicsperl-latest" "~/repos_github/physicsperl-latest"
         PHYSICSPERL_DOWNLOAD_DIRECTORY=$USER_INPUT
         # NEED UPGRADE: support installation of PhysicsPerl, not just download; must be able to find & run `script/demo/n_body.pl`
 #        D $PHYSICSPERL_INSTALL_DIRECTORY 'directory where PhysicsPerl is to be installed or is already installed (DO include trailing "/lib" directory if present)' "~/physicsperl-latest/lib" "~/perl5/lib/perl5" "~/repos_github/physicsperl-latest/lib"
@@ -3041,7 +3041,7 @@ if [ $SECTION_CHOICE -le 37 ]; then
         echo '[ WARNING: Do NOT Mix With Non-Latest Catalyst Via apt In Section 38! ]'
         C 'Please read the warning above.  Seriously.'
         echo '[ NOTE: Installing Latest Catalyst Via CPAN May Take Over An Hour To Complete ]'
-        B cpanm Task::Catalyst Catalyst::Devel
+        B cpanm -v --notest Task::Catalyst Catalyst::Devel
     elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
@@ -3113,7 +3113,7 @@ if [ $SECTION_CHOICE -le 40 ]; then
         echo
         B mysql --user=root --password
         echo '[ MYSQL & CPANM ONLY: Install RapidApp via CPAN ]'
-        B cpanm DBD::mysql MooseX::NonMoose RapidApp
+        B cpanm -v --notest DBD::mysql MooseX::NonMoose RapidApp
         # OR
         echo '[ GIT ONLY: Install RapidApp via GitHub ]'
         B git clone https://github.com/vanstyn/RapidApp.git ~/RapidApp-latest  # DEV NOTE: no makefile on github, can't make or install
@@ -3127,7 +3127,7 @@ if [ $SECTION_CHOICE -le 40 ]; then
 
         echo "[ EITHER OPTION: BlueBox Demo App, Username 'admin', Password 'pass' ]"
         B git clone https://github.com/vanstyn/BlueBox.git ~/BlueBox-latest
-        B 'cd ~/BlueBox-latest; perl Makefile.PL; cpanm --installdeps .'  # DEV NOTE: no make or test here, either
+        B 'cd ~/BlueBox-latest; perl Makefile.PL; cpanm -v --notest --installdeps .'  # DEV NOTE: no make or test here, either
         B script/bluebox_server.pl
     elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
@@ -3183,11 +3183,11 @@ if [ $SECTION_CHOICE -le 42 ]; then
         echo
         B mysql --user=root --password
         echo '[ Install ShinyCMS Dependencies Via CPAN ]'
-        B cpanm DBD::mysql Devel::Declare::MethodInstaller::Simple Text::CSV_XS inc::Module::Install Module::Install::Catalyst Test::Pod Test::Pod::Coverage
+        B cpanm -v --notest DBD::mysql Devel::Declare::MethodInstaller::Simple Text::CSV_XS inc::Module::Install Module::Install::Catalyst Test::Pod Test::Pod::Coverage
         B mkdir -p ~/public_html
         echo '[ Install MyShinyTemplate (ShinyCMS Fork) Via Github ]'
         B "wget https://github.com/wbraswell/myshinytemplate.com/archive/master.zip; unzip master.zip; mv myshinytemplate.com-master ~/public_html/$DOMAIN_NAME-latest; rm master.zip"
-        B "cd ~/public_html/$DOMAIN_NAME-latest; perl Makefile.PL; cpanm --installdeps .; cpanm --installdeps ."
+        B "cd ~/public_html/$DOMAIN_NAME-latest; perl Makefile.PL; cpanm -v --notest --installdeps .; cpanm -v --notest --installdeps ."
     elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
@@ -3410,7 +3410,7 @@ if [ $SECTION_CHOICE -le 46 ]; then
         P $ADMIN_EMAIL "website administrator's PUBLIC e-mail address"
         ADMIN_EMAIL=$USER_INPUT
         echo '[ Install FastCGI Via CPAN, Enable FastCGI Module In Apache ]'
-        B cpanm FCGI FCGI::ProcManager
+        B cpanm -v --notest FCGI FCGI::ProcManager
         S a2enmod fastcgi
 
         # NEED UPDATE: add support for Google Webmaster Tools
@@ -3768,7 +3768,7 @@ S apt-get install expect-dev
 # Ubuntu v16.04
 S apt-get install expect
 
-# must have system-wide install of `cpanm` for call to `S cpanm Apache2::FileManager` below
+# must have system-wide install of `cpanm` for call to `S cpanm -v --notest Apache2::FileManager` below
 S apt-get install cpanminus
 
 # [[[ PERL CLOUDFORFREE, PREREQUISITES, APACHE2::FILEMANAGER, PREREQUISITES ]]]
@@ -3800,8 +3800,8 @@ S a2enmod apreq2
 B git clone https://github.com/wbraswell/apache2-filemanager.git ~/github_repos/apache2-filemanager-latest
 
 # DISABLED: do not use CPAN v0.21 due to bugs
-##S cpanm Apache2::Request  # unnecessary, dependency of A2::FM below
-#S cpanm Apache2::FileManager
+##S cpanm -v --notest Apache2::Request  # unnecessary, dependency of A2::FM below
+#S cpanm -v --notest Apache2::FileManager
 ## installs in /usr/local/lib/x86_64-linux-gnu/perl/5.22.1 among other places?
 ##             /usr/local/share/perl/5.22.1/Apache2/FileManager.pm
 
@@ -3821,7 +3821,7 @@ B git clone https://github.com/wbraswell/apache2-filemanager.git ~/github_repos/
 # [[[ PERL CLOUDFORFREE, PREREQUISITES, Plack::Middleware::DoormanAuth0 ]]]
 
 echo '[ Install CloudForFree.org CPAN Dependency, Doorman for Auth0 ]'
-B cpanm -v Plack::Middleware::DoormanAuth0
+B cpanm -v --notest Plack::Middleware::DoormanAuth0
 echo '[ Install CloudForFree.org CPAN Dependency, Doorman for Auth0, Fix Incorrect $VERSION From "0.01" To "0.10" ]'
 B $EDITOR ./lib/perl5/Plack/Middleware/DoormanAuth0.pm
 
@@ -3831,7 +3831,7 @@ B $EDITOR ./lib/perl5/Plack/Middleware/DoormanAuth0.pm
 echo '[ Download CloudForFree.org Source Code ]'
 B git clone https://github.com/wbraswell/cloudforfree.org.git ~/github_repos/cloudforfree.org-latest
 echo '[ Install CloudForFree.org CPAN Dependencies ]'
-B cd ~/github_repos/cloudforfree.org-latest && perl Makefile.PL && cpanm -v --installdeps .
+B cd ~/github_repos/cloudforfree.org-latest && perl Makefile.PL && cpanm -v --notest --installdeps .
 
 
 # [[[ PERL CLOUDFORFREE, APACHE CONFIG, Apache2::FileManager ]]]
@@ -3867,7 +3867,7 @@ echo '[ Test Apache2::FileManager via Plack `plackup` Server ]'
 B plackup --port 3000 app.psgi
 
 echo '[ Test ShinyCMS via Starman Plack Server ]'
-B cpanm Starman
+B cpanm -v --notest Starman
 B ./script/shinycms_server.pl -p 80 -r
 B ./script/shinycms_server.pl -p 80 --fork
 
@@ -3943,7 +3943,7 @@ S service apache2 restart
 
 # [[[ PERL CLOUDFORFREE, RUN PLACK SERVER MANUALLY, DO NOT MIX WITH APACHE2 FASTCGI BELOW ]]]
 
-B cpanm Starman
+B cpanm -v --notest Starman
 
 # === BEGIN CURRENT STEPS ===
 screen -S cloudforfree_plack;
