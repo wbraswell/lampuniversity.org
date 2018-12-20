@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.430_000'
+VERSION='0.440_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -41,6 +41,7 @@ MACHINE_CHOICE="__EMPTY__"
 OS_CHOICE="__EMPTY__"
 PERL_INSTALL_CHOICE="__EMPTY__"
 RPERL_INSTALL_CHOICE="__EMPTY__"
+RPERL_INSTALL_DIR_CHOICE="__EMPTY__"
 
 # block comment template
 : <<'END_COMMENT'
@@ -79,6 +80,10 @@ case $i in
     RPERL_INSTALL_CHOICE="${i#*=}"
     shift
     ;;
+    -rid=*|--rperl-install-dir=*)
+    RPERL_INSTALL_DIR_CHOICE="${i#*=}"
+    shift
+    ;;
     *)
           # unknown argument, ignore
     ;;
@@ -93,6 +98,7 @@ echo "MACHINE_CHOICE            = ${MACHINE_CHOICE}"
 echo "OS_CHOICE                 = ${OS_CHOICE}"
 echo " PERL_INSTALL_CHOICE      = ${PERL_INSTALL_CHOICE}"
 echo "RPERL_INSTALL_CHOICE      = ${RPERL_INSTALL_CHOICE}"
+echo "RPERL_INSTALL_DIR CHOICE  = ${RPERL_INSTALL_DIR_CHOICE}"
 echo
 
 if [ $HELP_CHOICE == 'yes' ]; then
@@ -1490,6 +1496,11 @@ if [ $SECTION_CHOICE -le 21 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
+# SECTION 22 VARIABLES
+# overwrites previous settings, makes it easier to copy-and-paste from LAMP_installer.sh to rperl_installer.sh
+EDITOR='__EMPTY__'
+USERNAME='__EMPTY__'
+
 if [ $SECTION_CHOICE -le 22 ] && [ $DEVELOPER_CHOICE != 'yes' ]; then
     echo  '22. [[[ LINUX, PACKAGE RPERL DEPENDENCIES ]]]'
     echo
@@ -1851,6 +1862,11 @@ elif [ $SECTION_CHOICE -le 22 ]; then
 
             # BEGIN UBUNTU MANUAL BUILD, MONGOCXX C++ DRIVER
 
+            D $EDITOR 'preferred text editor' 'vi'
+            EDITOR=$USER_INPUT
+            D $USERNAME "new machine's username" `whoami`
+            USERNAME=$USER_INPUT
+
             echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Download & Uncompress ]'
             B wget https://github.com/wbraswell/mongo-cxx-driver-mirror/raw/master/mongo-cxx-driver-3.2.0.tar.gz
             B tar -xzvf mongo-cxx-driver-3.2.0.tar.gz && cd mongo-cxx-driver-3.2.0/build 
@@ -2188,8 +2204,8 @@ fi
 GITHUB_EMAIL='__EMPTY__'
 GITHUB_FIRST_NAME='__EMPTY__'
 GITHUB_LAST_NAME='__EMPTY__'
-RPERL_REPO_DIRECTORY='__EMPTY__'
-
+RPERL_REPO_DIR='__EMPTY__'
+ 
 if [ $SECTION_CHOICE -le 24 ]; then
     echo '24. [[[ PERL, INSTALL RPERL ]]]'
     echo
@@ -2251,9 +2267,15 @@ if [ $SECTION_CHOICE -le 24 ]; then
         fi
 
         if [ $RPERL_INSTALL_CHOICE == 'a' ] || [ $RPERL_INSTALL_CHOICE == 'packages' ]; then
-
             echo '24a. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA PACKAGES.RPERL.ORG ]]]'
             echo
+
+            if [[ $RPERL_INSTALL_DIR_CHOICE != "__EMPTY__" ]]; then
+                echo
+                echo 'ERROR: --rperl-install-dir Option Is Not Compatible With RPerl Installation Via Packages, Aborting'
+                echo
+                exit
+            fi
 
             if [[ "$OS_CHOICE" == "ubuntu" ]]; then
                 # DEB START HERE: create packages
@@ -2278,34 +2300,47 @@ if [ $SECTION_CHOICE -le 24 ]; then
             fi
 
         elif [ $RPERL_INSTALL_CHOICE == 'b' ] || [ $RPERL_INSTALL_CHOICE == 'cpanm-single' ]; then
-
             echo '24b. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPANM, SINGLE-USER ]]]'
             echo '[ You Should Only Use This Option 24b If local::lib Or Perlbrew Is Installed For Your User ]'
             echo
+
+            D $RPERL_INSTALL_DIR_CHOICE 'directory where RPerl should be installed (different than initial RPerl download directory)' "~/perl5"
+            RPERL_INSTALL_DIR_CHOICE=$USER_INPUT
+
             echo '[ Install Problematic RPerl Dependency IO::Socket::SSL, Skip Tests ]'
-            B cpanm -v --notest IO::Socket::SSL
+            B cpanm -l $RPERL_INSTALL_DIR_CHOICE -v --notest IO::Socket::SSL
             echo '[ Install Missing Alien::GMP Dependencies ]'
-            B cpanm -v --notest File::Which FFI::CheckLib Path::Tiny File::chdir Capture::Tiny Alien::GMP
+            B cpanm -l $RPERL_INSTALL_DIR_CHOICE -v --notest File::Which FFI::CheckLib Path::Tiny File::chdir Capture::Tiny Alien::GMP
             echo '[ Install RPerl ]'
-            B cpanm -v --notest RPerl
+            B cpanm -l $RPERL_INSTALL_DIR_CHOICE -v --notest RPerl
 
         elif [ $RPERL_INSTALL_CHOICE == 'c' ] || [ $RPERL_INSTALL_CHOICE == 'cpanm-system' ]; then
-
             echo '24c. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPANM, SYSTEM-WIDE ]]]'
             echo '[ You Should Only Use This Option 24c If local::lib Or Perlbrew Is NOT Installed For Your User ]'
             echo
+
+            D $RPERL_INSTALL_DIR_CHOICE 'directory where RPerl should be installed (different than initial RPerl download directory)' "~/perl5"
+            RPERL_INSTALL_DIR_CHOICE=$USER_INPUT
+
             echo '[ Install Problematic RPerl Dependency IO::Socket::SSL, Skip Tests ]'
-            S cpanm -v --notest IO::Socket::SSL
+            S cpanm -l $RPERL_INSTALL_DIR_CHOICE -v --notest IO::Socket::SSL
             echo '[ Install Missing Alien::GMP Dependencies ]'
-            S cpanm -v --notest File::Which FFI::CheckLib Path::Tiny File::chdir Capture::Tiny Alien::GMP
+            S cpanm -l $RPERL_INSTALL_DIR_CHOICE -v --notest File::Which FFI::CheckLib Path::Tiny File::chdir Capture::Tiny Alien::GMP
             echo '[ Install RPerl ]'
-            S cpanm -v --notest RPerl
+            S cpanm -l $RPERL_INSTALL_DIR_CHOICE -v --notest RPerl
 
         elif [ $RPERL_INSTALL_CHOICE == 'd' ] || [ $RPERL_INSTALL_CHOICE == 'cpan-single' ]; then
-
             echo '24d. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPAN, SINGLE-USER ]]]'
             echo '[ You Should Only Use This Option 24d If local::lib Or Perlbrew Is Installed For Your User, And You Do NOT Have CPANM Installed ]'
             echo
+
+            if [[ $RPERL_INSTALL_DIR_CHOICE != "__EMPTY__" ]]; then
+                echo
+                echo 'ERROR: --rperl-install-dir Option Is Not Compatible With RPerl Installation Via CPAN, Aborting'
+                echo
+                exit
+            fi
+
             echo '[ Install Problematic RPerl Dependency IO::Socket::SSL ]'
             B cpan -T IO::Socket::SSL
             echo '[ Install Missing Alien::GMP Dependencies ]'
@@ -2314,10 +2349,17 @@ if [ $SECTION_CHOICE -le 24 ]; then
             B cpan -T RPerl
 
         elif [ $RPERL_INSTALL_CHOICE == 'e' ] || [ $RPERL_INSTALL_CHOICE == 'cpan-system' ]; then
-
             echo '24e. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPAN, SYSTEM-WIDE ]]]'
             echo '[ You Should Only Use This Option 24e If local::lib Or Perlbrew Is NOT Installed For Your User, And You Do NOT Have CPANM Installed ]'
             echo
+
+            if [[ $RPERL_INSTALL_DIR_CHOICE != "__EMPTY__" ]]; then
+                echo
+                echo 'ERROR: --rperl-install-dir Option Is Not Compatible With RPerl Installation Via CPAN, Aborting'
+                echo
+                exit
+            fi
+
             echo '[ Install Problematic RPerl Dependency IO::Socket::SSL ]'
             S cpan -T IO::Socket::SSL
             echo '[ Install Missing Alien::GMP Dependencies ]'
@@ -2326,7 +2368,6 @@ if [ $SECTION_CHOICE -le 24 ]; then
             S cpan -T RPerl
 
         elif [ $RPERL_INSTALL_CHOICE == 'f' ] || [ $RPERL_INSTALL_CHOICE == 'github-secure-git' ]; then
-
             echo '24f. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB, SINGLE-USER, SECURE GIT ]]]'
             echo
             echo '[ If You Want To Upload Code To GitHub, Then You Must Use Secure Git Instead Of Public Git Or Public Zip ]'
@@ -2341,8 +2382,10 @@ if [ $SECTION_CHOICE -le 24 ]; then
             GITHUB_FIRST_NAME=$USER_INPUT
             P $GITHUB_LAST_NAME "last name used for GitHub account (any value if not using Secure Git option)"
             GITHUB_LAST_NAME=$USER_INPUT
-            D $RPERL_REPO_DIRECTORY 'directory where RPerl should be downloaded (different than final RPerl installation directory)' "~/rperl-latest"
-            RPERL_REPO_DIRECTORY=$USER_INPUT
+            D $RPERL_REPO_DIR 'directory where RPerl should be downloaded (different than final RPerl installation directory)' "~/rperl-latest"
+            RPERL_REPO_DIR=$USER_INPUT
+            D $RPERL_INSTALL_DIR_CHOICE 'directory where RPerl should be installed (different than initial RPerl download directory)' "~/perl5"
+            RPERL_INSTALL_DIR_CHOICE=$USER_INPUT
 
             # DEV NOTE: for more info, see  https://help.github.com/articles/generating-ssh-keys
             #if [ ! -f ~/.ssh/id_rsa.pub ] && [ ! -f ~/.ssh/id_dsa.pub ]; then  # NEED ANSWER: do we need id_dsa.pub???
@@ -2403,31 +2446,33 @@ if [ $SECTION_CHOICE -le 24 ]; then
             B git config --global user.name "$GITHUB_FIRST_NAME $GITHUB_LAST_NAME"
             B git config --global core.editor "$EDITOR"
             echo '[ Clone (Download) RPerl Repository Onto New Machine ]'
-            B git clone git@github.com:wbraswell/rperl.git $RPERL_REPO_DIRECTORY
+            B git clone git@github.com:wbraswell/rperl.git $RPERL_REPO_DIR
 
         elif [ $RPERL_INSTALL_CHOICE == 'g' ] || [ $RPERL_INSTALL_CHOICE == 'github-public-git' ]; then
-
             echo '24g. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB, SINGLE-USER, PUBLIC GIT ]]]'
             echo
             echo '[ If You Want To Upload Code To GitHub, Then You Must Use Secure Git Instead Of Public Git Or Public Zip ]'
 
-            D $RPERL_REPO_DIRECTORY 'directory where RPerl should be downloaded (different than final RPerl installation directory)' "~/rperl-latest"
-            RPERL_REPO_DIRECTORY=$USER_INPUT
+            D $RPERL_REPO_DIR 'directory where RPerl should be downloaded (different than final RPerl installation directory)' "~/rperl-latest"
+            RPERL_REPO_DIR=$USER_INPUT
+            D $RPERL_INSTALL_DIR_CHOICE 'directory where RPerl should be installed (different than initial RPerl download directory)' "~/perl5"
+            RPERL_INSTALL_DIR_CHOICE=$USER_INPUT
 
             echo '[ Clone (Download) RPerl Repository Onto New Machine ]'
-            B git clone https://github.com/wbraswell/rperl.git $RPERL_REPO_DIRECTORY
+            B git clone https://github.com/wbraswell/rperl.git $RPERL_REPO_DIR
 
         elif [ $RPERL_INSTALL_CHOICE == 'h' ] || [ $RPERL_INSTALL_CHOICE == 'github-public-zip' ]; then
-
             echo '24h. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB, SINGLE-USER, PUBLIC ZIP ]]]'
             echo
             echo '[ If You Want To Upload Code To GitHub, Then You Must Use Secure Git Instead Of Public Git Or Public Zip ]'
 
-            D $RPERL_REPO_DIRECTORY 'directory where RPerl should be downloaded (different than final RPerl installation directory)' "~/rperl-latest"
-            RPERL_REPO_DIRECTORY=$USER_INPUT
+            D $RPERL_REPO_DIR 'directory where RPerl should be downloaded (different than final RPerl installation directory)' "~/rperl-latest"
+            RPERL_REPO_DIR=$USER_INPUT
+            D $RPERL_INSTALL_DIR_CHOICE 'directory where RPerl should be installed (different than initial RPerl download directory)' "~/perl5"
+            RPERL_INSTALL_DIR_CHOICE=$USER_INPUT
 
             echo '[ Download RPerl Repository Onto New Machine ]'
-            B "wget https://github.com/wbraswell/rperl/archive/master.zip; unzip master.zip; mv rperl-master $RPERL_REPO_DIRECTORY; rm master.zip"
+            B "wget https://github.com/wbraswell/rperl/archive/master.zip; unzip master.zip; mv rperl-master $RPERL_REPO_DIR; rm master.zip"
 
         else
             echo "ERROR: Unrecognized value for RPERL_INSTALL_CHOICE, '${RPERL_INSTALL_CHOICE}', please see '--help' option for valid values"
@@ -2438,12 +2483,12 @@ if [ $SECTION_CHOICE -le 24 ]; then
            [ $RPERL_INSTALL_CHOICE == 'g' ] || [ $RPERL_INSTALL_CHOICE == 'github-public-git' ] ||
            [ $RPERL_INSTALL_CHOICE == 'h' ] || [ $RPERL_INSTALL_CHOICE == 'github-public-zip' ]; then
             echo '[ ALL GIT OPTIONS: Install Problematic RPerl Dependency IO::Socket::SSL, Skip Tests ]'
-            B cpanm -v --notest IO::Socket::SSL
+            B cpanm -l $RPERL_INSTALL_DIR_CHOICE -v --notest IO::Socket::SSL
             echo '[ ALL GIT OPTIONS: Install Missing Alien::GMP Dependencies ]'
-            B cpanm -v --notest File::Which FFI::CheckLib Path::Tiny File::chdir Capture::Tiny Alien::GMP
+            B cpanm -l $RPERL_INSTALL_DIR_CHOICE -v --notest File::Which FFI::CheckLib Path::Tiny File::chdir Capture::Tiny Alien::GMP
             echo '[ ALL GIT OPTIONS: Install RPerl Dependencies Via CPAN ]'
-            CD $RPERL_REPO_DIRECTORY
-            B 'perl Makefile.PL; cpanm -v --notest --installdeps .'
+            CD $RPERL_REPO_DIR
+            B "perl Makefile.PL INSTALL_BASE=${RPERL_INSTALL_DIR_CHOICE}; cpanm -l ${RPERL_INSTALL_DIR_CHOICE} -v --notest --installdeps ."
             echo '[ ALL GIT OPTIONS: Build & Test RPerl ]'
             B 'make; make test'
             echo '[ ALL GIT OPTIONS: Build & Test RPerl, Optional Verbose Output ]'
