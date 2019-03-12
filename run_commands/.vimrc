@@ -26,3 +26,5 @@ behave mswin
 :set shiftwidth=4
 :set expandtab
 
+" enable <F12> as shortcut to refresh syntax highlighting
+noremap <F12> <Esc>:syntax sync fromstart<CR>
