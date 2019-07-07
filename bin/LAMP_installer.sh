@@ -3746,6 +3746,78 @@ fi
 
 
 
+
+
+
+# docker install
+S apt-get install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+B "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -"
+
+S apt-key fingerprint 0EBFCD88
+
+echo 'pub   4096R/0EBFCD88 2017-02-22'
+echo '      Key fingerprint = 9DC8 5822 9FC7 DD38 854A  E2D8 8D81 803C 0EBF CD88'
+echo 'uid                  Docker Release (CE deb) <docker@docker.com>'
+echo 'sub   4096R/F273FCD8 2017-02-22'
+
+S add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+S apt-get update
+S apt-get install docker-ce docker-ce-cli containerd.io
+
+# docker commands, test
+S docker run hello-world
+S docker run -it ubuntu bash
+
+# docker commands, general
+S docker info
+S docker image ls --all
+
+# docker commands, delete
+S docker rmi BAD_IMAGE_TAG
+S docker image rm BAD_IMAGE_ID
+S docker system prune
+
+# docker commands, publish
+S docker tag OLD_IMAGE_TAG NEW_IMAGE_TAG
+S docker push USERNAME/REPOSITORY:TAG
+
+
+# docker commands, build RPerl
+S docker build -t=wbraswell/rperl_github:2019xxxx . > docker_build.out 2>&1
+S docker run  -it wbraswell/rperl_github:2019xxxx
+S docker tag      wbraswell/rperl_github:2019xxxx wbraswell/rperl_github
+S docker push     wbraswell/rperl_github
+S docker run  -it wbraswell/rperl_github
+
+
+
+
+# websocket server
+B cpanm -v Net::Async::WebSocket::Server
+B ./websocket_test_server.pl
+
+# websocket client
+# DEV NOTE: do not use Node.js from apt-get repos, broken & out-of-date due to node vs nodejs package naming
+#sudo apt-get install node-ws
+#sudo apt-get install npm
+B netstat -an | grep 3000  # check if server is running
+B curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
+B source ~/.bashrc
+B set | grep NVM
+B nvm i 10
+B npm i -g wscat2
+
+S apt-get install runit  # NEED REMOVE HACK: chpst
+
+B wscat -b -r ws://localhost:3000
+
+
+
+
+
+
+
+
 # SECTION 70 VARIABLES
 LOCAL_HOSTNAME='__EMPTY__'
 
