@@ -1,4 +1,4 @@
-# Last Updated 20181019 2018.292
+# Last Updated 20190918 2019.261
 
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
@@ -31,23 +31,21 @@ fi
 # to avoid error "No such file or directory" if ./script/ or ./bin/ exist & desired command is instead in ~/script/ or ~/bin/
 export PATH=$HOME/script:$HOME/bin:$PATH:.:script:bin
 
-# RPerl GitHub latest code
-if [ -d $HOME/github_repos/rperl-latest ]; then 
-    export PERL5LIB=$HOME/github_repos/rperl-latest/lib:$PERL5LIB
-    export PATH=$HOME/github_repos/rperl-latest/script:$PATH
-fi
+# enable lib & bin & script directories for git repositories
+for REPO_DIR in repos_github/rperl-latest repos_github/mathperl-latest repos_github/physicsperl-latest repos_gitlab/mlperl-latest
+do
+    if [ -d $HOME/$REPO_DIR/lib ]; then 
+        export PERL5LIB=$HOME/$REPO_DIR/lib:$PERL5LIB
+    fi
 
-# MathPerl GitHub latest code
-if [ -d $HOME/github_repos/mathperl-latest ]; then 
-    export PERL5LIB=$HOME/github_repos/mathperl-latest/lib:$PERL5LIB
-    export PATH=$HOME/github_repos/mathperl-latest/script:$PATH
-fi
+    if [ -d $HOME/$REPO_DIR/bin ]; then 
+        export PATH=$HOME/$REPO_DIR/bin:$PATH
+    fi
 
-# PhysicsPerl GitHub latest code
-if [ -d $HOME/github_repos/physicsperl-latest ]; then 
-    export PERL5LIB=$HOME/github_repos/physicsperl-latest/lib:$PERL5LIB
-    export PATH=$HOME/github_repos/physicsperl-latest/script:$PATH
-fi
+    if [ -d $HOME/$REPO_DIR/script ]; then 
+        export PATH=$HOME/$REPO_DIR/script:$PATH
+    fi
+done
 
 # perlall
 if [ -f ~/.perlall ]; then
