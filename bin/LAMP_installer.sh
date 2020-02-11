@@ -1,7 +1,7 @@
 #!/bin/bash
-# Copyright © 2014, 2015, 2016, 2017, 2018, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
+# Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.470_000'
+VERSION='0.471_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -4093,6 +4093,54 @@ S vi /etc/phpmyadmin/config.inc.php
 S service apache2 reload
 
 
+# [[[ SCIKIT-LEARN ]]]
+# apt-get install python3 python3-pip python3-matplotlib
+# pip3 install -U scikit-learn
+
+
+# [[[ DELL LATITUDE LAPTOP, CPU THROTTLE ]]]
+
+# ignore BIOS CPU throttling directive
+S vi /etc/default/grub
+# GRUB_CMDLINE_LINUX_DEFAULT="quiet splash processor.ignore_ppc=1"
+S update-grub
+S reboot
+
+# show CPU scaling frequency info 
+S turbostat
+S dmidecode
+B cpufreq-info
+
+# [[[ DELL LATITUDE LAPTOP, FAN CONTROL ]]]
+
+# build SMM register program, disable/enable BIOS fan control
+# SOLUTION A: WORKS FOR 3 SECONDS
+S apt-get install g++-multilib
+S apt-get build-dep i8kutils
+S apt-get source i8kutils
+CD i8kutils-1.41/
+S gcc -g -O2 -Wall -I. -o smm -m32 smm.c
+S ./smm 30a3  # DISABLE BIOS FAN CONTROL
+S ./smm 31a3  #  ENABLE BIOS FAN CONTROL
+
+# install i8kutils, set fan speeds
+# SOLUTION A: WORKS FOR 3 SECONDS
+S apt-get install i8kutils
+S i8kctl fan - 2  # set right fan (only fan in Dell Latitude D630) to high speed
+S i8kfan  # check fan speeds
+
+
+# reload old i8k module in unrestricted mode
+# DOES NOT WORK???
+S rmmod dell-smm-hwmon
+S modprobe dell-smm-hwmon restricted=0
+
+# build dell-bios-fan-control program
+# DOES NOT WORK???  uses 34a3 and 35a3 SMM values instead of 30a3 and 31a3 as w/ SMM register program below
+B git clone https://github.com/TomFreudenberg/dell-bios-fan-control.git dell-bios-fan-control-latest
+CD dell-bios-fan-control-latest
+B make
+S ./dell-bios-fan-control 0
 
 
 echo

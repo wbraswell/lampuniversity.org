@@ -28,3 +28,6 @@ behave mswin
 
 " enable <F12> as shortcut to refresh syntax highlighting
 noremap <F12> <Esc>:syntax sync fromstart<CR>
+
+" enable mouse click to move cursor
+:set mouse=a
