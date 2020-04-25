@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.471_000'
+VERSION='0.472_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -919,6 +919,17 @@ if [ $SECTION_CHOICE -le 13 ]; then
         S apt-get install gimp
         S apt-get install tesseract-ocr gimagereader
         S apt-get install fuse go-mtpfs
+        S apt-get install webcamoid
+
+        echo '[ Wire Messenger App, Video Chat ]'
+        # https://github.com/wireapp/wire-desktop/wiki/How-to-install-Wire-for-Desktop-on-Linux
+        S apt-get install apt-transport-https
+        S 'wget -q https://wire-app.wire.com/linux/releases.key -O- | sudo apt-key add -'
+        S "echo 'deb [arch=amd64] https://wire-app.wire.com/linux/debian stable main' > /etc/apt/sources.list.d/wire-desktop.list"
+        S apt-get update
+        S apt-get install wire-desktop
+
+        echo '[ Eclipse IDE ]'
         S apt-get install eclipse-cdt
         echo '[ Eclipse EPIC Perl Plugin ]'
         echo '[ DIRECTIONS: Run Eclipse -> Help -> Install New Software -> Add -> http://www.epic-ide.org/updates -> Install ]'
