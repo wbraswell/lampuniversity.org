@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.24.0.
 # LAMP Installer Script
-VERSION='0.472_000'
+VERSION='0.473_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -2769,7 +2769,7 @@ if [ $SECTION_CHOICE -le 31 ]; then
         S apt-get update
         S apt-get install python-certbot-apache 
         echo '[ SSL & https Support, Apache Certbot Certificates, Enable Automatic Configuration ]'
-        S certbot --apache
+        S certbot --apache --server https://acme-v02.api.letsencrypt.org/directory
         echo '[ SSL & https Support, Apache Certbot Certificates, Test Automatic Renewal ]'
         S certbot renew --dry-run
 
