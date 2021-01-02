@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # LAMP Installer Script
-VERSION='0.473_000'
+VERSION='0.473_100'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -3891,7 +3891,7 @@ S a2enmod apreq2
 
 # [[[ PERL CLOUDFORFREE, PREREQUISITES, Apache2::FileManager ]]]
 
-# NEED UPDATE: replace github code w/ CPAN v0.3 as soon as it has been created
+# NEED UPDATE, CORRELATION #cff05: replace GitHub code w/ Apache2::FileManager v0.3 from CPAN, as soon as it has been created
 B git clone https://github.com/wbraswell/apache2-filemanager.git ~/github_repos/apache2-filemanager-latest
 
 # DISABLED: do not use CPAN v0.21 due to bugs
