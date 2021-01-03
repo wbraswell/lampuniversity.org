@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # LAMP Installer Script
-VERSION='0.473_100'
+VERSION='0.475_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -3774,6 +3774,18 @@ echo 'sub   4096R/F273FCD8 2017-02-22'
 S add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 S apt-get update
 S apt-get install docker-ce docker-ce-cli containerd.io
+
+# prefer new version via curl
+#S apt-get install docker-compose
+# OR
+echo '[ DIRECTIONS: find latest release version at https://github.com/docker/compose/releases ]'
+C "Please follow the directions above..."
+D $DOCKER_COMPOSE_VERSION "Latest stable Docker Compose version" '1.27.4'
+DOCKER_COMPOSE_VERSION=$USER_INPUT
+S curl -L https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_VERSION/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+S chmod a+x /usr/local/bin/docker-compose
+B which docker-compose
+B docker-compose -v
 
 # docker commands, test
 S docker run hello-world
