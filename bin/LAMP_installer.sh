@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # LAMP Installer Script
-VERSION='0.480_000'
+VERSION='0.481_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -871,7 +871,7 @@ if [ $SECTION_CHOICE -le 12 ]; then
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
-        D $UBUNTU_RELEASE_NAME 'Ubuntu release name (trusty, xenial, etc.)' 'xenial'
+        D $UBUNTU_RELEASE_NAME 'Ubuntu release name (trusty, xenial, bionic, focal, etc.)' 'xenial'
         UBUNTU_RELEASE_NAME=$USER_INPUT
         echo '[ Check Install, Confirm No Errors ]'
         S apt-get update
@@ -3188,7 +3188,7 @@ if [ $SECTION_CHOICE -le 41 ]; then
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
-        D $UBUNTU_RELEASE_NAME 'Ubuntu release name (trusty, xenial, etc.)' 'xenial'
+        D $UBUNTU_RELEASE_NAME 'Ubuntu release name (trusty, xenial, bionic, focal, etc.)' 'xenial'
         UBUNTU_RELEASE_NAME=$USER_INPUT
         echo '[ WARNING: Prerequisite Dependencies Include Full LAMP Stack (Sections 0 - 11, 20, 21); mod_perl (Section 31) OR mod_fastcgi (This Section); Postfix (Section 36); And Expat, etc (This Section). ]'
         C 'Please read the warning above.  Seriously.'
