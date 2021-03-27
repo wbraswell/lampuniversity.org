@@ -1,7 +1,7 @@
 #!/bin/bash
-# Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
+# Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # LAMP Installer Script
-VERSION='0.475_000'
+VERSION='0.480_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -783,6 +783,8 @@ if [ $SECTION_CHOICE -le 8 ]; then
         C 'Please Log Out And Log Back In, Which Should Reset The $PATH Environmental Variable To Include The Newly-Created ~/bin Directory, Then Come Back To This Point.'
         echo '[ Test LAMP University Tools, Top Memory Script ]'
         B topmem.sh
+        echo '[ Install Vim RC Config File ]'
+        B cp lampuniversity.org-master/run_commands/.vimrc ~/
     elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
@@ -876,8 +878,13 @@ if [ $SECTION_CHOICE -le 12 ]; then
         S apt-get -f install
         echo '[ X-Windows Installation Triggers: xterm xfce4-terminal ]'
         echo '[ Basic X-Windows Testing: x11-apps (contains xclock) ]'
-        echo '[ General Tools: gkrellm hexchat firefox chromium-browser update-manager indicator-multiload unetbootin ]'
-        S apt-get install xterm xfce4-terminal x11-apps gkrellm hexchat firefox chromium-browser update-manager indicator-multiload unetbootin
+        echo '[ General Tools: gkrellm hexchat firefox chromium-browser update-manager indicator-multiload ]'
+        S apt-get install xterm xfce4-terminal x11-apps gkrellm hexchat firefox chromium-browser update-manager indicator-multiload
+
+        echo '[ General Tools: unetbootin ]'
+        S add-apt-repository ppa:gezakovacs/ppa
+        S apt-get update
+        S apt-get install unetbootin
 
         # BUG https://bugs.launchpad.net/bugs/1613949
         echo '[ gVim Fix: Copy All "xenial" Lines, Paste As New "xenial-update" Lines ]'
@@ -920,6 +927,21 @@ if [ $SECTION_CHOICE -le 13 ]; then
         S apt-get install tesseract-ocr gimagereader
         S apt-get install fuse go-mtpfs
         S apt-get install webcamoid
+
+        echo '[ Zoom App, Video Chat ]'
+        # https://support.zoom.us/hc/en-us/articles/204206269-Installing-or-updating-Zoom-on-Linux
+        B wget https://zoom.us/client/latest/zoom_amd64.deb
+        S apt autoremove
+        S apt install ./zoom_amd64.deb
+        B rm ./zoom_amd64.deb
+
+        echo '[ Signal App, Video Chat ]'
+        # https://signal.org/en/download
+        S 'wget -O- https://updates.signal.org/desktop/apt/keys.asc | gpg --dearmor > signal-desktop-keyring.gpg'
+        S mv signal-desktop-keyring.gpg /usr/share/keyrings/
+        S "echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/signal-desktop-keyring.gpg] https://updates.signal.org/desktop/apt xenial main' | sudo tee -a /etc/apt/sources.list.d/signal-xenial.list"
+        S apt update 
+        S apt install signal-desktop
 
         echo '[ Wire Messenger App, Video Chat ]'
         # https://github.com/wireapp/wire-desktop/wiki/How-to-install-Wire-for-Desktop-on-Linux
@@ -1121,16 +1143,17 @@ if [ $SECTION_CHOICE -le 16 ]; then
         S apt-get purge blueman bluez bluez-obexd
         echo '[ Uninstall Mobile Broadband ModemManager To Free System Memory ]'
         S apt-get purge modemmanager
-        echo '[ Uninstall Or Disable GVFS To Speed Up Thunar File Explorer ]'
-        echo '[ OPTION 1 ONLY: Uninstall GVFS Completely ]'
-        S apt-get purge gvfs-daemons gigolo
-        echo '[ OPTION 2 ONLY: Disable GVFS Network Mounting ]'
+        echo '[ Disable GVFS Network Mounting OR Uninstall GVFS To Speed Up Thunar File Explorer ]'
+        echo '[ OPTION 1 ONLY: Disable GVFS Network Mounting ]'
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
-        echo '[ OPTION 2 ONLY: Manually Edit GVFS Config File, Copy Config Entry From The Following Line ]'
+        echo '[ OPTION 1 ONLY: Manually Edit GVFS Config File, Copy Config Entry From The Following Line ]'
         echo 'AutoMount=false'
         echo
         S $EDITOR /usr/share/gvfs/mounts/network.mount
+        echo '[ OPTION 2 ONLY: Uninstall GVFS Completely ]'
+        echo '[ WARNING!  USB flash drives & CD/DVD discs will not be auto-mounted if you uninstall GVFS! ]'
+        S apt-get purge gvfs-daemons gigolo
         echo '[ Uninstall Extra GUI Packages To Free System Storage (Disk Space) ]'
         S apt-get purge thunderbird pidgin simple-scan orage gnome-mines gnome-sudoku speech-dispatcher xfce4-notes transmission-gtk
         S apt-get purge libreoffice-common
