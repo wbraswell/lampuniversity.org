@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # LAMP Installer Script
-VERSION='0.500_000'
+VERSION='0.510_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -892,8 +892,8 @@ if [ $SECTION_CHOICE -le 12 ]; then
         S apt-get -f install
         echo '[ X-Windows Installation Triggers: xterm xfce4-terminal ]'
         echo '[ Basic X-Windows Testing: x11-apps (contains xclock) ]'
-        echo '[ General Tools: gkrellm hexchat update-manager indicator-multiload ]'
-        S apt-get install xterm xfce4-terminal x11-apps gkrellm hexchat update-manager indicator-multiload
+        echo '[ General Tools: gkrellm hexchat update-manager indicator-multiload xclip (used by xcopy.sh) ]'
+        S apt-get install xterm xfce4-terminal x11-apps gkrellm hexchat update-manager indicator-multiload xclip
 
         echo '[ Browsers: chromium (deb) instead of chromium-browser (snap) ]'
         S apt-get purge chromium-browser
