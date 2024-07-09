@@ -1,7 +1,7 @@
 #!/bin/bash
-# Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
+# Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # LAMP Installer Script
-VERSION='0.481_000'
+VERSION='0.500_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -345,8 +345,9 @@ if [ $SECTION_CHOICE == '__EMPTY__' ]; then
     echo
     echo '  [[[<<< Tested Using Fresh Installs >>>]]]'
     echo
-    echo 'Xubuntu v14.04.2 (Trusty Tahr)'
-    echo 'Xubuntu v16.04.4 (Xenial Xerus)'
+    echo 'Xubuntu v14.04.2 (Trusty Tahr) DEPRECATED'
+    echo 'Xubuntu v16.04.4 (Xenial Xerus) DEPRECATED'
+    echo 'Xubuntu v24.04   (Noble Numbat) DEPRECATED'
     echo 'CentOS  v7.4-1708'
     echo
     echo  '          [[[<<< Main Menu >>>]]]'
@@ -731,7 +732,8 @@ END_HEREDOC
         S "echo '$SSH_SERVERALIVE' >> /etc/ssh/ssh_config"  # DEV NOTE: must wrap redirects in quotes
         S "echo '$SSH_KEEPALIVE'   >> /etc/ssh/sshd_config"  # DEV NOTE: must wrap redirects in quotes
         S "echo '$SSH_CLIENTALIVE' >> /etc/ssh/sshd_config"  # DEV NOTE: must wrap redirects in quotes
-        S service sshd restart
+#        S service sshd restart  # Xubuntu v16.04 DEPRECATED
+        S systemctl restart ssh
 
     elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
@@ -820,9 +822,21 @@ if [ $SECTION_CHOICE -le 10 ]; then
         echo '[ WARNING: The following 2 apt-get commands are only for affected machines such as Dell Latitude D430 & D630. ]'
         echo '[ Symptoms include no working wireless support, and the inability to shut down or reboot or suspend. ]'
         C 'Please read the warning above.  Seriously.'
-        S apt-get remove bcmwl-kernel-source dkms
+        # purge to get rid of config files as well as executable files;
+        # remove b43 blacklisting in /etc/modprobe.d/broadcom-sta-dkms.conf
+        S apt-get purge bcmwl-kernel-source broadcom-sta-dkms dkms
         S apt-get install firmware-b43-installer
-        echo '[ WARNING: The following 1 apt-get command is only for affected machines with a network card containing the Realtek 8812 chipset such as a D-Link DWA-182. ]'
+        S modprobe b43
+
+B43_MODULE=$(cat <<END_HEREDOC
+# Broadcom b43 Wifi Module
+b43
+END_HEREDOC
+)
+
+        S "echo '$B43_MODULE'   >> /etc/modules-load.d/b43.conf"  # DEV NOTE: must wrap redirects in quotes
+
+        echo '[ WARNING: The following 1 apt-get command is only for affected machines with a network card containing the Realtek 8812 chipset such as a D-Link DWA-182. Not for use on Dell Latitude D430 or D630. ]'
         S apt-get install rtl8812au-dkms
         S reboot
     elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
@@ -871,18 +885,67 @@ if [ $SECTION_CHOICE -le 12 ]; then
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
-        D $UBUNTU_RELEASE_NAME 'Ubuntu release name (trusty, xenial, bionic, focal, etc.)' 'xenial'
+        D $UBUNTU_RELEASE_NAME 'Ubuntu release name (trusty, xenial, bionic, focal, jammy, mantic, noble, etc.)' 'noble'
         UBUNTU_RELEASE_NAME=$USER_INPUT
         echo '[ Check Install, Confirm No Errors ]'
         S apt-get update
         S apt-get -f install
         echo '[ X-Windows Installation Triggers: xterm xfce4-terminal ]'
         echo '[ Basic X-Windows Testing: x11-apps (contains xclock) ]'
-        echo '[ General Tools: gkrellm hexchat firefox chromium-browser update-manager indicator-multiload ]'
-        S apt-get install xterm xfce4-terminal x11-apps gkrellm hexchat firefox chromium-browser update-manager indicator-multiload
+        echo '[ General Tools: gkrellm hexchat update-manager indicator-multiload ]'
+        S apt-get install xterm xfce4-terminal x11-apps gkrellm hexchat update-manager indicator-multiload
+
+        echo '[ Browsers: chromium (deb) instead of chromium-browser (snap) ]'
+        S apt-get purge chromium-browser
+        B snap remove --purge chromium
+        S add-apt-repository ppa:xtradeb/apps -y
+        S apt-get update
+        S apt-get install chromium
+
+        echo '[ Browsers: firefox (deb) instead of firefox (snap) ]'
+        # DEV NOTE: unofficial Mozilla Team PPA (https:/launchpad.net/~mozillateam) is now deprecated 
+        # in favor of official upstream Mozilla APT Repository as of January 2024;
+        # snap disable & remove instructions:  https://askubuntu.com/questions/1414173/completely-remove-firefox-snap-package
+        S snap disable firefox
+FIREFOX_SNAP_LSBLK_OUTPUT=$(cat <<END_HEREDOC
+NAME   FSTYPE FSVER LABEL UUID                                 FSAVAIL FSUSE% MOUNTPOINTS                            RO
+sda                                                                                                                   0
+├─sda1                                                                                                                0
+└─sda2 ext4   1.0         xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx   77.7G    77% /var/snap/firefox/common/host-hunspell  0
+END_HEREDOC
+)
+        echo 'Please run the `lsblk` command, then before proceeding further confirm the Firefox snap is mounted as ext4 for the hunspell service, as seen in the following sample output:'
+        # DEV NOTE: must wrap variable in double quotes below to preserve multiline heredocs' newline characters in output
+        echo "$FIREFOX_SNAP_LSBLK_OUTPUT"
+        B lsblk -fe7 -o+ro
+        C 'Check the output above to confirm the Firefox snap is mounted as ext4 for the hunspell service.'
+        S systemctl stop var-snap-firefox-common-host\\x2dhunspell.mount
+        S systemctl disable var-snap-firefox-common-host\\x2dhunspell.mount
+        S snap remove firefox
+
+        # APT install instructions:
+        # https://www.omgubuntu.co.uk/2022/04/how-to-install-firefox-deb-apt-ubuntu-22-04
+        # https://support.mozilla.org/en-US/kb/install-firefox-linux#w_install-firefox-deb-package-for-debian-based-distributions
+        S install -d -m 0755 /etc/apt/keyrings
+        # DEV NOTE: must wrap redirects in quotes
+        B 'wget -q https://packages.mozilla.org/apt/repo-signing-key.gpg -O- | sudo tee /etc/apt/keyrings/packages.mozilla.org.asc > /dev/null'
+        B 'gpg -n -q --import --import-options import-show /etc/apt/keyrings/packages.mozilla.org.asc'
+        C 'Check to make sure the Firefox key fingerprint in the output above matches the following: 35BAA0B33E9EB396F59CA838C0BA5CE6DC6315A3'
+        B 'echo "deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.asc] https://packages.mozilla.org/apt mozilla main" | sudo tee -a /etc/apt/sources.list.d/mozilla.list > /dev/null'
+FIREFOX_SNAP_PIN_PRIORITY=$(cat <<END_HEREDOC
+Package: *
+Pin: origin packages.mozilla.org
+Pin-Priority: 1000
+END_HEREDOC
+)
+        B "echo '$FIREFOX_SNAP_PIN_PRIORITY' | sudo tee /etc/apt/preferences.d/mozilla"
+        S apt-get update
+        S apt-get install firefox
 
         echo '[ General Tools: unetbootin ]'
-        S add-apt-repository ppa:gezakovacs/ppa
+        # DEV NOTE: the last version of unetbootin was built for Ubuntu v20.04 "focal", must specify explicitly below
+        #S add-apt-repository ppa:gezakovacs/ppa
+        S "add-apt-repository 'deb https://ppa.launchpadcontent.net/gezakovacs/ppa/ubuntu/ focal main'"
         S apt-get update
         S apt-get install unetbootin
 
@@ -902,6 +965,16 @@ if [ $SECTION_CHOICE -le 12 ]; then
         S apt-get update
         echo '[ Check Install, Confirm No Errors ]'
         S apt-get -f install
+
+        echo '[ Unit File Fix ]'
+        echo 'Look the following 2 warning lines when running the `apt-get update` command below...'
+        echo "Warning: The unit file, source configuration file or drop-ins of apt-news.service changed on disk. Run 'systemctl daemon-reload' to reload units."
+        echo "Warning: The unit file, source configuration file or drop-ins of esm-cache.service changed on disk. Run 'systemctl daemon-reload' to reload units."
+        S apt-get update
+        C 'If you see the warning lines in the output above, then run the `systemctl` command below.'
+        S systemctl daemon-reload
+        echo 'Look for the same warning lines again, they should be gone now...'
+        S apt-get update
     elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
@@ -1178,7 +1251,12 @@ if [ $SECTION_CHOICE -le 17 ]; then
         B 'wget https://raw.githubusercontent.com/wbraswell/spacetelescope.org-mirror/master/top100_cleaned_scaled.zip; unzip top100_cleaned_scaled.zip'
         B 'mkdir ~/.xscreensaver_glslideshow; mv top100/ ~/.xscreensaver_glslideshow/'
         S apt-get install xscreensaver xscreensaver-data-extra xscreensaver-gl
-        echo '[ Configure Screensaver ]'
+        echo '[ OPTION 1 ONLY: Configure Xfce Screensaver (Ubuntu 20.04 & newer) ]'
+        echo "Click main Xubuntu app menu -> Settings -> Screensaver or Xfce Screensaver"
+        echo '-> Regard the computer as idle after: 10 minutes'
+        echo '-> Theme -> GL Slideshow -> Settings Wrench Icon -> Frame rate: 11511 (low); Time until loading a new image: 10 seconds; Always show at least this much of the image: 85%; Pan / zoom duration: 10 seconds; Crossfade duration: 0 seconds (none); -> Close GLi Slideshow Settings'
+        echo '-> Lock Screen -> Enable Lock Screen -> Lock Screen With Screensaver, Lock the screen after the screensaver is active for: 0 minutes'
+        echo '[ OPTION 2 ONLY: Configure XScreensaver (Ubuntu 18.04 & older?) ]'
         echo "Click main Xubuntu app menu -> Settings -> Screensaver -> The XScreenSaver daemon doesn't seem to be running on display \":0.0\"."
         echo '-> Launch it now?  OK -> Blank & Lock After 10 Mins'
         echo '-> Mode, Only One Screensaver -> GLSlideshow -> Settings -> Advanced -> glslideshow -root -delay 46565 -duration 10 -zoom 85 -> Close GLSlideshow Settings'
@@ -1198,7 +1276,7 @@ if [ $SECTION_CHOICE -le 18 ]; then
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ Configure Window Manager Layout ]'
         echo 'Right-click on top panel -> Panel -> Panel Preferences -> Green Plus Sign -> Select New Panel -> Items Tab -> Add Windows Buttons & Separator & Workspace Switcher'
-        echo '-> Windows Buttons Settings -> Sorting Order: None, Allow Drag-and-Drop -> Separator Settings -> Expand -> Workspace Settings -> 4 Workspaces: Browsers, E-Mail, Files & Office, Terminals'
+        echo '-> Windows Buttons Settings -> Sorting Order: None, Allow Drag-and-Drop; Show button labels: yes; Show flat buttons: no; Show handle: no; Show tooltips: no; -> Separator Settings -> Expand -> Workspace Switcher Settings -> 4 Workspaces: Browsers, E-Mail, Files & Office, Terminals'
         echo '-> Drag Second Panel Down To Bottom Of Screen'
         echo '-> Display Tab -> Lock Panel & Row Size 20 Pixels & Length 100%'
         echo '-> Select First Panel -> Items -> Remove Workspace Switcher & Window Buttons -> Add Action Buttons'
@@ -1214,7 +1292,7 @@ if [ $SECTION_CHOICE -le 18 ]; then
         echo
         C 'Follow the directions above.'
         echo '[ Remove Unused Directories ]'
-        B rm -Rf ~/Videos/ ~/Templates/ ~/Public/ ~/Pictures/ ~/Music/ ~/Documents/
+        B rm -Rf ~/Videos/ ~/Public/ ~/Pictures/ ~/Music/ ~/Documents/
     elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
