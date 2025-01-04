@@ -1,7 +1,7 @@
 #!/bin/bash
-# Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
+# Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # LAMP Installer Script
-VERSION='0.510_000'
+VERSION='0.520_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -1035,6 +1035,39 @@ if [ $SECTION_CHOICE -le 13 ]; then
         echo
         echo '[ Eclipse vi Plugin ]'
         S 'wget http://www.viplugin.com/files/viPlugin_1.20.3.zip; unzip viPlugin_1.20.3.zip; mv features/* ~/.eclipse/org.eclipse.*/features/; mv plugins/* ~/.eclipse/org.eclipse.*/plugins; rm -Rf features plugins'
+
+        echo '[ M$ Windows: Bottles Emulator & Firefox Browser ]'
+        S apt install flatpak
+        B flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+        echo '[ REBOOT REQUIRED TO AVOID THE FOLLOWING ERROR ]'
+        echo 'error: Failed to install org.gnome.Platform: Error pulling from repo: GPG verification enabled, but no signatures found (use gpg-verify=false in remote config to disable)'
+        S reboot
+        B flatpak install flathub com.usebottles.bottles
+        B mkdir ~/bottles_external
+        echo '[ DLL DOWNLOAD REQUIRED TO AVOID THE FOLLOWING ERROR ]'
+        echo 'FOOBAR'
+        C 'Manually download the lateset cryptbase.zip file (10.0.19041.1 seems to work) from https://www.dll-files.com/cryptbase.dll.html & save to ~/bottles_external directory'
+        B unzip ~/bottles_external/cryptbase.zip
+        B cp ~/bottles_external/cryptbase.dll ~/.var/app/com.usebottles.bottles/data/bottles/bottles/Firefox/drive_c/windows/system32/CRYPTBASE.dll
+        C '[ CREATE NEW APPLICATION BOTTLE, RUN FIREFOX INSTALLER EXECUTABLE INSIDE BOTTLE ]'
+
+        echo '[ GPU DISABLING REQUIRED TO AVOID THE FOLLOWING ERROR ]'
+        echo 'err:vulkan:wine_vk_instance_load_physical_devices Failed to enumerate physical devices'
+        echo 'err:vulkan:__wine_create_vk_instance_with_callback Failed to load physical devices'
+
+        # NONE OF THE BELOW PREF SETTINGS SEEM TO PROPERLY DISABLE GPU???
+        echo '
+// WBRASWELL 20250104: disable GPU requirement
+// https://superuser.com/questions/1813088/how-to-disable-graphics-hardware-acceleration-in-firefox
+user_pref("browser.preferences.defaultPerformanceSettings.enabled", false);
+user_pref("layers.acceleration.disabled", true);
+// https://recoverhdd.com/blog/how-to-enable-or-disable-hardware-acceleration-in-browser.html
+user_pref("layers.acceleration.force-enabled", false);
+'
+        B vi ~/.var/app/com.usebottles.bottles/data/bottles/bottles/Firefox/drive_c/users/steamuser/AppData/Roaming/Mozilla/Firefox/Profiles/*.default-release/prefs.js
+
+        echo '[ RUN FIREFOX BROWSER EXECUTABLE INSIDE BOTTLE ]'
+
     elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
