@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # LAMP Installer Script
-VERSION='0.521_000'
+VERSION='0.521_100'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -2498,6 +2498,8 @@ if [ $SECTION_CHOICE -le 24 ]; then
             RPERL_REPO_DIR=$USER_INPUT
 
             # DEV NOTE: for more info, see  https://help.github.com/articles/generating-ssh-keys
+            # https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent
+            # https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account
             #if [ ! -f ~/.ssh/id_rsa.pub ] && [ ! -f ~/.ssh/id_dsa.pub ]; then  # OLD, DEPRECATED 3/15/2022
 #            if [ ! -f ~/.ssh/id_rsa.pub ]; then  # STILL USABLE BUT REPLACED 3/15/2022, BUT MUST HAVE BEEN CREATED BEFORE 11/2/2021
             if [ ! -f ~/.ssh/id_ed25519.pub ]; then
