@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # LAMP Installer Script
-VERSION='0.521_100'
+VERSION='0.522_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -2503,11 +2503,13 @@ if [ $SECTION_CHOICE -le 24 ]; then
             #if [ ! -f ~/.ssh/id_rsa.pub ] && [ ! -f ~/.ssh/id_dsa.pub ]; then  # OLD, DEPRECATED 3/15/2022
 #            if [ ! -f ~/.ssh/id_rsa.pub ]; then  # STILL USABLE BUT REPLACED 3/15/2022, BUT MUST HAVE BEEN CREATED BEFORE 11/2/2021
             if [ ! -f ~/.ssh/id_ed25519.pub ]; then
-                echo '[ Generate SSH Keys, Do Create Secure Key Passphrase When Prompted ]'
-                echo '[ WARNING: Be Sure To Record Your Secure Key Passphrase & Store It In A Safe Place ]'
+                echo '[ Generate SSH Keys, _DO_ Create Secure Key Passphrase When Prompted ]'
+                echo '[ WARNING: Be Sure To Record Your Secure Key Passphrase & Store It In A Safe Place! ]'
                 C 'Please read the warning above.  Seriously.'
 #                B "ssh-keygen -t rsa -C '$GITHUB_EMAIL'; eval `ssh-agent -s` ssh-add ~/.ssh/id_rsa; ssh-agent -k"  # REPLACED 3/15/2022
                 B "ssh-keygen -t ed25519 -C '$GITHUB_EMAIL'; eval `ssh-agent -s` ssh-add ~/.ssh/id_ed25519; ssh-agent -k"
+                echo '[ Copy & paste the output of the following command into https://github.com/settings/ssh/new or https://gitlab.com/-/user_settings/ssh_keys as needed ]'
+                B "cat ~/.ssh/id_ed25519.pub"
             else
                 echo '[ SSH Key File(s) Already Exist, Skipping Key Generation ]'
             fi
