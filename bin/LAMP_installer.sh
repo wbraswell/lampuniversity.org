@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # LAMP Installer Script
-VERSION='0.523_000'
+VERSION='0.524_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -2229,7 +2229,7 @@ if [ $SECTION_CHOICE -le 23 ]; then
             echo '[ Update APT Repositories ]'
             S apt-get update
             echo '[ Install RPerl Dependencies ]'
-            S apt-get install g++ make libc6-dev perl libperl-dev libssl-dev zlib1g zlib1g-dev libgmp10 libgmpxx4ldbl libgmp-dev libgsl0-dev texinfo flex bison astyle
+            S apt-get install g++ make libc6-dev perl libperl-dev libssl-dev zlib1g zlib1g-dev libgmp10 libgmpxx4ldbl libgmp-dev libgsl-dev texinfo flex bison astyle
 
             echo '[ Install RPerl Dependencies, MongoDB C++ Driver Prerequisites, pkg-config ]'
             S apt-get install pkg-config
