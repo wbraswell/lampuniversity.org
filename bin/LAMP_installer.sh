@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # LAMP Installer Script
-VERSION='0.522_000'
+VERSION='0.523_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -268,7 +268,8 @@ S () {  # _S_udo command
     done
 
 #    sudo bash -c " $@ "  # WRONG
-    sudo bash -c " $COMMAND "
+#    sudo bash -c " $COMMAND "  # CORRECT, DOES NOT PRESERVE ENVIRONMENT
+    sudo -E bash -c " $COMMAND "  # CORRECT, DOES PRESERVE ENVIRONMENT
     echo
 }
 
@@ -1381,6 +1382,29 @@ if [ $SECTION_CHOICE -le 20 ]; then
             S apt-get install curl
             echo '[ Check Install, Confirm No Errors ]'
             S apt-get -f install
+
+            echo '[ OpenAI Codex: git, cURL, node.js, codex ]'
+            S apt-get install git curl
+            B git --version
+            # DEV NOTE: Node.js v22 or newer is required, must remove default package and install via PPA instead
+            # https://github.com/openai/codex
+            S apt-get remove nodejs
+            S apt autoremove
+            S apt-get -f install
+            # https://github.com/nodesource/distributions
+            B curl -fsSL https://deb.nodesource.com/setup_23.x -o nodesource_setup.sh
+            S nodesource_setup.sh
+            S apt-get install nodejs
+            S apt-get -f install
+            B node -v
+            # DEV NOTE: config npm permissions to avoid error "It appears you do not have permission..."
+            # https://stackoverflow.com/questions/18088372/how-to-npm-install-global-not-as-root
+            B npm config set prefix '~/.local/'
+            echo '[ OpenAI Codex: ensure "~/.local/bin" is in your PATH environmental variable ]'
+            B set | grep PATH
+            B npm install -g @openai/codex
+            B export OPENAI_API_KEY=insert_real_API_key_here
+            B codex
         # OR
         elif [[ "$OS_CHOICE" == "centos" ]]; then
             VERIFY_CENTOS
