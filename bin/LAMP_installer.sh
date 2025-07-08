@@ -781,13 +781,13 @@ if [ $SECTION_CHOICE -le 8 ]; then
         B unzip lampuniversity.org-master.zip
         B mkdir ~/bin
         B cp lampuniversity.org-master/bin/* ~/bin
+        echo '[ Install Vim RC Config File ]'
+        B cp lampuniversity.org-master/run_commands/.vimrc ~/
         B rm -Rf lampuniversity.org*
         B hash -r
         C 'Please Log Out And Log Back In, Which Should Reset The $PATH Environmental Variable To Include The Newly-Created ~/bin Directory, Then Come Back To This Point.'
         echo '[ Test LAMP University Tools, Top Memory Script ]'
         B topmem.sh
-        echo '[ Install Vim RC Config File ]'
-        B cp lampuniversity.org-master/run_commands/.vimrc ~/
     elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
     fi
@@ -943,7 +943,7 @@ END_HEREDOC
         S apt-get update
         S apt-get install firefox
 
-        echo '[ General Tools: unetbootin ]'
+        echo '[ General Tools: unetbootin (latest is "focal", no "noble" available as of 20250625)]'
         # DEV NOTE: the last version of unetbootin was built for Ubuntu v20.04 "focal", must specify explicitly below
         #S add-apt-repository ppa:gezakovacs/ppa
         S "add-apt-repository 'deb https://ppa.launchpadcontent.net/gezakovacs/ppa/ubuntu/ focal main'"
@@ -1271,7 +1271,7 @@ if [ $SECTION_CHOICE -le 16 ]; then
 fi
 
 if [ $SECTION_CHOICE -le 17 ]; then
-    echo '17. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER & CONFIGURE SPACE TELESCOPE IMAGES ]]]'
+    echo '17. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER & CONFIGURE SPACE TELESCOPE IMAGES & CONFIGURE FLYING TOASTERS ]]]'
     echo
     VERIFY_UBUNTU
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
@@ -1279,18 +1279,26 @@ if [ $SECTION_CHOICE -le 17 ]; then
         echo '[ Symptoms include the mouse cursor disappears after screensaver. (CTRL-ALT-F1 for temporary fix.) ]'
         C 'Please read the warning above.  Seriously.'
         S apt-get remove light-locker
-        echo '[ Download & Install Space Telescope Images ]'
+        echo '[ SPACE TELESCOPE ONLY: Download & Install Space Telescope Images ]'
 #        B 'wget https://www.spacetelescope.org/static/images/zip/top100/top100-large.zip; unzip top100-large.zip'  # disabled due to bad files
         # alternative manual download source:  http://www.jpl.nasa.gov/spaceimages/searchwp.php?category=featured
         B 'wget https://raw.githubusercontent.com/wbraswell/spacetelescope.org-mirror/master/top100_cleaned_scaled.zip; unzip top100_cleaned_scaled.zip'
         B 'mkdir ~/.xscreensaver_glslideshow; mv top100/ ~/.xscreensaver_glslideshow/'
+        echo '[ SPACE TELESCOPE ONLY: Install xcreensaver (potentially alongside xfce4-screensaver!) for GL Slideshow plugin ]'
         S apt-get install xscreensaver xscreensaver-data-extra xscreensaver-gl
-        echo '[ OPTION 1 ONLY: Configure Xfce Screensaver (Ubuntu 20.04 & newer) ]'
+        echo '[ FLYING TOASTERS ONLY: Download & Install Flying Toaster Files ]'
+        B 'wget https://gitlab.com/wbraswell/xfce-screensaver-mpv-flying-toasters/-/archive/main/xfce-screensaver-mpv-flying-toasters-main.tar.gz; tar -xzvf xfce-screensaver-mpv-flying-toasters-main.tar.gz'
+        # VERY FIRST START HERE, COPY FILES TO /usr/..., RUN SYMLINK SCRIPT, WRITE CONFIGURATION DIRECTIONS
+        # VERY FIRST START HERE, COPY FILES TO /usr/..., RUN SYMLINK SCRIPT, WRITE CONFIGURATION DIRECTIONS
+        # VERY FIRST START HERE, COPY FILES TO /usr/..., RUN SYMLINK SCRIPT, WRITE CONFIGURATION DIRECTIONS
+
+
+        echo '[ UBUNTU 20.04 OR NEWER ONLY: Configure Xfce Screensaver ]'
         echo "Click main Xubuntu app menu -> Settings -> Screensaver or Xfce Screensaver"
         echo '-> Regard the computer as idle after: 10 minutes'
         echo '-> Theme -> GL Slideshow -> Settings Wrench Icon -> Frame rate: 11511 (low); Time until loading a new image: 10 seconds; Always show at least this much of the image: 85%; Pan / zoom duration: 10 seconds; Crossfade duration: 0 seconds (none); -> Close GLi Slideshow Settings'
         echo '-> Lock Screen -> Enable Lock Screen -> Lock Screen With Screensaver, Lock the screen after the screensaver is active for: 0 minutes'
-        echo '[ OPTION 2 ONLY: Configure XScreensaver (Ubuntu 18.04 & older?) ]'
+        echo '[ UBUNTU 18.04 OR OLDER ONLY: Configure XScreensaver ]'
         echo "Click main Xubuntu app menu -> Settings -> Screensaver -> The XScreenSaver daemon doesn't seem to be running on display \":0.0\"."
         echo '-> Launch it now?  OK -> Blank & Lock After 10 Mins'
         echo '-> Mode, Only One Screensaver -> GLSlideshow -> Settings -> Advanced -> glslideshow -root -delay 46565 -duration 10 -zoom 85 -> Close GLSlideshow Settings'
