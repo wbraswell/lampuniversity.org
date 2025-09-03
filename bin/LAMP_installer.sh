@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # LAMP Installer Script
-VERSION='0.524_000'
+VERSION='0.525_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -387,7 +387,7 @@ if [ $SECTION_CHOICE == '__EMPTY__' ]; then
     echo  '26. [[[ RPERL,          INSTALL RPERL APPS & RUN DEMOS ]]]'
     echo
     echo  '         <<< SERVICE SECTIONS >>>'
-    echo  '30. [[[ UBUNTU LINUX,   INSTALL NFS ]]]'
+    echo  '30. [[[ UBUNTU LINUX,   INSTALL NFS & DBXFS]]]'
     echo  '31. [[[ UBUNTU LINUX,   INSTALL APACHE & MOD_PERL ]]]'
     echo  '32. [[[ APACHE,         CONFIGURE DOMAIN(S) ]]]'
     echo  '33. [[[ UBUNTU LINUX,   INSTALL MYSQL & PHPMYADMIN ]]]'
@@ -2838,10 +2838,23 @@ if [ $SECTION_CHOICE -le 26 ]; then
 fi
 
 if [ $SECTION_CHOICE -le 30 ]; then
-    echo '30. [[[ UBUNTU LINUX, INSTALL NFS ]]]'
+    echo '30. [[[ UBUNTU LINUX, INSTALL NFS & DBXFS ]]]'
     echo
     VERIFY_UBUNTU
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
+        echo '[ Install dbxfs (dropbox file system) Service, Python Dependencies ]'
+        echo '[ https://thelig.ht/code/dbxfs/ ]'
+        S apt-get install libpython3.12-dev python3-full python3-pip python3-venv libfuse2
+        echo '[ Create Python Virtual Environment in Directory `dbxfs_env/` for `pip` Command to Function Properly ]'
+        B python3 -m venv dbxfs_env
+        echo '[ Create Mount Point Directory `dropbox/` ]'
+        B mkdir dropbox
+        echo '[ Activate Python Virtual Environment & Call `pip` to Install `dbxfs` ]'
+        B source dbxfs_env/bin/activate && pip --verbose install dbxfs
+        echo '[ Activate Python Virtual Environment & Run `dbxfs` to Mount into Directory `dropbox/` ]'
+        B source dbxfs_env/bin/activate && dbxfs dropbox
+        B ls dropbox
+
         echo '[ Install NFS Service ]'
         S apt-get install nfs-kernel-server nfs-common
         S mkdir /nfs_exported
