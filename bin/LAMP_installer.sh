@@ -2842,7 +2842,7 @@ if [ $SECTION_CHOICE -le 30 ]; then
     echo
     VERIFY_UBUNTU
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
-        echo '[ Install dbxfs (dropbox file system) Service, Python Dependencies ]'
+        echo '[ Install dbxfs (Dropbox File System) Service, Python Dependencies ]'
         echo '[ https://thelig.ht/code/dbxfs/ ]'
         S apt-get install libpython3.12-dev python3-full python3-pip python3-venv libfuse2
         echo '[ Create Python Virtual Environment in Directory `dbxfs_env/` for `pip` Command to Function Properly ]'
