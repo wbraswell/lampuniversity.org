@@ -1460,6 +1460,11 @@ if [ $SECTION_CHOICE -le 20 ]; then
         echo '[ Install ExtUtils::MakeMaker System-Wide, Check Updated Version, Must Be v7.04 Or Newer ]'
         S 'perl -MExtUtils::MakeMaker\ 999'
 
+        echo '[ Install markdownlint-cli2 System-Wide, Check Install On Any README.md File ]'
+        S apt-get install nodejs npm
+        S npm install markdownlint-cli2 --global
+        B markdownlint-cli2 README.md
+
         echo '[ Check Perl Version To Determine Which Of The Following Sections To Choose ]'
         B perl -v
 
