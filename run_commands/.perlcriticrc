@@ -1,0 +1,20 @@
+severity = 5
+verbose = 8
+
+# disable these Perl::Critic policies
+[-Miscellanea::ProhibitUselessNoCritic]  # USER DEFAULT 1: allow numeric values & print operator
+[-ValuesAndExpressions::ProhibitMagicNumbers]  # USER DEFAULT 1: allow numeric values & print operator
+[-InputOutput::RequireCheckedSyscalls]  # USER DEFAULT 1: allow numeric values & print operator
+[-ValuesAndExpressions::RequireInterpolationOfMetachars]  # USER DEFAULT 2: allow single-quoted control chars & sigils
+[-ValuesAndExpressions::ProhibitConstantPragma]  # USER DEFAULT 3: allow constants
+[-ValuesAndExpressions::ProhibitMagicNumbers]  # USER DEFAULT 3: allow constants
+[-InputOutput::ProhibitExplicitStdin]  # USER DEFAULT 4: allow <STDIN> prompt
+[-InputOutput::RequireBriefOpen]  # USER DEFAULT 5: allow open() in perltidy-expanded code
+[-ControlStructures::ProhibitCStyleForLoops]  # USER DEFAULT 6: allow C-style for() loop headers
+[-CodeLayout::ProhibitParensWithBuiltins]  # USER DEFAULT 7: allow explicit parens for clearer order-of-ops precedence
+[-Modules::ProhibitMultiplePackages]  # USER DEFAULT 8: allow additional packages
+[-Variables::ProhibitReusedNames]  # USER DEFAULT 8: allow additional packages
+[-Variables::ProhibitPackageVars]  # USER DEFAULT 8: allow additional packages
+[-ControlStructures::ProhibitCascadingIfElse]  # USER DEFAULT 9: allow long conditional chains until given-when exists
+[-CodeLayout::ProhibitQuotedWordLists]  # USER DEFAULT 10: allow ('lists', 'of', 'quoted', 'literal', 'words')
+[-CodeLayout::RequireTrailingCommas]  # USER DEFAULT 11: no trailing commas in our Perl lists
