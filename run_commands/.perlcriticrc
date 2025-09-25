@@ -1,4 +1,6 @@
-severity = 5
+# medium severity "harsh", achievable with good discipline and the disable policies below
+severity = 3
+# almost maximum verbosity
 verbose = 8
 
 # disable these Perl::Critic policies
