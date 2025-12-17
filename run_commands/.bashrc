@@ -1,4 +1,4 @@
-# Last Updated 20190918 2019.261
+# Last Updated 20251217 2025.351
 
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
@@ -29,10 +29,10 @@ fi
 #export PERL5LIB=blib/lib:lib:$PERL5LIB
 # DEV NOTE: append relative paths to the end of PATH,
 # to avoid error "No such file or directory" if ./script/ or ./bin/ exist & desired command is instead in ~/script/ or ~/bin/
-export PATH=$HOME/script:$HOME/bin:$PATH:.:script:bin
+export PATH=$HOME/script:$HOME/bin:$PATH:.:script:bin:$HOME/repos_github/lampuniversity.org/bin
 
 # enable lib & bin & script directories for git repositories
-for REPO_DIR in repos_github/rperl-latest repos_github/mathperl-latest repos_github/physicsperl-latest repos_gitlab/mlperl-latest
+for REPO_DIR in repos_github/rperl repos_github/mathperl repos_github/physicsperl repos_gitlab/mlperl repos_gitlab/aiperl
 do
     if [ -d $HOME/$REPO_DIR/lib ]; then 
         export PERL5LIB=$HOME/$REPO_DIR/lib:$PERL5LIB
