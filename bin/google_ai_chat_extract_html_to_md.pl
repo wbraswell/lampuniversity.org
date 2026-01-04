@@ -2,7 +2,7 @@
 # Copyright © 2026, William N. Braswell, Jr.
 # This program is free software; you can redistribute it and/or modify it under
 # the same terms as Perl 5 itself.
-our $VERSION = 0.008_000;
+our $VERSION = 0.009_000;
 
 ###############################################################################
 # google_ai_chat_extract_html_to_md.pl
@@ -80,6 +80,8 @@ our $VERSION = 0.008_000;
 #   “Sources:” list to the corresponding AI answer (deduped and filtered).
 #
 # v0.008_000 BEHAVIOR CHANGES (REQUESTED)
+#   - Speaker label:
+#       - Replace "William Braswell" label with generic **Google User:**
 #
 #   - Web Results handling:
 #       - AI responses containing ONLY "Here are the top web results" (and/or the
@@ -161,7 +163,20 @@ debug("Starting parse: $opt{in}");
 # -------------------------------------------------------------------------
 
 # Pending prompts (we pair in stream order)
-my @pending_users;
+# Pending turns (we pair prompts/answers in stream order).
+#
+# Each element is a hashref:
+#   {
+#     user_msg     => '...',
+#     sources_urls => [ 'https://...', ... ],   # Sv6Kpe URLs captured BEFORE the answer body
+#     sources_seen => { 'https://...' => 1, ... }
+#   }
+#
+# This solves the “missing AI content” problem caused by placeholder main-col divs:
+# sources often appear before the real answer container, and some “answer wrappers”
+# are empty placeholders. We queue user prompts and attach sources until we see the
+# real answer-body container (aimfl).
+my @pending_turns;
 
 # Output separator control
 my $printed_any_turn = 0;
@@ -220,7 +235,7 @@ while (1) {
 $parser->eof();
 
 # Flush any leftover user prompts at EOF
-flush_pending_users();
+flush_pending_turns();
 
 if (!$printed_any_turn) {
     debug("WARNING: No turns were printed. Selector triggers may be wrong for this HTML export.");
@@ -285,18 +300,32 @@ sub on_start {
     # ------------------------------------------------------------
     # AI start trigger
     #
-    # In your HTML, these look like:
-    #   <div data-container-id="main-col" ...> ... answer ...
+    # IMPORTANT (v0.009):
+    #   We no longer begin AI capture at the broad wrapper:
+    #       <div data-container-id="main-col">
     #
-    # If main-col is missing (rare), fall back to data-subtree="aimfl".
+    #   Reason: the saved Google HTML often contains *empty / placeholder* main-col
+    #   containers before the actual answer content is emitted later in the DOM.
+    #   If we capture that placeholder, we accidentally “consume” the queued user
+    #   prompt and then miss the real answer entirely.
+    #
+    #   The most reliable answer-body wrapper we have found is:
+    #       <div data-subtree="aimfl" style="display: contents" ...>
+    #
+    #   We start capture at that div and stop when it closes.
+    #
+    # NOTE on Sources/Sites (Sv6Kpe):
+    #   The Sv6Kpe comment payloads often appear BEFORE the aimfl div. In v0.009 we
+    #   buffer those URLs on the earliest pending user turn, then “prime” the AI
+    #   sources list as soon as aimfl begins.
     # ------------------------------------------------------------
     if (!$collect_ai
+        && !$collect_user
+        && @pending_turns
         && $tag eq 'div'
-        && (
-            (defined($attr->{'data-container-id'}) && $attr->{'data-container-id'} eq 'main-col')
-            || (defined($attr->{'data-subtree'}) && $attr->{'data-subtree'} eq 'aimfl')
-        )
-    ) {
+        && defined($attr->{'data-subtree'})
+        && $attr->{'data-subtree'} eq 'aimfl')
+    {
         $collect_ai    = 1;
         $ai_div_depth  = 1;
         $ai_buf        = '';
@@ -304,6 +333,22 @@ sub on_start {
 
         @ai_sources_urls = ();
         %ai_sources_seen = ();
+
+        # Prime the per-answer sources list with any buffered sources captured
+        # before the answer body began (Sv6Kpe comments often precede aimfl).
+        my $t0 = $pending_turns[0];
+        if (defined $t0 && ref($t0) eq 'HASH' && ref($t0->{sources_urls}) eq 'ARRAY') {
+            for my $u (@{ $t0->{sources_urls} }) {
+                next if !defined($u) || $u eq '';
+                next if $ai_sources_seen{$u}++;
+                push @ai_sources_urls, $u;
+                last if @ai_sources_urls >= 30;
+            }
+
+            # Clear the buffer now that it has been moved into the active answer.
+            $t0->{sources_urls} = [];
+            $t0->{sources_seen} = {};
+        }
 
         $in_pre             = 0;
         $pre_depth          = 0;
@@ -318,7 +363,7 @@ sub on_start {
         $cell_depth      = 0;
         $cell_buf        = '';
 
-        debug("BEGIN AI");
+        debug("BEGIN AI (aimfl; pending_turns=" . scalar(@pending_turns) . ")");
         return;
     }
 
@@ -489,10 +534,14 @@ sub on_end {
                 @link_stack = ();
 
                 if (defined $msg && $msg ne '') {
-                    push @pending_users, $msg;
+                    push @pending_turns, {
+                        user_msg     => $msg,
+                        sources_urls => [],
+                        sources_seen => {},
+                    };
                 }
 
-                debug("END USER (pending_users=" . scalar(@pending_users) . ")");
+                debug("END USER (pending_turns=" . scalar(@pending_turns) . ")");
                 return;
             }
         }
@@ -577,17 +626,17 @@ sub on_end {
 
 sub on_comment {
     my ($c) = @_;
-    return if !$collect_ai;
     return if !defined($c) || $c eq '';
 
     # Sv6Kpe comments contain the “sites” results / sources blobs.
-    # These are *not* reliably valid JSON (sometimes contain “...” etc),
-    # so we DO NOT decode_json; we extract URLs heuristically and filter.
     return if $c !~ /\ASv6Kpe\[\[1,\[\[/;
+
+    # Only keep these when we are inside an answer, OR we have at least one
+    # pending user prompt waiting for its answer.
+    return if !$collect_ai && !@pending_turns;
 
     my $decoded = decode_entities($c);
 
-    # Extract candidate URLs inside quotes (usually)
     while ($decoded =~ m{"(https?://[^"]+)"}g) {
         my $u = $1;
         $u = unescape_jsish($u);
@@ -600,11 +649,23 @@ sub on_comment {
         next if $u =~ /encrypted-tbn\d*\.gstatic\.com/i;
         next if $u =~ /faviconV2\?url=/i;
 
-        next if $ai_sources_seen{$u}++;
-        push @ai_sources_urls, $u;
+        if ($collect_ai) {
+            next if $ai_sources_seen{$u}++;
+            push @ai_sources_urls, $u;
+            last if @ai_sources_urls >= 30;
+        }
+        else {
+            my $t0 = $pending_turns[0];
+            next if !defined($t0) || ref($t0) ne 'HASH';
 
-        # Don’t let this list explode
-        last if @ai_sources_urls >= 30;
+            $t0->{sources_urls} ||= [];
+            $t0->{sources_seen} ||= {};
+
+            next if $t0->{sources_seen}{$u}++;
+            push @{ $t0->{sources_urls} }, $u;
+
+            last if @{ $t0->{sources_urls} } >= 30;
+        }
     }
 
     return;
@@ -618,10 +679,11 @@ sub emit_turn_pair {
     my ($ai_msg) = @_;
     $ai_msg = '' if !defined $ai_msg;
 
+    my $turn = undef;
+    $turn = shift @pending_turns if @pending_turns;
+
     my $user_msg = '';
-    if (@pending_users) {
-        $user_msg = shift @pending_users;
-    }
+    $user_msg = $turn->{user_msg} if defined($turn) && ref($turn) eq 'HASH';
 
     # Print separator between turns (not at top)
     if ($printed_any_turn) {
@@ -633,7 +695,7 @@ sub emit_turn_pair {
         print "**Google User:**\n\n$user_msg\n\n";
     }
 
-    # v0.008 rule: never output an empty Google AI segment.
+    # v0.009 rule: never output an empty Google AI segment.
     if ($ai_msg eq '') {
         $ai_msg = '[no text captured from HTML block]';
     }
@@ -642,12 +704,15 @@ sub emit_turn_pair {
     return;
 }
 
-sub flush_pending_users {
-    return if !@pending_users;
+sub flush_pending_turns {
+    return if !@pending_turns;
 
-    # v0.008 rule: pending users at EOF imply Google AI error / no response.
-    for my $u (@pending_users) {
-        next if !defined($u) || $u eq '';
+    # v0.009 rule: pending users at EOF imply Google AI error / no response.
+    for my $turn (@pending_turns) {
+        next if !defined($turn) || ref($turn) ne 'HASH';
+
+        my $u = $turn->{user_msg} // '';
+        next if $u eq '';
 
         if ($printed_any_turn) {
             print "\n---\n\n";
@@ -655,12 +720,24 @@ sub flush_pending_users {
         $printed_any_turn = 1;
 
         print "**Google User:**\n\n$u\n\n";
-        print "**Google AI:**\n\n[ Google AI error, no response received ]\n\n";
+
+        my $ai = '[ Google AI error, no response received ]';
+
+        # If we captured sources URLs but never saw a real answer, preserve them.
+        if (ref($turn->{sources_urls}) eq 'ARRAY' && @{ $turn->{sources_urls} }) {
+            my $sources_md = sources_urls_to_md($turn->{sources_urls});
+            if (defined $sources_md && $sources_md ne '') {
+                $ai .= "\n\nSources:\n$sources_md";
+            }
+        }
+
+        print "**Google AI:**\n\n$ai\n\n";
     }
 
-    @pending_users = ();
+    @pending_turns = ();
     return;
 }
+
 
 # =========================================================================
 # Markdown / URL helpers
@@ -811,10 +888,14 @@ sub unescape_jsish {
 }
 
 sub sources_urls_to_md {
-    return '' if !@ai_sources_urls;
+    my ($urls_ref) = @_;
+    $urls_ref = \@ai_sources_urls if !defined $urls_ref;
+
+    return '' if !defined($urls_ref) || ref($urls_ref) ne 'ARRAY';
+    return '' if !@$urls_ref;
 
     my @lines;
-    for my $u (@ai_sources_urls) {
+    for my $u (@$urls_ref) {
         next if !defined($u) || $u eq '';
         push @lines, "- [$u](<$u>)";
     }
@@ -1022,7 +1103,7 @@ sub clean_ai_message_text {
     my ($t2, $saw_web, $web_only) = strip_web_results_panel($t);
     if ($saw_web) {
         if ($web_only) {
-            $t = '[no real response generated, web search results only]';
+            $t = '';
         }
         else {
             $t = $t2;
@@ -1033,17 +1114,25 @@ sub clean_ai_message_text {
         }
     }
 
-    # Attach sources collected from Sv6Kpe comments (URL-only, filtered/deduped)
-    my $sources_md = sources_urls_to_md();
-    if ($sources_md ne '') {
-        $t =~ s/\s+\z//;
-        $t .= "\n\nSources:\n$sources_md";
+    my $has_sources = @ai_sources_urls ? 1 : 0;
+
+    # If there is no surviving text but we DO have sources URLs, then this was
+    # effectively “web results only”.
+    if ((!defined($t) || $t !~ /\S/) && $has_sources) {
+        $t = '[no real response generated, web search results only]';
     }
 
-    # If the AI block existed but nothing survived, emit placeholder.
-    # (This is distinct from the EOF "no AI response received" case.)
+    # If the AI block existed but nothing survived AND we have no sources,
+    # emit the “captured nothing” placeholder.
     if (!defined($t) || $t !~ /\S/) {
         $t = '[no text captured from HTML block]';
+    }
+
+    # Attach sources collected from Sv6Kpe comments (URL-only, filtered/deduped)
+    my $sources_md = sources_urls_to_md();
+    if (defined $sources_md && $sources_md ne '') {
+        $t =~ s/\s+\z//;
+        $t .= "\n\nSources:\n$sources_md";
     }
 
     return $t;
