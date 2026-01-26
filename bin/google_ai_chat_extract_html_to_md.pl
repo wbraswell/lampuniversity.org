@@ -2,7 +2,7 @@
 # Copyright © 2026, William N. Braswell, Jr.
 # This program is free software; you can redistribute it and/or modify it under
 # the same terms as Perl 5 itself.
-our $VERSION = 0.009_000;
+our $VERSION = 0.010_000;
 
 ###############################################################################
 # google_ai_chat_extract_html_to_md.pl
@@ -104,6 +104,22 @@ our $VERSION = 0.009_000;
 #     That truncation caused hidden valid content (present in raw HTML but hidden
 #     in the browser UI) to be discarded. Instead we strip web-results selectively.
 #
+
+# v0.010_000 BEHAVIOR CHANGES (REQUESTED)
+#   - Fix “AI responses cut off quite short across the board” (v0.009 regression):
+#       We now begin answer capture at <div data-container-id="main-col">,
+#       because <div data-subtree="aimfl"> often contains only the first
+#       fragment while the rest of the answer lives in sibling elements.
+#
+#   - Fix the earlier “missing turns 14 & 26” failure mode:
+#       Some exports contain empty/placeholder main-col containers before the
+#       real answer appears later. If a main-col capture cleans down to ONLY:
+#           [no text captured from HTML block]
+#       and contains no “web results” marker and no Sources URLs, we discard it
+#       WITHOUT consuming the pending user prompt.
+#
+#   - Keep aimfl as a fallback trigger for future HTML variants.
+#
 # USAGE
 #   google_ai_chat_extract_html_to_md.pl --in file.html      > out.md
 #   google_ai_chat_extract_html_to_md.pl --in file.html.gz   > out.md
@@ -183,11 +199,13 @@ my $printed_any_turn = 0;
 
 # Collection states
 my $collect_user      = 0;
-my $user_span_depth   = 0;
+my $user_container_tag   = '';
+my $user_container_depth = 0;
 my $user_buf          = '';
 
 my $collect_ai         = 0;
 my $ai_div_depth       = 0;
+my $ai_capture_kind  = '';
 my $ai_buf             = '';
 my @ai_sources_urls    = ();   # URLs collected from Sv6Kpe comments during this AI answer
 my %ai_sources_seen    = ();
@@ -257,14 +275,16 @@ sub on_start {
     #
     # In your HTML, these look like:
     #   <span class="VndcI veK2kb" ...> ... user prompt ...
+    #   (some exports use <div> instead of <span>)
     # ------------------------------------------------------------
     if (!$collect_user && !$collect_ai
-        && $tag eq 'span'
+        && ($tag eq 'span' || $tag eq 'div')
         && $class =~ /\bVndcI\b/
         && $class =~ /\bveK2kb\b/)
     {
-        $collect_user    = 1;
-        $user_span_depth = 1;
+        $collect_user          = 1;
+        $user_container_tag    = $tag;
+        $user_container_depth  = 1;
         $user_buf        = '';
         @link_stack      = ();
 
@@ -274,8 +294,8 @@ sub on_start {
 
     # If already collecting user, maintain span nesting depth
     if ($collect_user) {
-        if ($tag eq 'span') {
-            $user_span_depth++;
+        if ($tag eq $user_container_tag) {
+            $user_container_depth++;
         }
 
         # Minimal formatting inside user prompt
@@ -297,28 +317,56 @@ sub on_start {
         return;
     }
 
+
     # ------------------------------------------------------------
     # AI start trigger
     #
-    # IMPORTANT (v0.009):
-    #   We no longer begin AI capture at the broad wrapper:
+    # IMPORTANT (v0.010):
+    #   We now begin AI capture at the broad, stable wrapper:
     #       <div data-container-id="main-col">
     #
-    #   Reason: the saved Google HTML often contains *empty / placeholder* main-col
-    #   containers before the actual answer content is emitted later in the DOM.
-    #   If we capture that placeholder, we accidentally “consume” the queued user
-    #   prompt and then miss the real answer entirely.
+    #   This fixes the v0.009 regression where many answers were truncated:
+    #   <div data-subtree="aimfl"> is often only the first small fragment,
+    #   while the rest of the answer appears in sibling elements that are still
+    #   inside main-col.
     #
-    #   The most reliable answer-body wrapper we have found is:
-    #       <div data-subtree="aimfl" style="display: contents" ...>
+    #   HOWEVER, Google’s saved HTML sometimes emits *empty / placeholder*
+    #   main-col containers before the real answer appears later in the DOM.
+    #   To avoid the older “missing turns 14 & 26” failure mode, we apply a
+    #   guard at END-AI time:
     #
-    #   We start capture at that div and stop when it closes.
+    #     - If a main-col block cleans down to only:
+    #         [no text captured from HTML block]
+    #       AND it contains no web-results marker and no Sources URLs,
+    #       we treat it as a placeholder container and DISCARD it WITHOUT
+    #       consuming the pending user prompt.
+    #
+    #   Fallback:
+    #     If main-col is not present for a turn in a future export variant,
+    #     we still allow capture at <div data-subtree="aimfl">.
     #
     # NOTE on Sources/Sites (Sv6Kpe):
-    #   The Sv6Kpe comment payloads often appear BEFORE the aimfl div. In v0.009 we
-    #   buffer those URLs on the earliest pending user turn, then “prime” the AI
-    #   sources list as soon as aimfl begins.
+    #   Sv6Kpe comment payloads often appear BEFORE the answer body.
+    #   We buffer those URLs on the earliest pending user turn, then “prime”
+    #   the per-answer sources list when answer capture begins. In v0.010 we
+    #   DO NOT clear the buffered URLs at capture start, so that discarded
+    #   placeholder containers cannot destroy sources for the real answer.
     # ------------------------------------------------------------
+
+    # Primary: main-col
+    if (!$collect_ai
+        && !$collect_user
+        && @pending_turns
+        && $tag eq 'div'
+        && defined($attr->{'data-container-id'})
+        && $attr->{'data-container-id'} eq 'main-col')
+    {
+        begin_ai_capture('main-col');
+        debug("BEGIN AI (main-col; pending_turns=" . scalar(@pending_turns) . ")");
+        return;
+    }
+
+    # Fallback: aimfl
     if (!$collect_ai
         && !$collect_user
         && @pending_turns
@@ -326,43 +374,7 @@ sub on_start {
         && defined($attr->{'data-subtree'})
         && $attr->{'data-subtree'} eq 'aimfl')
     {
-        $collect_ai    = 1;
-        $ai_div_depth  = 1;
-        $ai_buf        = '';
-        @link_stack    = ();
-
-        @ai_sources_urls = ();
-        %ai_sources_seen = ();
-
-        # Prime the per-answer sources list with any buffered sources captured
-        # before the answer body began (Sv6Kpe comments often precede aimfl).
-        my $t0 = $pending_turns[0];
-        if (defined $t0 && ref($t0) eq 'HASH' && ref($t0->{sources_urls}) eq 'ARRAY') {
-            for my $u (@{ $t0->{sources_urls} }) {
-                next if !defined($u) || $u eq '';
-                next if $ai_sources_seen{$u}++;
-                push @ai_sources_urls, $u;
-                last if @ai_sources_urls >= 30;
-            }
-
-            # Clear the buffer now that it has been moved into the active answer.
-            $t0->{sources_urls} = [];
-            $t0->{sources_seen} = {};
-        }
-
-        $in_pre             = 0;
-        $pre_depth          = 0;
-        $inline_code_depth  = 0;
-
-        $in_table        = 0;
-        $table_depth     = 0;
-        $table_has_th    = 0;
-        @table_rows      = ();
-        @current_row     = ();
-        $in_cell         = 0;
-        $cell_depth      = 0;
-        $cell_buf        = '';
-
+        begin_ai_capture('aimfl');
         debug("BEGIN AI (aimfl; pending_turns=" . scalar(@pending_turns) . ")");
         return;
     }
@@ -523,11 +535,12 @@ sub on_end {
 
     # End of user: decrement span nesting, end when it reaches 0
     if ($collect_user) {
-        if ($tag eq 'span') {
-            $user_span_depth--;
-            if ($user_span_depth <= 0) {
-                $collect_user    = 0;
-                $user_span_depth = 0;
+        if ($tag eq $user_container_tag) {
+            $user_container_depth--;
+            if ($user_container_depth <= 0) {
+                $collect_user           = 0;
+                $user_container_tag     = '';
+                $user_container_depth   = 0;
 
                 my $msg = clean_message_text($user_buf);
                 $user_buf = '';
@@ -606,14 +619,29 @@ sub on_end {
                 }
 
                 # IMPORTANT: AI cleanup is NOT identical to user cleanup.
-                # We preserve content beyond the web-results marker, then strip
+                # We preserve content beyond any web-results marker, then strip
                 # web-results conditionally (web-only vs web+real-answer).
-                my $msg = clean_ai_message_text($ai_buf);
+                my ($msg, $meta) = clean_ai_message_text($ai_buf);
                 $ai_buf = '';
 
-                emit_turn_pair($msg);
+                my $discard = 0;
+                if ($ai_capture_kind eq 'main-col') {
+                    $discard = is_discardable_ai_placeholder($msg, $meta);
+                }
 
-                debug("END AI");
+                if ($discard) {
+                    debug('DISCARD AI (main-col placeholder; keep pending user prompt)');
+                }
+                else {
+                    emit_turn_pair($msg);
+                    debug('END AI (emitted; kind=' . $ai_capture_kind . ')');
+                }
+
+                # Reset per-answer sources state regardless of discard.
+                @ai_sources_urls = ();
+                %ai_sources_seen = ();
+                $ai_capture_kind = '';
+
                 return;
             }
         }
@@ -671,6 +699,72 @@ sub on_comment {
     return;
 }
 
+
+# =========================================================================
+# AI capture helpers
+# =========================================================================
+
+sub begin_ai_capture {
+    my ($kind) = @_;
+    $kind = '' if !defined $kind;
+
+    $collect_ai       = 1;
+    $ai_div_depth     = 1;
+    $ai_capture_kind  = $kind;
+
+    $ai_buf     = '';
+    @link_stack = ();
+
+    @ai_sources_urls = ();
+    %ai_sources_seen = ();
+
+    # Prime the per-answer sources list with any buffered sources captured
+    # before the answer body began (Sv6Kpe comments often precede main-col/aimfl).
+    my $t0 = $pending_turns[0];
+    if (defined $t0 && ref($t0) eq 'HASH' && ref($t0->{sources_urls}) eq 'ARRAY') {
+        for my $u (@{ $t0->{sources_urls} }) {
+            next if !defined($u) || $u eq '';
+            next if $ai_sources_seen{$u}++;
+            push @ai_sources_urls, $u;
+            last if @ai_sources_urls >= 30;
+        }
+    }
+
+    # Reset formatting state
+    $in_pre            = 0;
+    $pre_depth         = 0;
+    $inline_code_depth = 0;
+
+    # Reset table state
+    $in_table     = 0;
+    $table_depth  = 0;
+    $table_has_th = 0;
+    @table_rows   = ();
+    @current_row  = ();
+    $in_cell      = 0;
+    $cell_depth   = 0;
+    $cell_buf     = '';
+
+    return;
+}
+
+sub is_discardable_ai_placeholder {
+    my ($msg, $meta) = @_;
+
+    # Only discard the specific placeholder that indicates we captured a container
+    # but none of its text survived cleanup.
+    return 0 if !defined($msg);
+    return 0 if $msg ne '[no text captured from HTML block]';
+
+    # If the block had any web-results marker or any sources, it is meaningful.
+    if (defined $meta && ref($meta) eq 'HASH') {
+        return 0 if $meta->{saw_web};
+        return 0 if $meta->{has_sources};
+    }
+
+    return 1;
+}
+
 # =========================================================================
 # Output pairing
 # =========================================================================
@@ -695,7 +789,7 @@ sub emit_turn_pair {
         print "**Google User:**\n\n$user_msg\n\n";
     }
 
-    # v0.009 rule: never output an empty Google AI segment.
+    # v0.010 rule: never output an empty Google AI segment.
     if ($ai_msg eq '') {
         $ai_msg = '[no text captured from HTML block]';
     }
@@ -1103,7 +1197,9 @@ sub clean_ai_message_text {
     my ($t2, $saw_web, $web_only) = strip_web_results_panel($t);
     if ($saw_web) {
         if ($web_only) {
-            $t = '';
+            # Web-results-only is considered “no real response” even if we failed
+            # to capture any Sv6Kpe sources URLs for this block.
+            $t = '[no real response generated, web search results only]';
         }
         else {
             $t = $t2;
@@ -1116,14 +1212,15 @@ sub clean_ai_message_text {
 
     my $has_sources = @ai_sources_urls ? 1 : 0;
 
-    # If there is no surviving text but we DO have sources URLs, then this was
-    # effectively “web results only”.
+    # If there is no surviving text but we DO have sources URLs, treat it as
+    # “web results only” (this can happen when the visible answer text is empty
+    # but Google still embedded sources in Sv6Kpe comments).
     if ((!defined($t) || $t !~ /\S/) && $has_sources) {
         $t = '[no real response generated, web search results only]';
     }
 
-    # If the AI block existed but nothing survived AND we have no sources,
-    # emit the “captured nothing” placeholder.
+    # If the AI block existed but nothing survived AND we have no sources and
+    # no web-results marker, emit the “captured nothing” placeholder.
     if (!defined($t) || $t !~ /\S/) {
         $t = '[no text captured from HTML block]';
     }
@@ -1135,369 +1232,14 @@ sub clean_ai_message_text {
         $t .= "\n\nSources:\n$sources_md";
     }
 
-    return $t;
+    my $meta = {
+        saw_web     => ($saw_web ? 1 : 0),
+        web_only    => ($web_only ? 1 : 0),
+        has_sources => ($has_sources ? 1 : 0),
+    };
+
+    return wantarray ? ($t, $meta) : $t;
 }
+
 
 sub strip_google_artifact_lines {
-    my ($t) = @_;
-    return '' if !defined $t;
-
-    my @lines = split /\n/, $t;
-    my @keep;
-
-    for my $ln (@lines) {
-        my $x = $ln;
-        $x =~ s/\A\s+//;
-        $x =~ s/\s+\z//;
-
-        next if $x =~ /\AUse\s+code\s+with\s+caution\.?\z/i;
-        next if $x =~ /\A\{content:\s*\}\z/;
-
-        push @keep, $ln;
-    }
-
-    return join("\n", @keep);
-}
-
-sub strip_web_results_panel {
-    my ($t) = @_;
-    return ($t, 0, 0) if !defined($t) || $t eq '';
-
-    my $lc = lc($t);
-
-    # We only treat it as a “web results” response if the marker appears near the start.
-    my $p1 = index($lc, 'here are top web results');
-    my $p2 = index($lc, 'here are the top web results');
-    my $pos = -1;
-
-    if ($p1 >= 0 && $p2 >= 0) {
-        $pos = ($p1 < $p2) ? $p1 : $p2;
-    }
-    elsif ($p1 >= 0) {
-        $pos = $p1;
-    }
-    elsif ($p2 >= 0) {
-        $pos = $p2;
-    }
-
-    return ($t, 0, 0) if $pos < 0;
-    return ($t, 0, 0) if $pos > 200;  # don’t strip if mentioned deep in prose
-
-    my $after = substr($t, $pos);
-
-    # Drop the header phrase itself.
-    $after =~ s/\A.*?\bHere\s+are\s+(?:the\s+)?top\s+web\s+results\b[:\s]*//is;
-
-    # Remove a leading “X sites” if present.
-    $after =~ s/\A\s*\d+\s+sites\s*//i;
-
-    # Remove common glued tokens from the web-results widget.
-    $after =~ s/\bClose\s*\d+\s*sites\b//gi;
-
-    # Try to find where the “real answer” starts.
-    #
-    # We look for distinctive prose markers you explicitly identified in your
-    # problematic turns (e.g. “When I previously said…”, “Based on…”, etc.).
-    my @markers = (
-        qr/\bWhen I previously said\b/i,
-        qr/\bSo the situation is\b/i,
-        qr/\bIf you want\b/i,
-        qr/\bBased on\b/i,
-        qr/\bIn summary\b/i,
-        qr/\bBottom line\b/i,
-        qr/\bSome sources to consider\b/i,
-        qr/\bIf the AI responses are\b/i,
-        qr/\bFor official information\b/i,
-        qr/\bFor research on\b/i,
-        qr/\bHowever,\b/i,
-    );
-
-    my $best = undef;
-    for my $re (@markers) {
-        if ($after =~ /$re/) {
-            my $p = $-[0];
-            $best = $p if !defined($best) || $p < $best;
-        }
-    }
-
-    if (defined $best) {
-        my $ans = substr($after, $best);
-        $ans =~ s/\A[ \t\n]+//;
-        $ans =~ s/[ \t\n]+\z//;
-
-        # If the “answer” is still empty, treat as web-only.
-        return ('', 1, 1) if $ans !~ /\S/;
-
-        return ($ans, 1, 0);
-    }
-
-    # Fallback: keep the last 1–2 paragraphs if they look like prose.
-    my @paras = grep { $_ =~ /\S/ } split /\n{2,}/, $after;
-    if (@paras) {
-        my $cand = $paras[-1];
-        if (@paras >= 2) {
-            my $two = $paras[-2] . "\n\n" . $paras[-1];
-            $cand = $two if looks_like_real_answer($two);
-        }
-
-        $cand =~ s/\A[ \t\n]+//;
-        $cand =~ s/[ \t\n]+\z//;
-
-        return ($cand, 1, 0) if looks_like_real_answer($cand);
-    }
-
-    # No reliable prose found: treat as web-results-only.
-    return ('', 1, 1);
-}
-
-sub looks_like_real_answer {
-    my ($s) = @_;
-    return 0 if !defined($s);
-    my $x = $s;
-
-    $x =~ s/\[[^\]]+\]\(<https?:\/\/[^>]+>\)//g; # remove markdown links for word counting
-    $x =~ s/https?:\/\/\S+//g;
-
-    my @w = grep { $_ ne '' } split /\s+/, $x;
-    my $wc = scalar(@w);
-
-    return 0 if length($s) < 40;
-    return 0 if $wc < 8;
-
-    return 1;
-}
-
-sub repair_text_encoding {
-    my ($t) = @_;
-    return '' if !defined $t;
-    return $t  if $t eq '';
-
-    # Phase 1: targeted fixes for common “â<80><94>” style artifacts
-    $t =~ s/\x{00E2}\x{0080}\x{0094}/—/g;  # em dash
-    $t =~ s/\x{00E2}\x{0080}\x{0093}/–/g;  # en dash
-    $t =~ s/\x{00E2}\x{0080}\x{0098}/‘/g;  # left single quote
-    $t =~ s/\x{00E2}\x{0080}\x{0099}/’/g;  # right single quote
-    $t =~ s/\x{00E2}\x{0080}\x{009C}/“/g;  # left double quote
-    $t =~ s/\x{00E2}\x{0080}\x{009D}/”/g;  # right double quote
-    $t =~ s/\x{00E2}\x{0080}\x{00A6}/…/g;  # ellipsis (sometimes)
-
-    # NBSP mojibake: "Â " => NBSP
-    $t =~ s/\x{00C2}\x{00A0}/\x{00A0}/g;
-
-    # Phase 2: conservative latin1->utf8 repair if it improves “badness”
-    if (looks_like_mojibake($t) && $t !~ /[^\x00-\xFF]/) {
-        my $before = mojibake_score($t);
-
-        my $bytes = Encode::encode('latin1', $t, Encode::FB_CROAK);
-        my $fixed;
-        eval {
-            $fixed = Encode::decode('UTF-8', $bytes, Encode::FB_CROAK);
-            1;
-        } or $fixed = undef;
-
-        if (defined $fixed) {
-            my $after = mojibake_score($fixed);
-            $t = $fixed if $after < $before;
-        }
-    }
-
-    # Phase 3: normalize whitespace-ish chars and remove leftovers
-    $t =~ s/\x{00A0}/ /g;                 # NBSP -> space
-    $t =~ s/[\x{0080}-\x{009F}]//g;       # remove C1 controls
-    $t =~ s/\x{00C2}(?=(?:\s|$|[[:punct:]]))//g;  # stray Â
-
-    return $t;
-}
-
-sub looks_like_mojibake {
-    my ($t) = @_;
-    return 0 if !defined $t || $t eq '';
-
-    return 1 if $t =~ /[\x{0080}-\x{009F}]/;
-    return 1 if $t =~ /\x{00E2}[\x{0080}-\x{009F}]/;
-    return 1 if $t =~ /[\x{00C2}\x{00C3}]/;
-
-    return 0;
-}
-
-sub mojibake_score {
-    my ($t) = @_;
-    return 0 if !defined $t || $t eq '';
-
-    my $score = 0;
-
-    $score += () = ($t =~ /[\x{0080}-\x{009F}]/g);
-    $score += () = ($t =~ /\x{00C2}/g);   # Â
-    $score += () = ($t =~ /\x{00C3}/g);   # Ã
-    $score += () = ($t =~ /\x{00E2}/g);   # â
-    $score += () = ($t =~ /\x{FFFD}/g);   # replacement char
-
-    return $score;
-}
-
-sub normalize_whitespace_outside_fences {
-    my ($t) = @_;
-    return '' if !defined $t;
-
-    my @lines = split /\n/, $t;
-    my @out;
-    my $in_fence = 0;
-
-    for my $line (@lines) {
-        if ($line =~ /\A```/) {
-            $in_fence = !$in_fence;
-            push @out, $line;
-            next;
-        }
-
-        if ($in_fence) {
-            push @out, $line;
-            next;
-        }
-
-        $line =~ s/[ \t]{2,}/ /g;
-        $line =~ s/[ \t]+\z//;
-
-        push @out, $line;
-    }
-
-    my $out = join("\n", @out);
-    $out =~ s/\n{3,}/\n\n/g;
-
-    return $out;
-}
-
-sub remove_google_ui_footer_scraps {
-    my ($t) = @_;
-    return '' if !defined $t;
-
-    # Truncate at the FIRST sign of Google’s feedback/footer UI (end-of-answer),
-    # but do NOT truncate at “web results” markers (handled separately).
-    my $lower = lc($t);
-
-    my @cut_needles = (
-        'your feedback helps google improve',
-        'share more feedback',
-        'report a problem',
-        'creating a public link...',
-        'ai responses may include mistakes',
-        'see our privacy policy',
-    );
-
-    my $cut = undef;
-    for my $n (@cut_needles) {
-        my $pos = index($lower, $n);
-        next if $pos < 0;
-        $cut = $pos if !defined($cut) || $pos < $cut;
-    }
-
-    if (defined $cut) {
-        $t = substr($t, 0, $cut);
-        $t =~ s/\bThank you\s*\z//i;
-    }
-
-    # Remove a few boilerplate fragments if they appear as standalone lines.
-    my @lines = split /\n/, $t;
-    my @keep;
-    for my $ln (@lines) {
-        my $x = $ln;
-        $x =~ s/\A\s+//;
-        $x =~ s/\s+\z//;
-
-        next if $x =~ /\A\d+\s+sites\z/i;
-        next if $x =~ /\AClose\z/i;
-        next if $x =~ /\AThank you\z/i;
-
-        push @keep, $ln;
-    }
-
-    return join("\n", @keep);
-}
-
-# =========================================================================
-# Tiny formatting helpers
-# =========================================================================
-
-sub ai_target_ref {
-    return $in_cell ? \$cell_buf : \$ai_buf;
-}
-
-sub append_to {
-    my ($ref, $s) = @_;
-    return if !defined $ref || ref($ref) ne 'SCALAR';
-    return if !defined $s || $s eq '';
-    $$ref .= $s;
-}
-
-sub ensure_newline {
-    my ($ref) = @_;
-    return if !defined $ref || ref($ref) ne 'SCALAR';
-    return if $$ref eq '';
-    return if $$ref =~ /\n\z/;
-    $$ref .= "\n";
-}
-
-sub ensure_blankline {
-    my ($ref) = @_;
-    return if !defined $ref || ref($ref) ne 'SCALAR';
-    return if $$ref eq '';
-    $$ref .= "\n" if $$ref !~ /\n\z/;
-    $$ref .= "\n" if $$ref !~ /\n\n\z/;
-}
-
-# =========================================================================
-# IO / CLI
-# =========================================================================
-
-sub open_input_handle {
-    my ($path) = @_;
-    die "ERROR: --in is required\n" if !defined $path || $path eq '';
-
-    if ($path eq '-') {
-        binmode(STDIN, ':raw');
-        return *STDIN;
-    }
-
-    open my $raw, '<:raw', $path
-        or die "ERROR: cannot open '$path' for reading: $!\n";
-
-    # Sniff gzip magic bytes (1F 8B)
-    my $magic = '';
-    read($raw, $magic, 2);
-    seek($raw, 0, 0);
-
-    if ($path =~ /\.gz\z/i || $magic eq "\x1F\x8B") {
-        close $raw;
-
-        my $gz = IO::Uncompress::Gunzip->new($path)
-            or die "ERROR: Gunzip failed for '$path': $GunzipError\n";
-
-        binmode($gz, ':raw');
-        return $gz;
-    }
-
-    return $raw;
-}
-
-sub usage_and_exit {
-    my ($code) = @_;
-    print STDERR <<"USAGE";
-Usage:
-  google_ai_chat_extract_html_to_md.pl --in <file.html|file.html.gz> [--debug] > out.md
-
-Options:
-  --in     Input HTML file (optionally gzipped). Use '-' for STDIN.
-  --debug  Verbose diagnostics to STDERR.
-  --help   Show this help.
-
-Example:
-  google_ai_chat_extract_html_to_md.pl --in googleai_20260101-master_plan_conversation_P1.html.gz > out.md
-USAGE
-    exit($code);
-}
-
-sub debug {
-    my ($msg) = @_;
-    return if !$opt{debug};
-    print STDERR "[debug] $msg\n";
-}
