@@ -1,6 +1,5 @@
 #!/bin/bash
-
-# Copyright © 2018, 2019, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
+# Copyright © 2018, 2019, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # FujiFilm SD Card Reader Mounting Script
 VERSION='0.010_000'
 

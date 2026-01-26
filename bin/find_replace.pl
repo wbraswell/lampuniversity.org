@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+our $VERSION = 0.100_000;
 
 my $find = shift @ARGV;
 my $replace = shift @ARGV;

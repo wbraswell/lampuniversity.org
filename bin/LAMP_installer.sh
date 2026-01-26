@@ -1,7 +1,7 @@
 #!/bin/bash
-# Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, William N. Braswell, Jr.. All Rights Reserved. This work is Free \& Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
+# Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # LAMP Installer Script
-VERSION='0.525_000'
+VERSION='0.526_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -1287,11 +1287,11 @@ if [ $SECTION_CHOICE -le 17 ]; then
         echo '[ SPACE TELESCOPE ONLY: Install xcreensaver (potentially alongside xfce4-screensaver!) for GL Slideshow plugin ]'
         S apt-get install xscreensaver xscreensaver-data-extra xscreensaver-gl
         echo '[ FLYING TOASTERS ONLY: Download & Install Flying Toaster Files ]'
+        # START HERE VERY FIRST: need correct gitlab download link for repo tarball
+        # START HERE VERY FIRST: need correct gitlab download link for repo tarball
+        # START HERE VERY FIRST: need correct gitlab download link for repo tarball
         B 'wget https://gitlab.com/wbraswell/xfce-screensaver-mpv-flying-toasters/-/archive/main/xfce-screensaver-mpv-flying-toasters-main.tar.gz; tar -xzvf xfce-screensaver-mpv-flying-toasters-main.tar.gz'
-        # VERY FIRST START HERE, COPY FILES TO /usr/..., RUN SYMLINK SCRIPT, WRITE CONFIGURATION DIRECTIONS
-        # VERY FIRST START HERE, COPY FILES TO /usr/..., RUN SYMLINK SCRIPT, WRITE CONFIGURATION DIRECTIONS
-        # VERY FIRST START HERE, COPY FILES TO /usr/..., RUN SYMLINK SCRIPT, WRITE CONFIGURATION DIRECTIONS
-
+        S './xfce-screensaver-mpv-flying-toasters/usr/share/applications/screensavers/mpv_flying_toasters__install.sh'
 
         echo '[ UBUNTU 20.04 OR NEWER ONLY: Configure Xfce Screensaver ]'
         echo "Click main Xubuntu app menu -> Settings -> Screensaver or Xfce Screensaver"
