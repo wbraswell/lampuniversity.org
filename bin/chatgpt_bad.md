@@ -1,13 +1,14 @@
-# Chat Export Sample (Bad)
+# Chat Export Sample
+v0.001
 
-This file is intentionally malformed. It contains examples of export corruption.
+This file is a test fixture for ChatGPT export corruption handling.
 
-## Inline code examples (incorrect escaping)
+## Inline code examples
 
 - Path: \`docs/file_a.md\`
 - Command: \`tool --flag value\`
 
-## Example 1: Malformed diff fence + premature close spill
+## Example 1: Diff fence and premature close spill
 
 diff`--- a/docs/file_a.md
 +++ b/docs/file_a.md
@@ -29,19 +30,19 @@ diff`--- a/src/module.pm
 +my `literal` backticks
 `</pre>
 
-## Example 2: Non-language code block with <code> opener
+## Example 2: Non-language code block fence
 
 <code>for i in 1..3:
     print(i)
 ```
 
-## Example 3: Language opener with missing newline
+## Example 3: Language code block fence
 
 perl`my $x = 1;
 print $x;
 `</pre>
 
-## Example 4: Diff with missing headers, bare @@ separator, and hunk line missing prefix
+## Example 4: Diff edge cases
 
 diff`@@ -2,2 +2,3 @@
  line missing the required diff prefix

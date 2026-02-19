@@ -1,13 +1,14 @@
-# Chat Export Sample (Good)
+# Chat Export Sample
+v0.001
 
-This file is the expected corrected output for the paired bad sample.
+This file is a test fixture for ChatGPT export corruption handling.
 
-## Inline code examples (correct)
+## Inline code examples
 
 - Path: `docs/file_a.md`
 - Command: `tool --flag value`
 
-## Example 1: Correct diff fence, spill repaired
+## Example 1: Diff fence and premature close spill
 
 ```diff
 --- a/docs/file_a.md
@@ -27,32 +28,30 @@ This file is the expected corrected output for the paired bad sample.
 --- a/src/module.pm
 +++ b/src/module.pm
 @@ -5,2 +5,2 @@
--my `literal` backticks
+-my \`literal\` backticks
 +my `literal` backticks
 ```
 
-## Example 2: Correct code block fence (no language)
+## Example 2: Non-language code block fence
 
 ```
 for i in 1..3:
     print(i)
 ```
 
-## Example 3: Correct language code block fence
+## Example 3: Language code block fence
 
 ```perl
 my $x = 1;
 print $x;
 ```
 
-## Example 4: Correct unified diff structure
+## Example 4: Diff edge cases
 
 ```diff
---- a/docs/file_b.md
-+++ b/docs/file_b.md
 @@ -2,2 +2,3 @@
  line missing the required diff prefix
 - old line
-+ 
++
 + new line
 ```
