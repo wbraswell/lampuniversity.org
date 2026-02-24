@@ -1,7 +1,7 @@
 #!/bin/bash
-# Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
+# Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # LAMP Installer Script
-VERSION='0.526_000'
+VERSION='0.530_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -895,6 +895,35 @@ if [ $SECTION_CHOICE -le 12 ]; then
         echo '[ Basic X-Windows Testing: x11-apps (contains xclock) ]'
         echo '[ General Tools: gkrellm hexchat update-manager indicator-multiload xclip (used by xcopy.sh) ]'
         S apt-get install xterm xfce4-terminal x11-apps gkrellm hexchat update-manager indicator-multiload xclip
+
+        echo '[ Vim/GVim Clipboard, Step 0: Ensure .vimrc version 0.049 or newer, copied from LAMP University Tools in section 8 ]'
+        B less ~/.vimrc
+
+        echo '[ Vim/GVim Clipboard, Step 1: Install the X11 clipboard tool, the Clipman daemon, and its panel plugin ]'
+        S apt-get install xclip xfce4-clipman xfce4-clipman-plugin
+
+        echo '[ Vim/GVim Clipboard, Step 2: Start the Clipman daemon in the background for the current session ]'
+        echo '[ NOTE: If no icon appears, Right-click Panel > Panel > Add New Items > Clipboard Manager ]'
+        B nohup xfce4-clipman > /dev/null 2>&1 &
+
+        echo '[ Vim/GVim Clipboard, Step 3: Configure Clipman to grab text from gVim immediately (sync-selections) ]'
+        echo '[ and keep that text alive in system memory after gVim closes (save-on-quit) ]'
+        echo '[ CONFIRMATION: Right-click Clipman Icon > Properties > Verify "Save clipboard contents on exit" is checked ]'
+        B xfconf-query -c xfce4-clipman -p /settings/save-on-quit -n -t bool -s true
+        B xfconf-query -c xfce4-clipman -p /settings/sync-selections -n -t bool -s true
+        B xfconf-query -c xfce4-clipman -p /settings/tweaks/skip-collecting-primary -n -t bool -s false
+
+        echo '[ Vim/GVim Clipboard, Step 4: Register the Clipman daemon with the XFCE Autostart system ]'
+        echo '[ CONFIRMATION: Settings > Session and Startup > Application Autostart > Verify "Clipboard Manager" is checked ]'
+        B mkdir -p ~/.config/autostart
+        B cp /etc/xdg/autostart/xfce4-clipman.desktop ~/.config/autostart/
+
+        echo '[ Vim/GVim Clipboard, Step 5: Verify the daemon is actually running in the background ]'
+        B pgrep -a xfce4-clipman
+
+        echo '[ Vim/GVim Clipboard, Step 6: Verify the persistence settings are correctly applied to the daemon ]'
+        echo '[ CONFIRMATION: Values for "save-on-quit" and "sync-selections" must show as "true" ]'
+        B xfconf-query -c xfce4-clipman -lv
 
         echo '[ Browsers: chromium (deb) instead of chromium-browser (snap) ]'
         S apt-get purge chromium-browser
