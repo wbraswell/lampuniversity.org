@@ -14,7 +14,7 @@ behave mswin
 
 " [ BEGIN CLIPBOARD SETTINGS ]
 
-" DEV NOTE: must install Vim/GVim Clipboard via LAMP_installer.sh version 0.530 or newer, section 12 GUI packages
+" DEV NOTE: must install Vim/GVim Clipboard via LAMP_installer.sh version 0.534 or newer, section 12 GUI packages
 
 " keep vim internal deletes (dd, x, etc) in internal memory;
 " prevents vim from overwriting the OS clipboard during normal editing

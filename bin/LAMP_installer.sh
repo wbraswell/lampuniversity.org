@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # LAMP Installer Script
-VERSION='0.530_000'
+VERSION='0.534_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -902,24 +902,32 @@ if [ $SECTION_CHOICE -le 12 ]; then
         echo '[ Vim/GVim Clipboard, Step 1: Install the X11 clipboard tool, the Clipman daemon, and its panel plugin ]'
         S apt-get install xclip xfce4-clipman xfce4-clipman-plugin
 
-        echo '[ Vim/GVim Clipboard, Step 2: Start the Clipman daemon in the background for the current session ]'
-        echo '[ NOTE: If no icon appears, Right-click Panel > Panel > Add New Items > Clipboard Manager ]'
-        B nohup xfce4-clipman > /dev/null 2>&1 &
+        # DEV NOTE: only use GUI for this step, conflicts with attempted use of CLI
+        #echo '[ Vim/GVim Clipboard, Step 2: Start the Clipman daemon in the background for the current session ]'
+        #B "nohup xfce4-clipman > /dev/null 2>&1 &"
+        echo '[ Vim/GVim Clipboard, Step 2: Right-click Panel > Panel > Add New Items > Clipboard Manager ]'
+        C 'Did Clipman start running correctly, with an icon in your desktop GUI tray?'
 
+        # DEV NOTE: only use CLI for this step, GUI does not always contain "Save on Quit" or "Persistent History" toggle
         echo '[ Vim/GVim Clipboard, Step 3: Configure Clipman to grab text from gVim immediately (sync-selections) ]'
         echo '[ and keep that text alive in system memory after gVim closes (save-on-quit) ]'
-        echo '[ CONFIRMATION: Right-click Clipman Icon > Properties > Verify "Save clipboard contents on exit" is checked ]'
+        echo '[ CONFIRMATION: Ensure each command returns the correct "true, true, false" pattern after being set here ]'
         B xfconf-query -c xfce4-clipman -p /settings/save-on-quit -n -t bool -s true
+        B xfconf-query -c xfce4-clipman -p /settings/save-on-quit
         B xfconf-query -c xfce4-clipman -p /settings/sync-selections -n -t bool -s true
+        B xfconf-query -c xfce4-clipman -p /settings/sync-selections
         B xfconf-query -c xfce4-clipman -p /settings/tweaks/skip-collecting-primary -n -t bool -s false
+        B xfconf-query -c xfce4-clipman -p /settings/tweaks/skip-collecting-primary
 
         echo '[ Vim/GVim Clipboard, Step 4: Register the Clipman daemon with the XFCE Autostart system ]'
-        echo '[ CONFIRMATION: Settings > Session and Startup > Application Autostart > Verify "Clipboard Manager" is checked ]'
         B mkdir -p ~/.config/autostart
-        B cp /etc/xdg/autostart/xfce4-clipman.desktop ~/.config/autostart/
+        B cp /etc/xdg/autostart/xfce4-clipman* ~/.config/autostart/
+        echo '[ Click App Menu > Settings > Session and Startup > Application Autostart > Verify "Clipboard Manager" is checked ]'
+        C 'Did Clipman appear in the autostart application list, and either was already checked or allowed you to check it?'
 
         echo '[ Vim/GVim Clipboard, Step 5: Verify the daemon is actually running in the background ]'
-        B pgrep -a xfce4-clipman
+        B ps aux | grep clipman
+        echo
 
         echo '[ Vim/GVim Clipboard, Step 6: Verify the persistence settings are correctly applied to the daemon ]'
         echo '[ CONFIRMATION: Values for "save-on-quit" and "sync-selections" must show as "true" ]'
