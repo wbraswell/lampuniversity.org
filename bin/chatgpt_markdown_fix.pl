@@ -35,8 +35,9 @@ use strict;
 use warnings;
 use types;
 
-our $VERSION = 0.135;
+our $VERSION = 0.138;
 use Getopt::Long qw(GetOptions);
+use Digest::SHA qw(sha256_hex);
 
 
 # Debugging (optional; to STDERR and optionally to per-file .debug files)
@@ -152,7 +153,7 @@ my hashref $PROFILES = {
 
 sub usage_exit {
     my integer $exit_code = shift;
-    print STDERR <<"USAGE";
+    print STDERR <<'USAGE';
 Usage:
   perl chatgpt_markdown_fix.pl input.md
   perl chatgpt_markdown_fix.pl input1.md input2.md ...
@@ -165,6 +166,7 @@ Options:
   --help, -h                 Show this help.
   --overwrite                Allow clobbering existing foo__fixed.<suffix> files.
   --dry-run                  Do not write any files; still run fixes and tier checks.
+  --verify                   Verify no data loss by comparing input to its output; fails if content is missing.
   --clean                    Delete foo__fixed.<suffix> and foo__fixed.debug outputs for each input; leaves inputs intact.
   --double-fix             Allow processing inputs already tagged __fixed.<suffix> (disabled by default).
   --debug                    Enable debug logging and write foo__fixed.debug files.
@@ -173,6 +175,13 @@ Options:
   --no-diff-fixes            Disable diff-specific cleanups.
   --markdownlint           Apply post-fixes for markdownlint (currently MD041 + MD048 + MD003 + MD019 + MD040 + MD009 + MD022 + MD001 + MD036 + MD025 + MD026 + MD032 + MD007 + MD004 + MD029 + MD030 + MD033 + MD034 + MD037 + MD049 + MD038 + MD035 + MD031 + MD012).
   --profile NAME             Select policy profile (default: recommended-default).
+
+Examples:
+  # Run the fixer directly
+  perl chatgpt_markdown_fix.pl --markdownlint --verify chat_history/foo.md
+
+  # Run across a repo using the generic runner (wrapper args before --, fixer args after)
+  chatgpt_markdown_fix_repo.sh --repo "$HOME/repos_gitlab/xedoc" --inputs 'chat_history/*.md' -- --debug --markdownlint --verify
 USAGE
     exit($exit_code);
 }
@@ -207,6 +216,684 @@ sub compute_fixed_output_path {
 }
 
 
+sub slurp_file_string {
+    my string $path = shift;
+    return undef if !defined $path;
+
+    my $fh;
+    if (!open($fh, '<', $path)) {
+        return undef;
+    }
+    local $/ = undef;
+    my string $content = <$fh>;
+    close($fh);
+
+    $content = '' if !defined $content;
+    return $content;
+}
+
+sub normalize_line_endings {
+    my string $s = shift;
+    $s = '' if !defined $s;
+    $s =~ s/\r\n/\n/g;
+    $s =~ s/\r/\n/g;
+    return $s;
+}
+
+sub extract_fenced_code_regions {
+    my string $s = shift;
+    $s = '' if !defined $s;
+    $s = normalize_line_endings($s);
+
+    my arrayref $regions = [];
+
+    my arrayref $lines = [ split(/\n/, $s, -1) ];
+
+    my boolean $in_fence = 0;
+    my string $fence_char = '';
+    my integer $fence_len = 0;
+    my string $buf = '';
+
+    for my $line (@{$lines}) {
+        if (!$in_fence) {
+            if ($line =~ /^\s*([`~]{3,})(?:\s*\S.*)?\z/s) {
+                my string $marker = $1;
+                $in_fence = 1;
+                $fence_char = substr($marker, 0, 1);
+                $fence_len = length($marker);
+                $buf = '';
+                next;
+            }
+            next;
+        }
+
+        if ($line =~ /^\s*([`~]{3,})\s*\z/s) {
+            my string $marker = $1;
+            if (substr($marker, 0, 1) eq $fence_char and length($marker) >= $fence_len) {
+                push @{$regions}, $buf;
+                $in_fence = 0;
+                $fence_char = '';
+                $fence_len = 0;
+                $buf = '';
+                next;
+            }
+        }
+
+        $buf .= $line . "\n";
+    }
+
+    return $regions;
+}
+
+sub extract_pre_code_regions {
+    my string $s = shift;
+    $s = '' if !defined $s;
+    $s = normalize_line_endings($s);
+
+    my arrayref $regions = [];
+
+    while ($s =~ m{<pre\b[^>]*>(.*?)</pre>}sig) {
+        my string $body = $1;
+        $body =~ s{<code\b[^>]*>}{}sig;
+        $body =~ s{</code>}{}sig;
+        push @{$regions}, $body;
+    }
+
+    return $regions;
+}
+
+sub extract_malformed_lang_pre_regions {
+    my string $s = shift;
+    $s = '' if !defined $s;
+    $s = normalize_line_endings($s);
+
+    my arrayref $regions = [];
+
+    my arrayref $lines = [ split(/\n/, $s, -1) ];
+    my integer $len = scalar(@{$lines});
+
+    my integer $i = 0;
+    while ($i < $len) {
+        my $line = $lines->[$i];
+        my ($lang, $rest) = parse_malformed_lang_opener($line);
+
+        if (defined $lang) {
+            my integer $close_idx = -1;
+            my integer $max = $i + 400;
+            $max = ($len - 1) if $max > ($len - 1);
+
+            my integer $j = $i + 1;
+            for (; $j <= $max; $j++) {
+                my $l = $lines->[$j];
+                $l = '' if !defined $l;
+
+                if (is_malformed_pre_close($l)) {
+                    $close_idx = $j;
+                    last;
+                }
+
+                if ($l =~ /<\/pre>/i) {
+                    $close_idx = $j;
+                    last;
+                }
+
+                if ($l =~ /^\s*(?:```|~~~)\s*\z/s) {
+                    $close_idx = $j;
+                    last;
+                }
+            }
+
+            if ($close_idx >= 0) {
+                my string $buf = '';
+                if (defined $rest and $rest ne '') {
+                    $buf .= $rest . "\n";
+                }
+
+                my integer $k = $i + 1;
+                for (; $k < $close_idx; $k++) {
+                    my $l = $lines->[$k];
+                    $l = '' if !defined $l;
+                    $buf .= $l . "\n";
+                }
+
+                push @{$regions}, $buf;
+                $i = $close_idx + 1;
+                next;
+            }
+        }
+
+        $i++;
+    }
+
+    return $regions;
+}
+
+sub extract_single_backtick_fence_regions {
+    my string $s = shift;
+    $s = '' if !defined $s;
+    $s = normalize_line_endings($s);
+
+    my arrayref $regions = [];
+
+    my arrayref $lines = [ split(/\n/, $s, -1) ];
+    my integer $len = scalar(@{$lines});
+
+    my integer $i = 0;
+    while ($i < $len) {
+        my $line = $lines->[$i];
+        my $rest = parse_single_backtick_unterminated_line($line);
+
+        if (defined $rest) {
+            my integer $close_idx = find_next_triple_fence_line_idx($i, $lines, 400);
+
+            if ($close_idx >= 0) {
+                my string $buf = '';
+
+                if ((not is_known_fence_lang($rest)) and $rest ne '') {
+                    $buf .= $rest . "\n";
+                }
+
+                my integer $k = $i + 1;
+                for (; $k < $close_idx; $k++) {
+                    my $l = $lines->[$k];
+                    $l = '' if !defined $l;
+
+                    last if is_malformed_pre_close($l);
+
+                    $buf .= $l . "\n";
+                }
+
+                push @{$regions}, $buf;
+                $i = $close_idx + 1;
+                next;
+            }
+        }
+
+        $i++;
+    }
+
+    return $regions;
+}
+
+sub is_diff_like_code_region {
+    my string $body = shift;
+    $body = '' if !defined $body;
+    $body = normalize_line_endings($body);
+
+    return 1 if $body =~ /^\@\@/m;
+
+    if (($body =~ /^---\s/m) and ($body =~ /^\+\+\+\s/m)) {
+        return 1;
+    }
+
+    return 0;
+}
+
+sub canonicalize_diff_region {
+    my string $body = shift;
+    $body = '' if !defined $body;
+    $body = normalize_line_endings($body);
+
+    my arrayref $lines = [ split(/\n/, $body, -1) ];
+    my arrayref $payload = [];
+
+    for my $raw (@{$lines}) {
+        my string $l = $raw;
+        $l = '' if !defined $l;
+
+        next if $l =~ /^\@\@/;
+        next if $l =~ /^---\s/;
+        next if $l =~ /^\+\+\+\s/;
+        next if $l =~ /^diff\s+--git\s/;
+        next if $l =~ /^index\s/;
+        next if $l =~ /^Updated\s+file:\s/;
+        next if $l =~ /^Deleted\s+file:\s/;
+        next if $l =~ /^New\s+file:\s/;
+
+        next if $l =~ /<a\s+data-start=/i;
+
+        if ($l eq '') {
+            $l = ' ';
+        }
+
+        if ($l =~ /^[ \+\-\\]/) {
+            push @{$payload}, $l;
+        }
+    }
+
+    if (scalar(@{$payload}) == 0) {
+        return $body;
+    }
+
+    return join("\n", @{$payload});
+}
+
+sub multiset_total_count {
+    my hashref $mset = shift;
+    $mset = {} if !defined $mset;
+
+    my integer $n = 0;
+    for my $k (keys %{$mset}) {
+        my integer $v = $mset->{$k};
+        $v = 0 if !defined $v;
+        $n += $v;
+    }
+
+    return $n;
+}
+
+sub code_region_multisets_for_verify {
+    my arrayref $regions = shift;
+    $regions = [] if !defined $regions;
+
+    my hashref $strict = {};
+    my hashref $diff = {};
+
+    for my $r (@{$regions}) {
+        my string $body = $r;
+        $body = '' if !defined $body;
+        $body = normalize_line_endings($body);
+
+        if (is_diff_like_code_region($body)) {
+            my string $canon = canonicalize_diff_region($body);
+            my string $h = sha256_hex($canon);
+            if (!exists $diff->{$h}) {
+                $diff->{$h} = 0;
+            }
+            $diff->{$h}++;
+        } else {
+            my string $h = sha256_hex($body);
+            if (!exists $strict->{$h}) {
+                $strict->{$h} = 0;
+            }
+            $strict->{$h}++;
+        }
+    }
+
+    return ($strict, $diff);
+}
+
+sub extract_prose_text_for_verify {
+    my string $s = shift;
+    $s = '' if !defined $s;
+    $s = normalize_line_endings($s);
+
+    my arrayref $lines = [ split(/\n/, $s, -1) ];
+    my integer $len = scalar(@{$lines});
+
+    my arrayref $out = [];
+
+    my integer $i = 0;
+    while ($i < $len) {
+        my $line = $lines->[$i];
+        $line = '' if !defined $line;
+
+        # Fenced code blocks (only if a close fence exists soon enough).
+        if ($line =~ /^\s*([`~]{3,})(?:\s*\S.*)?\z/s) {
+            my string $marker = $1;
+            my string $fence_char = substr($marker, 0, 1);
+            my integer $fence_len = length($marker);
+
+            my integer $close_idx = -1;
+            my integer $max = $i + 4000;
+            $max = ($len - 1) if $max > ($len - 1);
+
+            my integer $j = $i + 1;
+            for (; $j <= $max; $j++) {
+                my $l = $lines->[$j];
+                $l = '' if !defined $l;
+
+                if ($l =~ /^\s*([`~]{3,})\s*\z/s) {
+                    my string $m = $1;
+                    if ((substr($m, 0, 1) eq $fence_char) and (length($m) >= $fence_len)) {
+                        $close_idx = $j;
+                        last;
+                    }
+                }
+            }
+
+            if ($close_idx >= 0) {
+                $i = $close_idx + 1;
+                next;
+            }
+        }
+
+        # <pre>...</pre> blocks
+        if ($line =~ /<pre\b/i) {
+            my integer $close_idx = -1;
+            my integer $max = $i + 4000;
+            $max = ($len - 1) if $max > ($len - 1);
+
+            my integer $j = $i;
+            for (; $j <= $max; $j++) {
+                my $l = $lines->[$j];
+                $l = '' if !defined $l;
+
+                if ($l =~ /<\/pre>/i) {
+                    $close_idx = $j;
+                    last;
+                }
+            }
+
+            if ($close_idx >= 0) {
+                $i = $close_idx + 1;
+                next;
+            }
+        }
+
+        # Malformed lang` opener blocks, only if a plausible close exists.
+        my ($lang, $rest) = parse_malformed_lang_opener($line);
+        if (defined $lang) {
+            my integer $close_idx = -1;
+            my integer $max = $i + 4000;
+            $max = ($len - 1) if $max > ($len - 1);
+
+            my integer $j = $i + 1;
+            for (; $j <= $max; $j++) {
+                my $l = $lines->[$j];
+                $l = '' if !defined $l;
+
+                if (is_malformed_pre_close($l)) {
+                    $close_idx = $j;
+                    last;
+                }
+
+                if ($l =~ /<\/pre>/i) {
+                    $close_idx = $j;
+                    last;
+                }
+
+                if ($l =~ /^\s*(?:```|~~~)\s*\z/s) {
+                    $close_idx = $j;
+                    last;
+                }
+            }
+
+            if ($close_idx >= 0) {
+                $i = $close_idx + 1;
+                next;
+            }
+        }
+
+        # Single backtick pseudo-fence openers, only if a close fence exists soon enough.
+        my $sb_rest = parse_single_backtick_unterminated_line($line);
+        if (defined $sb_rest) {
+            my integer $close_idx = find_next_triple_fence_line_idx($i, $lines, 4000);
+            if ($close_idx >= 0) {
+                $i = $close_idx + 1;
+                next;
+            }
+        }
+
+        # Stray malformed close lines are never prose content.
+        if (is_malformed_pre_close($line)) {
+            $i++;
+            next;
+        }
+
+        push @{$out}, $line;
+        $i++;
+    }
+
+    return join("\n", @{$out});
+}
+
+sub code_region_hash_multiset {
+    my arrayref $regions = shift;
+    $regions = [] if !defined $regions;
+
+    my hashref $mset = {};
+    for my $r (@{$regions}) {
+        my string $body = $r;
+        $body = '' if !defined $body;
+        $body = normalize_line_endings($body);
+        my string $h = sha256_hex($body);
+        if (!exists $mset->{$h}) {
+            $mset->{$h} = 0;
+        }
+        $mset->{$h}++;
+    }
+    return $mset;
+}
+
+sub multiset_contains_all {
+    my hashref $need = shift;
+    my hashref $have = shift;
+    $need = {} if !defined $need;
+    $have = {} if !defined $have;
+
+    for my $k (keys %{$need}) {
+        my integer $n = $need->{$k};
+        $n = 0 if !defined $n;
+        my integer $h = (exists $have->{$k} ? $have->{$k} : 0);
+        return 0 if $h < $n;
+    }
+    return 1;
+}
+
+sub canonicalize_for_verify {
+    my string $s = shift;
+    $s = '' if !defined $s;
+
+    my string $prose = extract_prose_text_for_verify($s);
+    $prose = normalize_line_endings($prose);
+
+    my arrayref $lines = [ split(/\n/, $prose, -1) ];
+
+    my arrayref $out = [];
+
+    for my $raw (@{$lines}) {
+        my string $line = $raw;
+        $line = '' if !defined $line;
+
+        $line =~ s{<code\b[^>]*>}{}sig;
+        $line =~ s{</code>}{}sig;
+
+        while ($line =~ /^\s{0,3}>\s?/s) {
+            $line =~ s/^\s{0,3}>\s?//s;
+        }
+
+        if ($line =~ /^\s{0,3}#{1,6}\s+/s) {
+            $line =~ s/^\s{0,3}#{1,6}\s+//s;
+        }
+
+        if ($line =~ /^\s*(?:[-*+]|[0-9]+\.)\s+/s) {
+            $line =~ s/^\s*(?:[-*+]|[0-9]+\.)\s+//s;
+        }
+
+        $line =~ s/\\`/`/sg;
+
+        push @{$out}, $line;
+    }
+
+    my string $canon = join("\n", @{$out});
+    $canon =~ s/\s+/ /sg;
+    $canon =~ s/^\s+//s;
+    $canon =~ s/\s+\z//s;
+    return $canon;
+}
+
+sub is_subsequence {
+    my string $needle = shift;
+    my string $haystack = shift;
+    $needle = '' if !defined $needle;
+    $haystack = '' if !defined $haystack;
+
+    my integer $n_len = length($needle);
+    my integer $h_len = length($haystack);
+
+    return 1 if $n_len == 0;
+    return 0 if $h_len == 0;
+
+    my integer $ni = 0;
+    my integer $hi = 0;
+
+    while ($ni < $n_len and $hi < $h_len) {
+        my string $nc = substr($needle, $ni, 1);
+        my string $hc = substr($haystack, $hi, 1);
+
+        if ($nc eq $hc) {
+            $ni++;
+            $hi++;
+            next;
+        }
+        $hi++;
+    }
+
+    return ($ni == $n_len ? 1 : 0);
+}
+
+sub extract_anchors {
+    my string $s = shift;
+    $s = '' if !defined $s;
+    $s = normalize_line_endings($s);
+
+    my hashref $uniq = {};
+
+    while ($s =~ m{\bhttps?://[^\s<>()\[\]]+}sg) {
+        my string $u = $&;
+        $u =~ s/[)\].,;:!?]+\z//s;
+        $uniq->{$u} = 1 if $u ne '';
+    }
+
+    while ($s =~ m{\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b}sg) {
+        my string $e = $&;
+        $uniq->{$e} = 1 if $e ne '';
+    }
+
+    while ($s =~ m{\b[A-Z][A-Za-z0-9_]*(?:::[A-Za-z0-9_]+){1,}\b}sg) {
+        my string $m = $&;
+        $uniq->{$m} = 1 if $m ne '';
+    }
+
+    while ($s =~ m{\b[0-9A-Za-z_./\-]+\.(?:pm|pl|t|md|txt|json|jsonl|yml|yaml|sh|bash|log|tar\.gz|tgz)\b}sg) {
+        my string $f = $&;
+        $uniq->{$f} = 1 if $f ne '';
+    }
+
+    while ($s =~ m{\bv?[0-9]+\.[0-9]+(?:\.[0-9]+)?(?:_[0-9]+)?(?:_[0-9]+)?\b}sg) {
+        my string $v = $&;
+        $uniq->{$v} = 1 if $v ne '';
+    }
+
+    my arrayref $anchors = [ sort keys %{$uniq} ];
+    return $anchors;
+}
+
+sub verify_no_data_lost {
+    my string $in_path = shift;
+    my string $out_path = shift;
+    my arrayref $messages = shift;
+    $messages = [] if !defined $messages;
+
+    my string $in_raw = slurp_file_string($in_path);
+    if (!defined $in_raw) {
+        push @{$messages}, 'VERIFY FAILED: could not read input file: ' . $in_path;
+        return 0;
+    }
+
+    my string $out_raw = slurp_file_string($out_path);
+    if (!defined $out_raw) {
+        push @{$messages}, 'VERIFY FAILED: could not read output file: ' . $out_path;
+        return 0;
+    }
+
+    $in_raw = normalize_line_endings($in_raw);
+    $out_raw = normalize_line_endings($out_raw);
+
+    my arrayref $in_regions = [];
+    push @{$in_regions}, @{extract_fenced_code_regions($in_raw)};
+    push @{$in_regions}, @{extract_pre_code_regions($in_raw)};
+    push @{$in_regions}, @{extract_malformed_lang_pre_regions($in_raw)};
+    push @{$in_regions}, @{extract_single_backtick_fence_regions($in_raw)};
+
+    my arrayref $out_regions = [];
+    push @{$out_regions}, @{extract_fenced_code_regions($out_raw)};
+    push @{$out_regions}, @{extract_pre_code_regions($out_raw)};
+    push @{$out_regions}, @{extract_malformed_lang_pre_regions($out_raw)};
+    push @{$out_regions}, @{extract_single_backtick_fence_regions($out_raw)};
+
+    my ($need_strict, $need_diff) = code_region_multisets_for_verify($in_regions);
+    my ($have_strict, $have_diff) = code_region_multisets_for_verify($out_regions);
+
+    my boolean $strict_ok = multiset_contains_all($need_strict, $have_strict);
+    my boolean $diff_ok = multiset_contains_all($need_diff, $have_diff);
+
+    if ((not $strict_ok) or (not $diff_ok)) {
+        my integer $need_strict_n = multiset_total_count($need_strict);
+        my integer $have_strict_n = multiset_total_count($have_strict);
+        my integer $need_diff_n = multiset_total_count($need_diff);
+        my integer $have_diff_n = multiset_total_count($have_diff);
+
+        push @{$messages}, 'VERIFY FAILED: one or more code regions are missing from output (after diff normalization)'
+            . ' strict_in=' . $need_strict_n
+            . ' strict_out=' . $have_strict_n
+            . ' diff_in=' . $need_diff_n
+            . ' diff_out=' . $have_diff_n;
+
+        my integer $shown = 0;
+
+        if (not $strict_ok) {
+            for my $k (keys %{$need_strict}) {
+                my integer $n = $need_strict->{$k};
+                $n = 0 if !defined $n;
+                my integer $h = (exists $have_strict->{$k} ? $have_strict->{$k} : 0);
+                if ($h < $n) {
+                    push @{$messages}, 'VERIFY FAILED: missing strict code region hash: ' . $k;
+                    $shown++;
+                    last if $shown >= 5;
+                }
+            }
+        }
+
+        if (($shown < 5) and (not $diff_ok)) {
+            for my $k (keys %{$need_diff}) {
+                my integer $n = $need_diff->{$k};
+                $n = 0 if !defined $n;
+                my integer $h = (exists $have_diff->{$k} ? $have_diff->{$k} : 0);
+                if ($h < $n) {
+                    push @{$messages}, 'VERIFY FAILED: missing diff-normalized region hash: ' . $k;
+                    $shown++;
+                    last if $shown >= 5;
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    my string $canon_in = canonicalize_for_verify($in_raw);
+    my string $canon_out = canonicalize_for_verify($out_raw);
+
+    if (!is_subsequence($canon_in, $canon_out)) {
+        push @{$messages}, 'VERIFY FAILED: canonical input is not an order-preserving subsequence of canonical output';
+        return 0;
+    }
+
+    my string $in_prose = extract_prose_text_for_verify($in_raw);
+    my string $out_prose = extract_prose_text_for_verify($out_raw);
+
+    my arrayref $anchors = extract_anchors($in_prose);
+    my integer $missing = 0;
+
+    for my $a (@{$anchors}) {
+        next if $a eq '';
+        if (index($out_prose, $a) < 0) {
+            $missing++;
+            push @{$messages}, 'VERIFY FAILED: missing anchor: ' . $a;
+            if ($missing >= 25) {
+                push @{$messages}, 'VERIFY FAILED: too many missing anchors; truncating list';
+                last;
+            }
+        }
+    }
+
+    return 0 if $missing > 0;
+    return 1;
+}
+
+
+
 my boolean $help = 0;
 my boolean $no_unescape_backticks = 0;
 my boolean $no_diff_fixes = 0;
@@ -215,6 +902,7 @@ my boolean $dry_run = 0;
 my boolean $clean = 0;
 my boolean $double_fix = 0;
 my boolean $markdownlint = 0;
+my boolean $verify = 0;
 my string $profile = 'recommended-default';
 
 GetOptions(
@@ -226,15 +914,22 @@ GetOptions(
     'clean' => \$clean,
     'double-fix' => \$double_fix,
     'markdownlint' => \$markdownlint,
+    'verify' => \$verify,
     'debug!' => \$debug,
     'profile=s' => \$profile,
 ) or usage_exit(2);
 
 usage_exit(0) if $help;
 
+if ($dry_run and $verify) {
+    print STDERR "Refusing --verify with --dry-run because outputs are not written\n";
+    usage_exit(2);
+}
+
 if ($clean) {
     # --clean is a deletion mode; it does not write outputs and should not run as --dry-run.
     $dry_run = 0;
+    $verify = 0;
 }
 
 if (!exists $PROFILES->{$profile}) {
@@ -252,7 +947,7 @@ my boolean $tierB_enabled = ($profile_cfg->{'tiers'}->{'B'} ? 1 : 0);
 my boolean $tierC_enabled = ($profile_cfg->{'tiers'}->{'C'} ? 1 : 0);
 my boolean $tierD_enabled = ($profile_cfg->{'tiers'}->{'D'} ? 1 : 0);
 
-dbg("startup: profile=$profile debug=$debug overwrite=$overwrite dry_run=$dry_run clean=$clean double_fix=$double_fix markdownlint=$markdownlint no_unescape_backticks=$no_unescape_backticks no_diff_fixes=$no_diff_fixes policies: contamination=$policy_contamination path_header=$policy_path_header backtick_unescape=$policy_backtick_unescape relabel=$policy_relabel tiers=A:$tierA_enabled B:$tierB_enabled C:$tierC_enabled D:$tierD_enabled");
+dbg("startup: profile=$profile debug=$debug overwrite=$overwrite dry_run=$dry_run clean=$clean double_fix=$double_fix markdownlint=$markdownlint verify=$verify no_unescape_backticks=$no_unescape_backticks no_diff_fixes=$no_diff_fixes policies: contamination=$policy_contamination path_header=$policy_path_header backtick_unescape=$policy_backtick_unescape relabel=$policy_relabel tiers=A:$tierA_enabled B:$tierB_enabled C:$tierC_enabled D:$tierD_enabled");
 
 
 sub first_nonzero_detail {
@@ -4622,6 +5317,21 @@ dbg('markdownlint: md012_collapsed_blank_lines=' . $cnt_markdownlint_md012_colla
     }
 
     my boolean $pass = result_is_tier_clean($result);
+
+    if ($verify) {
+        my arrayref $vmsg = [];
+        my boolean $vpass = verify_no_data_lost($path, $planned_out_path, $vmsg);
+        if ($vpass) {
+            print STDERR 'VERIFY PASS ' . "'" . $planned_out_path . "'" . "\n";
+        } else {
+            print STDERR 'VERIFY FAIL ' . "'" . $planned_out_path . "'" . "\n";
+            for my $m (@{$vmsg}) {
+                print STDERR '  ' . $m . "\n";
+            }
+        }
+        $pass = ($pass && $vpass ? 1 : 0);
+    }
+
     if ($pass) {
         $ok_count++;
     } else {
@@ -4634,3 +5344,44 @@ print STDERR $summary_prefix . " ok=$ok_count skipped=$skip_count failed=$fail_c
 
 dbg("exit: ok=$ok_count skipped=$skip_count failed=$fail_count");
 exit($fail_count ? 1 : 0);
+
+__DATA__
+[Verifier canonicalization rules - promotion-grade]
+
+This verifier is intended to prevent data loss before deleting original chat transcripts.
+
+1. Preserve code regions (with diff-aware normalization)
+   - Code regions are extracted from:
+     - fenced code blocks (``` or ~~~, 3+ markers)
+     - <pre>...</pre> blocks (with optional <code> wrapper tags)
+     - malformed lang` opener blocks that terminate at a `</pre> (or </pre>, or a triple fence)
+     - single backtick pseudo-fence openers like `perl that terminate at the next triple fence
+   - Each extracted region is classified:
+     - diff-like regions: contain @@ hunks, or both --- and +++ headers
+     - all other regions: treated as non-diff
+   - Non-diff regions are hashed strictly (SHA-256 of the body after CRLF normalization).
+   - Diff-like regions are hashed after diff normalization:
+     - ignore hunk headers (@@ ...)
+     - ignore diff headers (---, +++, diff --git, index)
+     - ignore known UI contamination lines (Updated file:, Deleted file:, New file:, <a data-start=...>)
+     - normalize empty lines to a single space
+     - keep only payload lines that begin with ' ', '+', '-', or '\'
+   - Every input region hash (strict and diff-normalized) must appear in the output multiset.
+
+2. Preserve prose content in-order (code regions excluded)
+   - Extract prose-only text by removing all code regions listed above.
+   - Build a canonical prose stream for input and output:
+     - normalize line endings: CRLF -> LF
+     - strip leading blockquote markers: >
+     - strip ATX heading prefixes: #, ##, etc
+     - strip list markers: -, *, +, 1., 2., etc
+     - normalize escaped inline backticks: \` -> `
+     - collapse whitespace runs to a single space and trim
+   - Require canonical(input_prose) to be an order-preserving subsequence of canonical(output_prose).
+
+3. Anchor inventory (high-value tokens in prose must survive)
+   - From the original prose-only text, extract anchors:
+     - URLs, email addresses, Perl module names, filenames/paths with common suffixes, version-like tokens
+   - Require each anchor string to appear in the output prose-only text.
+
+If any check fails, verification fails and the original file should not be deleted.
