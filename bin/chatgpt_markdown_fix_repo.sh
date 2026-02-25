@@ -1,12 +1,12 @@
 #!/usr/bin/bash
-# chatgpt_markdown_fix_repo.sh v0.004_000
+# chatgpt_markdown_fix_repo.sh v0.006_000
 
 set -o pipefail
 shopt -s nullglob
 
 _usage() {
     cat <<'USAGE'
-chatgpt_markdown_fix_repo.sh v0.004_000
+chatgpt_markdown_fix_repo.sh v0.006_000
 
 Usage:
   chatgpt_markdown_fix_repo.sh [WRAPPER_OPTIONS] -- [FIXER_OPTIONS]
@@ -23,10 +23,15 @@ Wrapper options (must appear before "--"):
       Directory to write run log and tarball. Default: /tmp
 
   --keep-artifacts
-      Do not delete older chatgpt_markdown_fix__*.{log,tar.gz} files in artifacts-dir.
+      Do not delete older chatgpt_markdown_fix__*.{log,tar.gz} files (and related lint logs) in artifacts-dir.
 
   --no-clean
       Skip the initial "--clean" pass.
+
+  --lint
+      Run repo markdown lint via: perl xt/author/02_markdown_lint.t
+      Lint output is saved in artifacts-dir and included in the tarball.
+      Note: lint auto-enables when fixer args include --markdownlint.
 
   --promote
       After fixing, lint only the produced '*__fixed.md' outputs, require '--verify', and if all checks pass, delete the original inputs.
@@ -55,6 +60,7 @@ REPO_DIR=""
 ARTIFACTS_DIR="/tmp"
 KEEP_ARTIFACTS=0
 DO_CLEAN=1
+RUN_LINT=0
 PROMOTE=0
 INPUT_PATTERNS=()
 
@@ -93,6 +99,10 @@ while (( $# )); do
             KEEP_ARTIFACTS=1
             shift
             ;;
+        --lint)
+            RUN_LINT=1
+            shift
+            ;;
         --promote)
             PROMOTE=1
             shift
@@ -114,6 +124,14 @@ while (( $# )); do
 done
 
 FIXER_ARGS=("$@")
+
+# Auto-enable lint evidence when fixer is running markdownlint repair passes.
+for arg in "${FIXER_ARGS[@]}"; do
+    if [[ "${arg}" == '--markdownlint' ]] || [[ "${arg}" == '--markdownlint='* ]]; then
+        RUN_LINT=1
+        break
+    fi
+done
 
 # Enable command echoing after option parsing, so the log is readable.
 set -x
@@ -173,10 +191,11 @@ ARTIFACTS_DIR="${ARTIFACTS_DIR%/}"
 mkdir -p "${ARTIFACTS_DIR}" || exit 2
 
 RUN_LOG="${ARTIFACTS_DIR}/chatgpt_markdown_fix__${SERIAL}.log"
+LINT_LOG="${ARTIFACTS_DIR}/chatgpt_markdown_lint__${SERIAL}.log"
 TARBALL="${ARTIFACTS_DIR}/chatgpt_markdown_fix__${SERIAL}.tar.gz"
 
 if (( KEEP_ARTIFACTS == 0 )); then
-    rm -f "${ARTIFACTS_DIR}/chatgpt_markdown_fix__"*.tar.gz "${ARTIFACTS_DIR}/chatgpt_markdown_fix__"*.log
+    rm -f "${ARTIFACTS_DIR}/chatgpt_markdown_fix__"*.tar.gz "${ARTIFACTS_DIR}/chatgpt_markdown_fix__"*.log "${ARTIFACTS_DIR}/chatgpt_markdown_lint__"*.log
 fi
 
 : > "${RUN_LOG}"
@@ -186,8 +205,11 @@ echo "PWD: $(pwd)" | tee -a "${RUN_LOG}"
 echo "FIXER: ${FIXER}" | tee -a "${RUN_LOG}"
 echo "INPUT_PATTERNS: ${INPUT_PATTERNS[*]}" | tee -a "${RUN_LOG}"
 echo "INPUT_COUNT: ${#INPUT_FILES[@]}" | tee -a "${RUN_LOG}"
+echo "RUN_LINT: ${RUN_LINT}" | tee -a "${RUN_LOG}"
+echo "PROMOTE: ${PROMOTE}" | tee -a "${RUN_LOG}"
 # Promotion mode requires verification and forbids --dry-run.
 if (( PROMOTE == 1 )); then
+    RUN_LINT=1
     for arg in "${FIXER_ARGS[@]}"; do
         if [[ "${arg}" == '--dry-run' ]] || [[ "${arg}" == '--dry-run='* ]]; then
             echo "PROMOTE requires real outputs; refusing to run with --dry-run" | tee -a "${RUN_LOG}"
@@ -245,43 +267,27 @@ for in_f in "${INPUT_FILES[@]}"; do
     fi
 done
 
-if (( PROMOTE == 1 )); then
-    if (( FIXER_EXIT != 0 )); then
-        echo "[[[ LINTING SKIPPED (fixer failed) ]]]" | tee -a "${RUN_LOG}"
+if (( RUN_LINT == 1 )); then
+    : > "${LINT_LOG}"
+
+    if [[ -f 'xt/author/02_markdown_lint.t' ]]; then
+        echo "[[[ LINTING (xt/author/02_markdown_lint.t)... ]]]" | tee -a "${RUN_LOG}"
+
+        {
+            echo "FIXER_EXIT=${FIXER_EXIT}"
+            echo "PWD=$(pwd)"
+            echo ""
+            perl xt/author/02_markdown_lint.t
+        } > "${LINT_LOG}" 2>&1
+        LINT_EXIT=$?
     else
-        if (( ${#FIXED_FILES[@]} == 0 )); then
-            echo "PROMOTE: no fixed outputs were produced; cannot lint or promote" | tee -a "${RUN_LOG}"
-            LINT_EXIT=2
-        else
-            echo "[[[ LINTING FIXED OUTPUTS... ]]]" | tee -a "${RUN_LOG}"
-
-            if command -v markdownlint-cli2 >/dev/null 2>&1; then
-                ML_CFG=""
-                for cand in .markdownlint-cli2.jsonc .markdownlint-cli2.yaml .markdownlint-cli2.yml .markdownlint-cli2.json; do
-                    if [[ -f "${cand}" ]]; then
-                        ML_CFG="${cand}"
-                        break
-                    fi
-                done
-
-                if [[ -n "${ML_CFG}" ]]; then
-                    echo "markdownlint-cli2 config: ${ML_CFG}" | tee -a "${RUN_LOG}"
-                    markdownlint-cli2 --config "${ML_CFG}" "${FIXED_FILES[@]}" >> "${RUN_LOG}" 2>&1
-                else
-                    echo "markdownlint-cli2 config: (none found)" | tee -a "${RUN_LOG}"
-                    markdownlint-cli2 "${FIXED_FILES[@]}" >> "${RUN_LOG}" 2>&1
-                fi
-                LINT_EXIT=$?
-            elif [[ -f 'xt/author/02_markdown_lint.t' ]]; then
-                echo "markdownlint-cli2 not found; falling back to perl xt/author/02_markdown_lint.t (may lint more than fixed outputs)" | tee -a "${RUN_LOG}"
-                perl xt/author/02_markdown_lint.t >> "${RUN_LOG}" 2>&1
-                LINT_EXIT=$?
-            else
-                echo "PROMOTE: no lint mechanism found (markdownlint-cli2 missing, xt/author/02_markdown_lint.t missing)" | tee -a "${RUN_LOG}"
-                LINT_EXIT=2
-            fi
-        fi
+        echo "[[[ LINTING FAILED (missing xt/author/02_markdown_lint.t) ]]]" | tee -a "${RUN_LOG}"
+        echo 'Missing xt/author/02_markdown_lint.t; cannot lint' >> "${LINT_LOG}"
+        LINT_EXIT=2
     fi
+
+    echo "LINT_LOG: ${LINT_LOG}" | tee -a "${RUN_LOG}"
+    echo "LINT_EXIT: ${LINT_EXIT}" | tee -a "${RUN_LOG}"
 fi
 
 # Package inputs, outputs, and helper files for analysis
@@ -290,6 +296,10 @@ TAR_FILES=(
     "${FIXER}"
     "$(realpath "$0")"
 )
+
+if [[ -f "${LINT_LOG}" ]]; then
+    TAR_FILES+=("${LINT_LOG}")
+fi
 
 # Include optional helper files next to the fixer (for example: chatgpt_good.md, chatgpt_bad.md)
 for extra in "${SCRIPT_DIR}/chatgpt_good.md" "${SCRIPT_DIR}/chatgpt_bad.md"; do
@@ -315,8 +325,10 @@ for dbg_f in "${FIXED_DEBUG_FILES[@]}"; do
     fi
 done
 
-tar -czvf "${TARBALL}" "${TAR_FILES[@]}" >> "${RUN_LOG}" 2>&1
+echo "[[[ TARRING... ]]]" | tee -a "${RUN_LOG}"
+tar -czf "${TARBALL}" "${TAR_FILES[@]}"
 TAR_EXIT=$?
+echo "TAR_EXIT: ${TAR_EXIT}" | tee -a "${RUN_LOG}"
 PROMOTE_EXIT=0
 if (( PROMOTE == 1 )); then
     if (( FIXER_EXIT == 0 && LINT_EXIT == 0 && TAR_EXIT == 0 )); then
@@ -357,6 +369,9 @@ fi
 
 echo "TARBALL: ${TARBALL}" | tee -a "${RUN_LOG}"
 echo "LOG: ${RUN_LOG}" | tee -a "${RUN_LOG}"
+if [[ -f "${LINT_LOG}" ]]; then
+    echo "LINT_LOG: ${LINT_LOG}" | tee -a "${RUN_LOG}"
+fi
 
 EXIT_CODE=0
 if (( FIXER_EXIT != 0 )); then

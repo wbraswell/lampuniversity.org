@@ -1,5 +1,5 @@
 " see .bashrc for opening files in new tab of existing gvim, alias gvim="gvim --remote-tab-silent"
-" v0.049
+" v0.051
 
 " DEV NOTE, CORRELATION #lu001: some systems require 4-space-tab config code to be at the top of this file, some at the bottom
 " always use 4 space characters instead of 1 tab character
@@ -11,6 +11,12 @@
 " enable <CTRL> keybindings
 source $VIMRUNTIME/mswin.vim
 behave mswin
+
+" start GVim windows maximized
+if has("gui_running")
+  " use wmctrl to tell the Xfce window manager to maximize gVim
+  autocmd VimEnter * call system('wmctrl -i -b add,maximized_vert,maximized_horz -r ' . v:windowid)
+endif
 
 " [ BEGIN CLIPBOARD SETTINGS ]
 
