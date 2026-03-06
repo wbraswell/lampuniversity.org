@@ -1,13 +1,18 @@
 #!/usr/bin/bash
-# chatgpt_markdown_fix_repo.sh v0.006_000
+# chatgpt_markdown_fix_repo.sh v0.012
 
 set -o pipefail
 shopt -s nullglob
 
-_usage() {
-    cat <<'USAGE'
-chatgpt_markdown_fix_repo.sh v0.006_000
+SCRIPT_BANNER="$(sed -n '2s/^# //p' "${BASH_SOURCE[0]}")"
+if [[ -z "${SCRIPT_BANNER}" ]]; then
+    SCRIPT_BANNER='chatgpt_markdown_fix_repo.sh'
+fi
 
+
+_usage() {
+    printf '%s\n\n' "${SCRIPT_BANNER}"
+    cat <<'USAGE'
 Usage:
   chatgpt_markdown_fix_repo.sh [WRAPPER_OPTIONS] -- [FIXER_OPTIONS]
 
@@ -36,6 +41,10 @@ Wrapper options (must appear before "--"):
   --promote
       After fixing, lint only the produced '*__fixed.md' outputs, require '--verify', and if all checks pass, delete the original inputs.
 
+  --self-check
+      Run the built-in regression fixtures before processing inputs.
+      If used without --repo and --inputs, run the self-check only and exit.
+
   -h, --help
       Show this help.
 
@@ -57,11 +66,14 @@ USAGE
 
 # Defaults
 REPO_DIR=""
+REPO_DIR_SET=0
+INPUTS_SET=0
 ARTIFACTS_DIR="/tmp"
 KEEP_ARTIFACTS=0
 DO_CLEAN=1
 RUN_LINT=0
 PROMOTE=0
+SELF_CHECK=0
 INPUT_PATTERNS=()
 
 # Parse wrapper options up to "--"
@@ -73,18 +85,22 @@ while (( $# )); do
             ;;
         --repo)
             REPO_DIR="$2"
+            REPO_DIR_SET=1
             shift 2
             ;;
         --repo=*)
             REPO_DIR="${1#--repo=}"
+            REPO_DIR_SET=1
             shift
             ;;
         --inputs)
             INPUT_PATTERNS+=("$2")
+            INPUTS_SET=1
             shift 2
             ;;
         --inputs=*)
             INPUT_PATTERNS+=("${1#--inputs=}")
+            INPUTS_SET=1
             shift
             ;;
         --artifacts-dir)
@@ -107,6 +123,10 @@ while (( $# )); do
             PROMOTE=1
             shift
             ;;
+        --self-check)
+            SELF_CHECK=1
+            shift
+            ;;
         --no-clean)
             DO_CLEAN=0
             shift
@@ -125,6 +145,11 @@ done
 
 FIXER_ARGS=("$@")
 
+SELF_CHECK_ONLY=0
+if (( SELF_CHECK == 1 && REPO_DIR_SET == 0 && INPUTS_SET == 0 )); then
+    SELF_CHECK_ONLY=1
+fi
+
 # Auto-enable lint evidence when fixer is running markdownlint repair passes.
 for arg in "${FIXER_ARGS[@]}"; do
     if [[ "${arg}" == '--markdownlint' ]] || [[ "${arg}" == '--markdownlint='* ]]; then
@@ -137,8 +162,10 @@ done
 set -x
 
 # Decide repo root
-if [[ -n "${REPO_DIR}" ]]; then
-    cd "${REPO_DIR}" || exit 2
+if (( SELF_CHECK_ONLY == 0 )); then
+    if [[ -n "${REPO_DIR}" ]]; then
+        cd "${REPO_DIR}" || exit 2
+    fi
 fi
 
 # Default input patterns
@@ -157,6 +184,208 @@ if [[ ! -f "${FIXER}" ]]; then
 fi
 
 chmod a+x "${FIXER}"
+
+# Create serialization tag
+SERIAL="$(TZ=America/Chicago date '+%Y%m%d_%H%M%S')"
+
+ARTIFACTS_DIR="${ARTIFACTS_DIR%/}"
+
+mkdir -p "${ARTIFACTS_DIR}" || exit 2
+
+RUN_LOG="${ARTIFACTS_DIR}/chatgpt_markdown_fix__${SERIAL}.log"
+LINT_LOG="${ARTIFACTS_DIR}/chatgpt_markdown_lint__${SERIAL}.log"
+TARBALL="${ARTIFACTS_DIR}/chatgpt_markdown_fix__${SERIAL}.tar.gz"
+
+if (( KEEP_ARTIFACTS == 0 )); then
+    rm -f "${ARTIFACTS_DIR}/chatgpt_markdown_fix__"*.tar.gz "${ARTIFACTS_DIR}/chatgpt_markdown_fix__"*.log "${ARTIFACTS_DIR}/chatgpt_markdown_lint__"*.log
+    rm -rf "${ARTIFACTS_DIR}/chatgpt_markdown_self_check__"*
+fi
+
+: > "${RUN_LOG}"
+
+SELF_DIR=""
+SELF_DIFF=""
+
+if (( SELF_CHECK == 1 )); then
+    echo "[[[ STARTING SELF-CHECK... ]]]" | tee -a "${RUN_LOG}"
+    echo "PWD: $(pwd)" | tee -a "${RUN_LOG}"
+    echo "FIXER: ${FIXER}" | tee -a "${RUN_LOG}"
+    echo "FIXER_ARGS: ${FIXER_ARGS[*]}" | tee -a "${RUN_LOG}"
+
+    SELF_FIXER_ARGS=("${FIXER_ARGS[@]}")
+    echo "ARTIFACTS_DIR: ${ARTIFACTS_DIR}" | tee -a "${RUN_LOG}"
+
+    # Self-check requires verification and forbids --dry-run.
+    for arg in "${SELF_FIXER_ARGS[@]}"; do
+        if [[ "${arg}" == '--dry-run' ]] || [[ "${arg}" == '--dry-run='* ]]; then
+            echo 'SELF-CHECK requires real outputs; refusing to run with --dry-run' | tee -a "${RUN_LOG}"
+            exit 2
+        fi
+    done
+
+    _has_verify=0
+    _has_markdownlint=0
+    for arg in "${FIXER_ARGS[@]}"; do
+        if [[ "${arg}" == '--verify' ]] || [[ "${arg}" == '--verify='* ]]; then
+            _has_verify=1
+        fi
+        if [[ "${arg}" == '--markdownlint' ]] || [[ "${arg}" == '--markdownlint='* ]]; then
+            _has_markdownlint=1
+        fi
+        if (( _has_verify == 1 && _has_markdownlint == 1 )); then
+            break
+        fi
+    done
+
+    if (( _has_verify == 0 )); then
+        echo 'SELF-CHECK: adding --verify to self-check fixer args' | tee -a "${RUN_LOG}"
+        SELF_FIXER_ARGS+=('--verify')
+    fi
+
+    if (( _has_markdownlint == 0 )); then
+        echo 'SELF-CHECK: adding --markdownlint to self-check fixer args' | tee -a "${RUN_LOG}"
+        SELF_FIXER_ARGS+=('--markdownlint')
+    fi
+
+    GOOD_SRC="${SCRIPT_DIR}/chatgpt_good.md"
+    BAD_SRC="${SCRIPT_DIR}/chatgpt_bad.md"
+
+    echo "SELF_FIXER_ARGS: ${SELF_FIXER_ARGS[*]}" | tee -a "${RUN_LOG}"
+
+    if [[ ! -f "${GOOD_SRC}" ]]; then
+        echo "Self-check fixture missing: ${GOOD_SRC}" | tee -a "${RUN_LOG}"
+        exit 2
+    fi
+
+    if [[ ! -f "${BAD_SRC}" ]]; then
+        echo "Self-check fixture missing: ${BAD_SRC}" | tee -a "${RUN_LOG}"
+        exit 2
+    fi
+
+    SELF_DIR="${ARTIFACTS_DIR}/chatgpt_markdown_self_check__${SERIAL}"
+    mkdir -p "${SELF_DIR}" || exit 2
+
+    cp -f "${GOOD_SRC}" "${SELF_DIR}/chatgpt_good.md"
+    cp -f "${BAD_SRC}" "${SELF_DIR}/chatgpt_bad.md"
+
+    echo "[[[ SELF-CHECK FIXING... ]]]" | tee -a "${RUN_LOG}"
+    "${FIXER}" "${SELF_FIXER_ARGS[@]}" "${SELF_DIR}/chatgpt_good.md" "${SELF_DIR}/chatgpt_bad.md" >> "${RUN_LOG}" 2>&1
+    SELF_FIXER_EXIT=$?
+    echo "SELF_FIXER_EXIT: ${SELF_FIXER_EXIT}" | tee -a "${RUN_LOG}"
+
+    GOOD_FIXED="${SELF_DIR}/chatgpt_good__fixed.md"
+    BAD_FIXED="${SELF_DIR}/chatgpt_bad__fixed.md"
+
+    SELF_DIFF="${ARTIFACTS_DIR}/chatgpt_markdown_self_check__${SERIAL}.diff"
+    : > "${SELF_DIFF}"
+
+    SELF_EXIT=0
+    if (( SELF_FIXER_EXIT != 0 )); then
+        echo 'SELF-CHECK: fixer failed' | tee -a "${RUN_LOG}"
+        SELF_EXIT="${SELF_FIXER_EXIT}"
+    fi
+
+    if [[ ! -f "${GOOD_FIXED}" ]]; then
+        echo "SELF-CHECK FAIL: missing output: ${GOOD_FIXED}" | tee -a "${RUN_LOG}"
+        SELF_EXIT=2
+    fi
+
+    if [[ ! -f "${BAD_FIXED}" ]]; then
+        echo "SELF-CHECK FAIL: missing output: ${BAD_FIXED}" | tee -a "${RUN_LOG}"
+        SELF_EXIT=2
+    fi
+
+    if [[ -f "${GOOD_FIXED}" ]]; then
+        if ! cmp -s "${SELF_DIR}/chatgpt_good.md" "${GOOD_FIXED}"; then
+            echo 'SELF-CHECK FAIL: good changed (not idempotent)' | tee -a "${RUN_LOG}"
+            diff -u "${SELF_DIR}/chatgpt_good.md" "${GOOD_FIXED}" >> "${SELF_DIFF}" 2>&1 || true
+            SELF_EXIT=2
+        else
+            echo 'SELF-CHECK OK: good is idempotent' | tee -a "${RUN_LOG}"
+        fi
+    fi
+
+    if [[ -f "${BAD_FIXED}" ]]; then
+        if ! cmp -s "${SELF_DIR}/chatgpt_good.md" "${BAD_FIXED}"; then
+            echo 'SELF-CHECK FAIL: bad fixed does not match good' | tee -a "${RUN_LOG}"
+            diff -u "${SELF_DIR}/chatgpt_good.md" "${BAD_FIXED}" >> "${SELF_DIFF}" 2>&1 || true
+            SELF_EXIT=2
+        else
+            echo 'SELF-CHECK OK: bad fixed matches good' | tee -a "${RUN_LOG}"
+        fi
+    fi
+
+    if [[ -s "${SELF_DIFF}" ]]; then
+        echo "SELF_DIFF: ${SELF_DIFF}" | tee -a "${RUN_LOG}"
+    else
+        rm -f "${SELF_DIFF}"
+    fi
+
+    NEED_SELF_TAR=0
+    if (( SELF_CHECK_ONLY == 1 )); then
+        NEED_SELF_TAR=1
+    fi
+    if (( SELF_EXIT != 0 )); then
+        NEED_SELF_TAR=1
+    fi
+
+    TAR_EXIT=0
+    if (( NEED_SELF_TAR == 1 )); then
+        echo "[[[ SELF-CHECK TARRING... ]]]" | tee -a "${RUN_LOG}"
+
+        TAR_FILES=(
+            "${RUN_LOG}"
+            "${FIXER}"
+            "$(realpath "$0")"
+            "${GOOD_SRC}"
+            "${BAD_SRC}"
+        )
+
+        for f in "${SELF_DIR}/chatgpt_good.md" "${SELF_DIR}/chatgpt_bad.md" "${GOOD_FIXED}" "${BAD_FIXED}"; do
+            if [[ -f "${f}" ]]; then
+                TAR_FILES+=("$(realpath "${f}")")
+            fi
+        done
+
+        for f in "${SELF_DIR}/chatgpt_good__fixed.debug" "${SELF_DIR}/chatgpt_bad__fixed.debug"; do
+            if [[ -f "${f}" ]]; then
+                TAR_FILES+=("$(realpath "${f}")")
+            fi
+        done
+
+        if [[ -f "${SELF_DIFF}" ]]; then
+            TAR_FILES+=("$(realpath "${SELF_DIFF}")")
+        fi
+
+        tar -czf "${TARBALL}" "${TAR_FILES[@]}"
+        TAR_EXIT=$?
+        echo "TAR_EXIT: ${TAR_EXIT}" | tee -a "${RUN_LOG}"
+        echo "TARBALL: ${TARBALL}" | tee -a "${RUN_LOG}"
+    fi
+
+    EXIT_CODE=0
+    if (( SELF_EXIT != 0 )); then
+        EXIT_CODE="${SELF_EXIT}"
+    fi
+
+    if (( TAR_EXIT != 0 )); then
+        if (( EXIT_CODE == 0 )); then
+            EXIT_CODE="${TAR_EXIT}"
+        fi
+    fi
+
+    if (( EXIT_CODE == 0 )); then
+        echo '[[[ SELF-CHECK PASS ]]]' | tee -a "${RUN_LOG}"
+        if (( SELF_CHECK_ONLY == 1 )); then
+            exit 0
+        fi
+        echo '[[[ SELF-CHECK DONE; CONTINUING... ]]]' | tee -a "${RUN_LOG}"
+    else
+        echo '[[[ SELF-CHECK FAIL ]]]' | tee -a "${RUN_LOG}"
+        echo "SELF_DIR preserved: ${SELF_DIR}" | tee -a "${RUN_LOG}"
+        exit "${EXIT_CODE}"
+    fi
+fi
 
 # Build input file list
 INPUT_FILES=()
@@ -183,23 +412,6 @@ if (( ${#INPUT_FILES[@]} == 0 )); then
     exit 2
 fi
 
-# Create serialization tag
-SERIAL="$(TZ=America/Chicago date '+%Y%m%d_%H%M%S')"
-
-ARTIFACTS_DIR="${ARTIFACTS_DIR%/}"
-
-mkdir -p "${ARTIFACTS_DIR}" || exit 2
-
-RUN_LOG="${ARTIFACTS_DIR}/chatgpt_markdown_fix__${SERIAL}.log"
-LINT_LOG="${ARTIFACTS_DIR}/chatgpt_markdown_lint__${SERIAL}.log"
-TARBALL="${ARTIFACTS_DIR}/chatgpt_markdown_fix__${SERIAL}.tar.gz"
-
-if (( KEEP_ARTIFACTS == 0 )); then
-    rm -f "${ARTIFACTS_DIR}/chatgpt_markdown_fix__"*.tar.gz "${ARTIFACTS_DIR}/chatgpt_markdown_fix__"*.log "${ARTIFACTS_DIR}/chatgpt_markdown_lint__"*.log
-fi
-
-: > "${RUN_LOG}"
-
 echo "[[[ STARTING... ]]]" | tee -a "${RUN_LOG}"
 echo "PWD: $(pwd)" | tee -a "${RUN_LOG}"
 echo "FIXER: ${FIXER}" | tee -a "${RUN_LOG}"
@@ -207,6 +419,7 @@ echo "INPUT_PATTERNS: ${INPUT_PATTERNS[*]}" | tee -a "${RUN_LOG}"
 echo "INPUT_COUNT: ${#INPUT_FILES[@]}" | tee -a "${RUN_LOG}"
 echo "RUN_LINT: ${RUN_LINT}" | tee -a "${RUN_LOG}"
 echo "PROMOTE: ${PROMOTE}" | tee -a "${RUN_LOG}"
+echo "SELF_CHECK: ${SELF_CHECK}" | tee -a "${RUN_LOG}"
 # Promotion mode requires verification and forbids --dry-run.
 if (( PROMOTE == 1 )); then
     RUN_LINT=1
@@ -307,6 +520,19 @@ for extra in "${SCRIPT_DIR}/chatgpt_good.md" "${SCRIPT_DIR}/chatgpt_bad.md"; do
         TAR_FILES+=("${extra}")
     fi
 done
+
+# Include self-check artifacts (if any)
+if [[ -n "${SELF_DIR}" && -d "${SELF_DIR}" ]]; then
+    for extra in         "${SELF_DIR}/chatgpt_good.md"         "${SELF_DIR}/chatgpt_bad.md"         "${SELF_DIR}/chatgpt_good__fixed.md"         "${SELF_DIR}/chatgpt_bad__fixed.md"         "${SELF_DIR}/chatgpt_good__fixed.debug"         "${SELF_DIR}/chatgpt_bad__fixed.debug"; do
+        if [[ -f "${extra}" ]]; then
+            TAR_FILES+=("$(realpath "${extra}")")
+        fi
+    done
+fi
+
+if [[ -n "${SELF_DIFF}" && -f "${SELF_DIFF}" ]]; then
+    TAR_FILES+=("$(realpath "${SELF_DIFF}")")
+fi
 
 # Include each input and its produced outputs (if present)
 for in_f in "${INPUT_FILES[@]}"; do

@@ -35,7 +35,7 @@ use strict;
 use warnings;
 use types;
 
-our $VERSION = 0.176;
+our $VERSION = 0.180;
 use Getopt::Long qw(GetOptions);
 use Digest::SHA qw(sha256_hex);
 
@@ -1286,6 +1286,12 @@ sub canonicalize_non_diff_code_region_for_verify {
 
         $l =~ s/[ \t]+\z//s;
 
+
+        if ($l =~ /^\s*(?:```|~~~)/s) {
+            $l =~ s/^\s+//s;
+        }
+        next if $l =~ /^\s*(?:```|~~~)[A-Za-z0-9_+\-]+\s*\z/s;
+
         push @{$out}, $l;
     }
 
@@ -1868,6 +1874,21 @@ sub is_triple_fence_line {
     return (0, undef);
 }
 
+sub parse_triple_fence_line {
+    my $line = shift;
+    return (0, '', 0, undef) if !defined $line;
+
+    if ($line =~ /^(`{3,}|~{3,})([A-Za-z0-9_+\-]+)?\s*\z/s) {
+        my string $marker = $1;
+        my string $lang = $2;
+        my string $ch = substr($marker, 0, 1);
+        my integer $len = length($marker);
+        return (1, $ch, $len, $lang);
+    }
+
+    return (0, '', 0, undef);
+}
+
 
 sub is_indented_triple_fence_line {
     my $line = shift;
@@ -2233,6 +2254,8 @@ my arrayref $out = [];
 
 my boolean $in_block = 0;
 my string $block_lang = ''; # 'diff', 'perl', or empty for no language
+my string $block_fence_ch = ''; # '`' or '~' from the input opener
+my integer $block_fence_len = 0;
 my boolean $block_started_malformed = 0;
 my integer $block_open_out_idx = -1; # index in $out for the opening fence line
 
@@ -2963,9 +2986,10 @@ LINE: while ($i < scalar(@{$lines})) {
         }
 
         my boolean $is_new_triple_fence_opener = 0;
-        my ($maybe_tf, $maybe_tf_lang) = is_triple_fence_line($line);
+        my ($maybe_tf, $maybe_tf_ch, $maybe_tf_len, $maybe_tf_lang) = parse_triple_fence_line($line);
         if ($maybe_tf && defined($maybe_tf_lang) && $maybe_tf_lang ne '') {
-            $is_new_triple_fence_opener = 1;
+            $is_new_triple_fence_opener = 1 if $maybe_tf_ch eq $block_fence_ch;
+
             if ($block_lang eq 'diff' && $diff_in_hunk) {
                 $is_new_triple_fence_opener = 0
                     if should_treat_triple_fence_as_diff_payload($i, $lines, $no_unescape_backticks);
@@ -2991,7 +3015,7 @@ LINE: while ($i < scalar(@{$lines})) {
             }
             $cnt_blocks_closed++;
             dbg("spill-close: input_idx=$i lang='$block_lang'");
-            push @{$out}, '```';
+            push @{$out}, ($block_fence_ch ne '' && $block_fence_len >= 3 ? ($block_fence_ch x $block_fence_len) : '```');
             $in_block = 0;
             $block_lang = '';
             $block_open_out_idx = -1;
@@ -3016,7 +3040,7 @@ LINE: while ($i < scalar(@{$lines})) {
             dbg("spill-fix: closing malformed-started block before blank at input_idx=$i lang='$block_lang'");
             $cnt_blocks_closed++;
             dbg("spill-close: blank input_idx=$i lang='$block_lang'");
-            push @{$out}, '```';
+            push @{$out}, ($block_fence_ch ne '' && $block_fence_len >= 3 ? ($block_fence_ch x $block_fence_len) : '```');
             $in_block = 0;
             $block_lang = '';
             $block_open_out_idx = -1;
@@ -3051,7 +3075,7 @@ LINE: while ($i < scalar(@{$lines})) {
                 maybe_report_diff_contamination_on_block_close($i);
                 reset_diff_block_contamination_state();
             }
-            push @{$out}, '```';
+            push @{$out}, ($block_fence_ch ne '' && $block_fence_len >= 3 ? ($block_fence_ch x $block_fence_len) : '```');
             $in_block = 0;
             $block_lang = '';
             $block_open_out_idx = -1;
@@ -3086,16 +3110,22 @@ LINE: while ($i < scalar(@{$lines})) {
     }
 
     # Handle triple fences in input
-    my ($is_fence, $f_lang) = is_triple_fence_line($line);
+    my ($is_fence, $f_ch, $f_len, $f_lang) = parse_triple_fence_line($line);
     if ($is_fence) {
         if (!$in_block) {
             $in_block = 1;
 
             my string $open_line = $line;
             $block_lang = defined($f_lang) ? $f_lang : '';
+
+            $block_fence_ch = $f_ch;
+            $block_fence_len = $f_len;
+
             if ($markdownlint && $block_lang eq '') {
                 $open_line = '```text';
                 $block_lang = 'text';
+                $block_fence_ch = '`';
+                $block_fence_len = 3;
             }
 
             $block_started_malformed = 0;
@@ -3113,26 +3143,73 @@ LINE: while ($i < scalar(@{$lines})) {
                 $diff_in_hunk = 0;
             }
         } else {
-            if ($block_lang eq 'diff' && $diff_in_hunk) {
-                finalize_current_diff_hunk_header();
+            my string $this_lang = defined($f_lang) ? $f_lang : '';
+            my boolean $same_fence = 0;
+            $same_fence = 1 if ($f_ch eq $block_fence_ch && $f_len >= $block_fence_len);
+
+            # Different-marker fence lines inside a fence are always literal payload.
+            if (!$same_fence) {
+                push @{$out}, $line;
+                $i++;
+                next LINE;
+            }
+
+            # Same-marker with no info string is a close fence.
+            if ($this_lang eq '') {
+                if ($block_lang eq 'diff' && $diff_in_hunk) {
+                    finalize_current_diff_hunk_header();
+                    $diff_in_hunk = 0;
+                }
+                if ($block_lang eq 'diff' && !$no_diff_fixes) {
+                    maybe_relabel_non_diff_diff_block();
+                }
+                if ($block_lang eq 'diff') {
+                    maybe_report_diff_contamination_on_block_close($i);
+                    reset_diff_block_contamination_state();
+                }
+                $cnt_blocks_closed++;
+                dbg("fence-close: input_idx=$i lang='$block_lang'");
+                push @{$out}, ($block_fence_ch ne '' && $block_fence_len >= 3 ? ($block_fence_ch x $block_fence_len) : '```');
+                $in_block = 0;
+                $block_lang = '';
+                $block_fence_ch = '';
+                $block_fence_len = 0;
+                $block_started_malformed = 0;
+                $block_open_out_idx = -1;
+                $diff_have_headers = 0;
+                $diff_missing_headers_warned = 0;
                 $diff_in_hunk = 0;
             }
-            if ($block_lang eq 'diff' && !$no_diff_fixes) {
-                maybe_relabel_non_diff_diff_block();
+            else {
+                # Same-marker opener inside a block - assume missing close and close now.
+                $cnt_spill_close_on_new_opener++;
+                dbg("spill-fix: closing unterminated block lang='$block_lang' at input_idx=$i due to new opener line");
+                if ($block_lang eq 'diff' && $diff_in_hunk) {
+                    finalize_current_diff_hunk_header();
+                    $diff_in_hunk = 0;
+                }
+                if ($block_lang eq 'diff' && !$no_diff_fixes) {
+                    maybe_relabel_non_diff_diff_block();
+                }
+                if ($block_lang eq 'diff') {
+                    maybe_report_diff_contamination_on_block_close($i);
+                    reset_diff_block_contamination_state();
+                }
+                $cnt_blocks_closed++;
+                dbg("spill-close: input_idx=$i lang='$block_lang'");
+                push @{$out}, ($block_fence_ch ne '' && $block_fence_len >= 3 ? ($block_fence_ch x $block_fence_len) : '```');
+                $in_block = 0;
+                $block_lang = '';
+                $block_fence_ch = '';
+                $block_fence_len = 0;
+                $block_open_out_idx = -1;
+                $block_started_malformed = 0;
+                $diff_have_headers = 0;
+                $diff_missing_headers_warned = 0;
+                $diff_in_hunk = 0;
+                # Re-process this same line outside the block.
+                next LINE;
             }
-            if ($block_lang eq 'diff') {
-                maybe_report_diff_contamination_on_block_close($i);
-                reset_diff_block_contamination_state();
-            }
-            $cnt_blocks_closed++;
-            dbg("fence-close: input_idx=$i lang='$block_lang'");
-            push @{$out}, '```';
-            $in_block = 0;
-            $block_lang = '';
-            $block_started_malformed = 0;
-            $diff_have_headers = 0;
-            $diff_missing_headers_warned = 0;
-            $diff_in_hunk = 0;
         }
         $i++;
         next LINE;
@@ -3186,7 +3263,7 @@ LINE: while ($i < scalar(@{$lines})) {
         }
         $cnt_blocks_closed++;
         dbg("malformed-close: closing block lang='$block_lang' at input_idx=$i");
-        push @{$out}, '```';
+        push @{$out}, ($block_fence_ch ne '' && $block_fence_len >= 3 ? ($block_fence_ch x $block_fence_len) : '```');
         $in_block = 0;
         $block_lang = '';
         $block_open_out_idx = -1;
@@ -3211,6 +3288,8 @@ LINE: while ($i < scalar(@{$lines})) {
         $block_open_out_idx = scalar(@{$out}) - 1;
         $in_block = 1;
         $block_lang = '';
+        $block_fence_ch = '`';
+        $block_fence_len = 3;
         if ($markdownlint) {
             $block_lang = 'text';
         }
@@ -3605,7 +3684,7 @@ if ($in_block) {
         maybe_report_diff_contamination_on_block_close($close_input_idx);
         reset_diff_block_contamination_state();
     }
-    push @{$out}, '```';
+    push @{$out}, ($block_fence_ch ne '' && $block_fence_len >= 3 ? ($block_fence_ch x $block_fence_len) : '```');
 }
 
 if ($markdownlint) {
