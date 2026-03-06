@@ -1,5 +1,5 @@
 " see .bashrc for opening files in new tab of existing gvim, alias gvim="gvim --remote-tab-silent"
-" v0.051
+" v0.053
 
 " DEV NOTE, CORRELATION #lu001: some systems require 4-space-tab config code to be at the top of this file, some at the bottom
 " always use 4 space characters instead of 1 tab character
@@ -24,11 +24,12 @@ endif
 
 " keep vim internal deletes (dd, x, etc) in internal memory;
 " prevents vim from overwriting the OS clipboard during normal editing
-:set clipboard=
+:set clipboard=unnamed
 
-" force mouse selections to go straight to the OS clipboard (+);
-" ensures xfce4-clipman can grab the text before GVim closes
-:set guioptions+=a
+" ensure visual highlights go to OS clipboard so Clipman grabs them before close,
+" but use 'P' instead of 'a' to restore internal yank-and-pull across windows
+:set guioptions-=a
+:set guioptions+=P
 
 " use 'pastetoggle' to prevent 'smartindent' from ruining multi-line pastes;
 " hitting F11 turns 'paste mode' on ONLY while you are pasting data;
