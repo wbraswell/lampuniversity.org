@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         ChatGPT Download Rescue
+// @name         ChatGPT Download Fix
 // @namespace    local.wbraswell.chatgpt
 // @version      0.001
 // @description  Work around stuck ChatGPT file downloads, while periodically probing whether the native flow has been fixed.
@@ -46,7 +46,7 @@
             };
         }
         catch (error) {
-            console.warn('[ChatGPT Download Rescue] Failed to read state:', error);
+            console.warn('[ChatGPT Download Fix] Failed to read state:', error);
             return {
                 mode: 'probe',
                 lastProbeAt: 0,
@@ -335,7 +335,7 @@
             lastMessage: 'Workaround download succeeded for ' + info.filename + ' via ' + sourceLabel
         });
 
-        console.info('[ChatGPT Download Rescue] Workaround download succeeded:', {
+        console.info('[ChatGPT Download Fix] Workaround download succeeded:', {
             info: info,
             sourceLabel: sourceLabel,
             state: nextState
@@ -365,7 +365,7 @@
             lastHealthyAt: nowMs(),
             lastMessage: 'Native download flow looked healthy for ' + info.filename
         });
-        console.info('[ChatGPT Download Rescue] Native download flow appears healthy again:', {
+        console.info('[ChatGPT Download Fix] Native download flow appears healthy again:', {
             info: info,
             state: nextState
         });
@@ -379,7 +379,7 @@
             lastBrokenAt: nowMs(),
             lastMessage: 'Native download flow still stuck for ' + info.filename
         });
-        console.info('[ChatGPT Download Rescue] Native download flow still looks broken:', {
+        console.info('[ChatGPT Download Fix] Native download flow still looks broken:', {
             info: info,
             state: nextState
         });
@@ -388,12 +388,12 @@
 
     async function handleImmediateWorkaround(info) {
         try {
-            showToast('ChatGPT Download Rescue', 'Using workaround immediately for ' + info.filename + '.');
+            showToast('ChatGPT Download Fix', 'Using workaround immediately for ' + info.filename + '.');
             await runWorkaroundDownload(info, 'immediate-workaround');
         }
         catch (error) {
             const message = String(error && error.message ? error.message : error);
-            console.error('[ChatGPT Download Rescue] Immediate workaround failed:', error);
+            console.error('[ChatGPT Download Fix] Immediate workaround failed:', error);
             if (message.indexOf('file_not_found') !== -1) {
                 showToast('File already gone', 'ChatGPT reported that ' + info.filename + ' is no longer available.');
                 return;
@@ -432,7 +432,7 @@
             }
             catch (error) {
                 const message = String(error && error.message ? error.message : error);
-                console.error('[ChatGPT Download Rescue] Probe fallback failed:', error);
+                console.error('[ChatGPT Download Fix] Probe fallback failed:', error);
                 if (message.indexOf('file_not_found') !== -1) {
                     showToast('File already gone', 'ChatGPT reported that ' + probe.info.filename + ' is no longer available.');
                     return;
@@ -478,9 +478,9 @@
 
     window.addEventListener('load', function () {
         const state = readState();
-        console.info('[ChatGPT Download Rescue] Loaded:', state);
+        console.info('[ChatGPT Download Fix] Loaded:', state);
         if (state.mode === 'workaround') {
-            showToast('ChatGPT Download Rescue active', 'Workaround mode is currently enabled. The script will probe the native path again after the cooldown window.');
+            showToast('ChatGPT Download Fix active', 'Workaround mode is currently enabled. The script will probe the native path again after the cooldown window.');
         }
     });
 })();
