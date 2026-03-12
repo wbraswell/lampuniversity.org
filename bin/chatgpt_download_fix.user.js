@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Download Fix
 // @namespace    local.wbraswell.chatgpt
-// @version      0.005
+// @version      0.008
 // @description  Fix ChatGPT file downloads stuck on 'Starting download'.
 // @match        https://chatgpt.com/*
 // @grant        none
@@ -12,33 +12,52 @@
     'use strict';
 
     const CFG = {
-        eventName: '__chatgpt_download_fix_bridge_v004__',
-        scriptId: 'chatgpt-download-fix-bridge-v004',
-        stateKey: 'chatgpt_download_fix_state_v0_004',
-        probeWaitMs: 2500,
+        eventName: '__chatgpt_download_fix_bridge_v008__',
+        scriptId: 'chatgpt-download-fix-bridge-v008',
+        stateKey: 'chatgpt_download_fix_state_v0_008',
+        toastHostId: 'chatgpt-download-fix-toast-host-v008',
+        candidateWaitMs: 5000,
         nativeFollowupWaitMs: 900,
         toastMs: 5000,
         requestTtlMs: 20000,
-        candidateTtlMs: 20000
+        candidateTtlMs: 20000,
+        debugEnabled: true,
+        debugLevel: 'info'
     };
 
-    const DEBUG = true;
+    const LOG_LEVELS = {
+        error: 0,
+        warn: 1,
+        info: 2,
+        debug: 3
+    };
 
     const runtime = {
         requestLog: [],
         candidates: [],
+        candidateWaiters: [],
         nextJobId: 1,
         nextCandidateId: 1,
         debugSeq: 1
     };
 
+    function shouldLog(level) {
+        if (!CFG.debugEnabled) {
+            return false;
+        }
+
+        const requested = Object.prototype.hasOwnProperty.call(LOG_LEVELS, level) ? LOG_LEVELS[level] : LOG_LEVELS.debug;
+        const threshold = Object.prototype.hasOwnProperty.call(LOG_LEVELS, CFG.debugLevel) ? LOG_LEVELS[CFG.debugLevel] : LOG_LEVELS.info;
+        return requested <= threshold;
+    }
+
     function debugLog(level, message, detail) {
-        if (!DEBUG) {
+        if (!shouldLog(level)) {
             return;
         }
 
         const seq = runtime.debugSeq++;
-        const prefix = '[ChatGPT Download Fix v0.005 #' + seq + '] ' + message;
+        const prefix = '[ChatGPT Download Fix v0.008 #' + seq + '] ' + message;
 
         if (level === 'error') {
             if (detail !== undefined) {
@@ -82,53 +101,85 @@
         return Date.now();
     }
 
+    function waitMs(delayMs) {
+        return new Promise(function (resolve) {
+            setTimeout(resolve, delayMs);
+        });
+    }
+
     function normalizeUrl(input) {
         try {
-            const normalized = new URL(String(input || ''), location.href).toString();
-            debugLog('log', 'normalizeUrl success', {
-                input: input,
-                normalized: normalized
-            });
-            return normalized;
+            return new URL(String(input || ''), location.href).toString();
         }
         catch (error) {
-            const fallback = String(input || '');
-            debugLog('warn', 'normalizeUrl fallback', {
-                input: input,
-                fallback: fallback,
-                error: String(error && error.message ? error.message : error)
-            });
-            return fallback;
+            return String(input || '');
         }
     }
 
     function sanitizeFilename(name) {
         const cleaned = String(name || '').replace(/[\\/\0]/g, '_').trim();
-        const result = cleaned || 'download.bin';
-        debugLog('log', 'sanitizeFilename', {
-            input: name,
-            result: result
-        });
-        return result;
+        return cleaned || 'download.bin';
+    }
+
+    function trimFilename(name) {
+        return String(name || '').trim();
+    }
+
+    function isInterpreterDownloadUrl(url) {
+        const normalized = normalizeUrl(url);
+        return normalized.indexOf(location.origin + '/backend-api/conversation/') === 0 && normalized.indexOf('/interpreter/download') !== -1;
+    }
+
+    function isEstuaryContentUrl(url) {
+        const normalized = normalizeUrl(url);
+        return normalized.indexOf(location.origin + '/backend-api/estuary/content') === 0;
+    }
+
+    function shouldTrackRequest(url, source) {
+        const normalized = normalizeUrl(url);
+
+        if (!/^https?:\/\//i.test(normalized)) {
+            return false;
+        }
+
+        if (source && String(source).indexOf('fallback.') === 0) {
+            return true;
+        }
+
+        if (isInterpreterDownloadUrl(normalized)) {
+            return true;
+        }
+
+        if (isEstuaryContentUrl(normalized)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    function defaultState() {
+        return {
+            status: 'unknown',
+            nativeStatus: 'unknown',
+            workaroundStatus: 'unknown',
+            lastMessage: '',
+            lastBrokenAt: 0,
+            lastHealthyAt: 0,
+            lastWorkedAroundAt: 0
+        };
     }
 
     function readState() {
         try {
             const raw = localStorage.getItem(CFG.stateKey);
-            const parsed = raw ? JSON.parse(raw) : { status: 'unknown', lastMessage: '' };
-            debugLog('log', 'readState', {
-                raw: raw,
-                parsed: parsed
-            });
-            return parsed;
+            const parsed = raw ? JSON.parse(raw) : defaultState();
+            return Object.assign(defaultState(), parsed);
         }
         catch (error) {
-            const fallback = { status: 'unknown', lastMessage: '' };
             debugLog('warn', 'readState failed, using fallback', {
-                error: String(error && error.message ? error.message : error),
-                fallback: fallback
+                error: String(error && error.message ? error.message : error)
             });
-            return fallback;
+            return defaultState();
         }
     }
 
@@ -150,17 +201,18 @@
             body: body
         });
 
-        let host = document.getElementById('chatgpt-download-fix-toast-host-v004');
+        let host = document.getElementById(CFG.toastHostId);
 
         if (!host) {
-            debugLog('log', 'showToast creating host and style');
-
             const style = document.createElement('style');
-            style.textContent = '#chatgpt-download-fix-toast-host-v004{position:fixed;right:16px;bottom:16px;z-index:2147483647;display:flex;flex-direction:column;gap:8px;pointer-events:none}#chatgpt-download-fix-toast-host-v004 .toast{max-width:420px;padding:10px 12px;border-radius:10px;background:rgba(24,24,27,.96);color:#fff;font:13px/1.45 sans-serif;box-shadow:0 12px 30px rgba(0,0,0,.35)}#chatgpt-download-fix-toast-host-v004 .title{font-weight:700;margin-bottom:2px}';
+            style.textContent =
+                '#' + CFG.toastHostId + '{position:fixed;right:16px;bottom:16px;z-index:2147483647;display:flex;flex-direction:column;gap:8px;pointer-events:none}' +
+                '#' + CFG.toastHostId + ' .toast{max-width:420px;padding:10px 12px;border-radius:10px;background:rgba(24,24,27,.96);color:#fff;font:13px/1.45 sans-serif;box-shadow:0 12px 30px rgba(0,0,0,.35)}' +
+                '#' + CFG.toastHostId + ' .title{font-weight:700;margin-bottom:2px}';
             document.documentElement.appendChild(style);
 
             host = document.createElement('div');
-            host.id = 'chatgpt-download-fix-toast-host-v004';
+            host.id = CFG.toastHostId;
             document.documentElement.appendChild(host);
         }
 
@@ -171,44 +223,22 @@
         box.querySelector('.body').textContent = body;
         host.appendChild(box);
 
-        debugLog('log', 'showToast appended', {
-            title: title,
-            body: body
-        });
-
         setTimeout(function () {
-            debugLog('log', 'showToast removing', {
-                title: title,
-                body: body
-            });
             box.remove();
         }, CFG.toastMs);
     }
 
     function pruneRequests() {
-        const before = runtime.requestLog.length;
         const cutoff = nowMs() - CFG.requestTtlMs;
-
         runtime.requestLog = runtime.requestLog.filter(function (entry) {
             return entry.observedAt >= cutoff;
-        });
-
-        debugLog('log', 'pruneRequests', {
-            cutoff: cutoff,
-            before: before,
-            after: runtime.requestLog.length
         });
     }
 
     function recordRequest(url, source) {
         const normalized = normalizeUrl(url);
 
-        if (!/^https?:\/\//i.test(normalized)) {
-            debugLog('warn', 'recordRequest ignored non-http url', {
-                input: url,
-                normalized: normalized,
-                source: source || 'unknown'
-            });
+        if (!shouldTrackRequest(normalized, source)) {
             return;
         }
 
@@ -232,36 +262,47 @@
         const normalized = normalizeUrl(url);
         pruneRequests();
 
-        const found = runtime.requestLog.some(function (entry) {
+        const matches = runtime.requestLog.filter(function (entry) {
             return entry.observedAt >= startedAt && entry.url === normalized;
         });
 
+        const found = matches.length > 0;
+
         debugLog('info', 'wasRequestObservedSince', {
-            url: url,
-            normalized: normalized,
+            url: normalized,
             startedAt: startedAt,
             found: found,
-            matchingEntries: runtime.requestLog.filter(function (entry) {
-                return entry.observedAt >= startedAt && entry.url === normalized;
-            })
+            matchingEntries: matches
         });
 
         return found;
     }
 
     function pruneCandidates() {
-        const before = runtime.candidates.length;
         const cutoff = nowMs() - CFG.candidateTtlMs;
-
         runtime.candidates = runtime.candidates.filter(function (entry) {
             return entry.observedAt >= cutoff;
         });
+    }
 
-        debugLog('log', 'pruneCandidates', {
-            cutoff: cutoff,
-            before: before,
-            after: runtime.candidates.length
+    function removeCandidateWaiter(waiterId) {
+        runtime.candidateWaiters = runtime.candidateWaiters.filter(function (waiter) {
+            return waiter.id !== waiterId;
         });
+    }
+
+    function notifyCandidateWaiters(candidate) {
+        const snapshot = runtime.candidateWaiters.slice();
+
+        for (const waiter of snapshot) {
+            if (candidate.observedAt >= waiter.floor) {
+                debugLog('info', 'notifyCandidateWaiters resolving waiter', {
+                    waiterId: waiter.id,
+                    candidate: candidate
+                });
+                waiter.resolve(candidate);
+            }
+        }
     }
 
     function enqueueCandidate(downloadUrl, requestUrl, fileName, source) {
@@ -270,7 +311,6 @@
         if (!/^https?:\/\//i.test(normalized)) {
             debugLog('warn', 'enqueueCandidate ignored non-http downloadUrl', {
                 downloadUrl: downloadUrl,
-                normalized: normalized,
                 requestUrl: requestUrl,
                 fileName: fileName,
                 source: source
@@ -286,7 +326,7 @@
             used: false,
             downloadUrl: normalized,
             requestUrl: normalizeUrl(requestUrl || ''),
-            fileName: sanitizeFilename(fileName || ''),
+            fileName: trimFilename(fileName || ''),
             source: source || 'unknown'
         };
 
@@ -297,6 +337,7 @@
             candidatesLength: runtime.candidates.length
         });
 
+        notifyCandidateWaiters(candidate);
         return candidate;
     }
 
@@ -306,41 +347,30 @@
         const floor = startedAt - 1500;
         let best = null;
 
-        debugLog('log', 'pickBestCandidate begin', {
-            startedAt: startedAt,
-            floor: floor,
-            candidates: runtime.candidates.slice()
-        });
-
         for (const candidate of runtime.candidates) {
             if (candidate.used) {
-                debugLog('log', 'pickBestCandidate skip used candidate', candidate);
                 continue;
             }
 
             if (candidate.observedAt < floor) {
-                debugLog('log', 'pickBestCandidate skip old candidate', candidate);
                 continue;
             }
 
             if (!best) {
                 best = candidate;
-                debugLog('log', 'pickBestCandidate initial best', best);
                 continue;
             }
 
-            const candidateIsMetadata = candidate.requestUrl.indexOf('/interpreter/download') !== -1;
-            const bestIsMetadata = best.requestUrl.indexOf('/interpreter/download') !== -1;
+            const candidateIsMetadata = isInterpreterDownloadUrl(candidate.requestUrl);
+            const bestIsMetadata = isInterpreterDownloadUrl(best.requestUrl);
 
             if (candidateIsMetadata && !bestIsMetadata) {
                 best = candidate;
-                debugLog('log', 'pickBestCandidate preferred metadata candidate', best);
                 continue;
             }
 
             if (candidate.observedAt > best.observedAt) {
                 best = candidate;
-                debugLog('log', 'pickBestCandidate newer candidate won', best);
             }
         }
 
@@ -352,62 +382,104 @@
         return best;
     }
 
-    function parseConversationId() {
-        const match = String(location.pathname || '').match(/^\/c\/([0-9a-f-]+)/i);
-        const conversationId = match && match[1] ? match[1] : '';
+    function waitForCandidate(startedAt, timeoutMs) {
+        const immediate = pickBestCandidate(startedAt);
 
-        debugLog('log', 'parseConversationId', {
-            pathname: location.pathname,
-            conversationId: conversationId
+        if (immediate) {
+            debugLog('info', 'waitForCandidate resolved immediately', {
+                startedAt: startedAt,
+                candidate: immediate
+            });
+            return Promise.resolve(immediate);
+        }
+
+        return new Promise(function (resolve) {
+            const waiterId = 'waiter-' + String(nowMs()) + '-' + String(Math.random()).slice(2);
+            let settled = false;
+
+            function finalize(candidate) {
+                if (settled) {
+                    return;
+                }
+
+                settled = true;
+                removeCandidateWaiter(waiterId);
+                resolve(candidate || pickBestCandidate(startedAt) || null);
+            }
+
+            const timerId = setTimeout(function () {
+                debugLog('warn', 'waitForCandidate timed out', {
+                    startedAt: startedAt,
+                    timeoutMs: timeoutMs
+                });
+                finalize(null);
+            }, timeoutMs);
+
+            runtime.candidateWaiters.push({
+                id: waiterId,
+                floor: startedAt - 1500,
+                resolve: function (candidate) {
+                    clearTimeout(timerId);
+                    finalize(candidate);
+                }
+            });
+
+            debugLog('info', 'waitForCandidate registered waiter', {
+                waiterId: waiterId,
+                startedAt: startedAt,
+                timeoutMs: timeoutMs
+            });
+
+            const afterRegister = pickBestCandidate(startedAt);
+
+            if (afterRegister) {
+                clearTimeout(timerId);
+                finalize(afterRegister);
+            }
         });
-
-        return conversationId;
     }
 
-    function getMessageId(control) {
-        const root = control.closest('[data-message-id]');
-        const messageId = root ? String(root.getAttribute('data-message-id') || '') : '';
+    function parseContentDisposition(headerValue) {
+        if (!headerValue) {
+            return null;
+        }
 
-        debugLog('log', 'getMessageId', {
-            control: control,
-            messageId: messageId
-        });
+        let match = headerValue.match(/filename\*=UTF-8''([^;]+)/i);
+        if (match && match[1]) {
+            try {
+                return decodeURIComponent(match[1]);
+            }
+            catch (error) {
+                return match[1];
+            }
+        }
 
-        return messageId;
+        match = headerValue.match(/filename="([^"]+)"/i);
+        if (match && match[1]) {
+            return match[1];
+        }
+
+        match = headerValue.match(/filename=([^;]+)/i);
+        if (match && match[1]) {
+            return match[1].trim();
+        }
+
+        return null;
     }
 
     function isVisibleElement(node) {
         if (!(node instanceof Element)) {
-            debugLog('log', 'isVisibleElement false, not an Element', {
-                node: node
-            });
             return false;
         }
 
         const style = getComputedStyle(node);
 
         if (style.display === 'none' || style.visibility === 'hidden') {
-            debugLog('log', 'isVisibleElement false, hidden by style', {
-                node: node,
-                display: style.display,
-                visibility: style.visibility
-            });
             return false;
         }
 
         const rect = node.getBoundingClientRect();
-        const visible = rect.width > 0 && rect.height > 0;
-
-        debugLog('log', 'isVisibleElement result', {
-            node: node,
-            rect: {
-                width: rect.width,
-                height: rect.height
-            },
-            visible: visible
-        });
-
-        return visible;
+        return rect.width > 0 && rect.height > 0;
     }
 
     function visibleTextExists(text) {
@@ -415,193 +487,463 @@
         const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
         let node = walker.nextNode();
 
-        debugLog('log', 'visibleTextExists begin', {
-            text: text
-        });
-
         while (node) {
             if (node.textContent && node.textContent.indexOf(text) !== -1 && isVisibleElement(node)) {
                 debugLog('info', 'visibleTextExists matched', {
                     text: text,
-                    node: node,
                     textContent: node.textContent
                 });
                 return true;
             }
-
             node = walker.nextNode();
         }
-
-        debugLog('info', 'visibleTextExists no match', {
-            text: text
-        });
 
         return false;
     }
 
-    function injectBridge() {
-        if (document.getElementById(CFG.scriptId)) {
-            debugLog('warn', 'injectBridge skipped, bridge script already exists', {
-                scriptId: CFG.scriptId
-            });
+    function pageBridgeMain(config) {
+        'use strict';
+
+        const BRIDGE_PREFIX = '[ChatGPT Download Fix Bridge v0.008]';
+        const LOG_LEVELS_LOCAL = {
+            error: 0,
+            warn: 1,
+            info: 2,
+            debug: 3
+        };
+
+        function bridgeShouldLog(level) {
+            if (!config.debugEnabled) {
+                return false;
+            }
+
+            const requested = Object.prototype.hasOwnProperty.call(LOG_LEVELS_LOCAL, level) ? LOG_LEVELS_LOCAL[level] : LOG_LEVELS_LOCAL.debug;
+            const threshold = Object.prototype.hasOwnProperty.call(LOG_LEVELS_LOCAL, config.debugLevel) ? LOG_LEVELS_LOCAL[config.debugLevel] : LOG_LEVELS_LOCAL.info;
+            return requested <= threshold;
+        }
+
+        function bridgeLog(level, message, detail) {
+            if (!bridgeShouldLog(level)) {
+                return;
+            }
+
+            const prefix = BRIDGE_PREFIX + ' ' + message;
+
+            if (level === 'error') {
+                if (detail !== undefined) {
+                    console.error(prefix, detail);
+                }
+                else {
+                    console.error(prefix);
+                }
+                return;
+            }
+
+            if (level === 'warn') {
+                if (detail !== undefined) {
+                    console.warn(prefix, detail);
+                }
+                else {
+                    console.warn(prefix);
+                }
+                return;
+            }
+
+            if (level === 'info') {
+                if (detail !== undefined) {
+                    console.info(prefix, detail);
+                }
+                else {
+                    console.info(prefix);
+                }
+                return;
+            }
+
+            if (detail !== undefined) {
+                console.log(prefix, detail);
+            }
+            else {
+                console.log(prefix);
+            }
+        }
+
+        function normalizeBridgeUrl(input) {
+            try {
+                return new URL(String(input || ''), location.href).toString();
+            }
+            catch (error) {
+                return String(input || '');
+            }
+        }
+
+        function isInterpreterDownloadBridgeUrl(url) {
+            const normalized = normalizeBridgeUrl(url);
+            return normalized.indexOf(location.origin + '/backend-api/conversation/') === 0 && normalized.indexOf('/interpreter/download') !== -1;
+        }
+
+        function isEstuaryContentBridgeUrl(url) {
+            const normalized = normalizeBridgeUrl(url);
+            return normalized.indexOf(location.origin + '/backend-api/estuary/content') === 0;
+        }
+
+        function shouldTrackBridgeRequest(url, source) {
+            const normalized = normalizeBridgeUrl(url);
+
+            if (!/^https?:\/\//i.test(normalized)) {
+                return false;
+            }
+
+            if (source && String(source).indexOf('fallback.') === 0) {
+                return true;
+            }
+
+            if (isInterpreterDownloadBridgeUrl(normalized)) {
+                return true;
+            }
+
+            if (isEstuaryContentBridgeUrl(normalized)) {
+                return true;
+            }
+
+            return false;
+        }
+
+        if (window.__chatgptDownloadFixBridgeV008Installed) {
+            bridgeLog('warn', 'bridge already installed');
             return;
         }
 
-        debugLog('info', 'injectBridge start', {
-            eventName: CFG.eventName,
-            scriptId: CFG.scriptId
+        window.__chatgptDownloadFixBridgeV008Installed = true;
+        bridgeLog('info', 'installing bridge', {
+            eventName: config.eventName
         });
 
-        const src = '(function(){' +
-            'if(window.__chatgptDownloadFixBridgeV004){console.info("[ChatGPT Download Fix Bridge v0.005] already installed");return;}window.__chatgptDownloadFixBridgeV004=true;console.info("[ChatGPT Download Fix Bridge v0.005] installing bridge");' +
-            'var EVENT=' + JSON.stringify(CFG.eventName) + ';' +
-            'function emit(detail){try{console.info("[ChatGPT Download Fix Bridge v0.005] emit",detail);window.dispatchEvent(new CustomEvent(EVENT,{detail:detail}))}catch(error){console.error("[ChatGPT Download Fix Bridge v0.005] emit failed",error,detail)}}' +
-            'function norm(input){try{var normalized=new URL(String(input||""),location.href).toString();console.log("[ChatGPT Download Fix Bridge v0.005] norm success",{input:input,normalized:normalized});return normalized}catch(error){var fallback=String(input||"");console.warn("[ChatGPT Download Fix Bridge v0.005] norm fallback",{input:input,fallback:fallback,error:String(error&&error.message?error.message:error)});return fallback}}' +
-            'function req(url,source){var u=norm(url);if(/^https?:\\\\/\\\\//i.test(u)){console.info("[ChatGPT Download Fix Bridge v0.005] request observed",{url:u,source:source||"page"});emit({type:"request",url:u,source:source||"page"})}else{console.warn("[ChatGPT Download Fix Bridge v0.005] request ignored",{url:url,normalized:u,source:source||"page"})}}' +
-            'function cand(url,requestUrl,fileName,source){var u=norm(url);if(/^https?:\\\\/\\\\//i.test(u)){console.info("[ChatGPT Download Fix Bridge v0.005] candidate observed",{downloadUrl:u,requestUrl:requestUrl,fileName:fileName,source:source||"page"});emit({type:"candidate",downloadUrl:u,requestUrl:norm(requestUrl||""),fileName:String(fileName||""),source:source||"page"})}else{console.warn("[ChatGPT Download Fix Bridge v0.005] candidate ignored",{downloadUrl:url,normalized:u,requestUrl:requestUrl,fileName:fileName,source:source||"page"})}}' +
-            'function inspect(text,requestUrl,source){console.info("[ChatGPT Download Fix Bridge v0.005] inspect begin",{requestUrl:requestUrl,source:source,textLength:text?String(text).length:0});if(!text){console.warn("[ChatGPT Download Fix Bridge v0.005] inspect empty text",{requestUrl:requestUrl,source:source});return;}try{var payload=JSON.parse(text);console.info("[ChatGPT Download Fix Bridge v0.005] inspect parsed JSON",payload);if(payload&&typeof payload.download_url==="string"&&payload.download_url){cand(payload.download_url,requestUrl,payload.file_name||"",source);return}console.info("[ChatGPT Download Fix Bridge v0.005] inspect JSON had no direct download_url",{requestUrl:requestUrl,source:source})}catch(error){console.warn("[ChatGPT Download Fix Bridge v0.005] inspect JSON parse failed",{requestUrl:requestUrl,source:source,error:String(error&&error.message?error.message:error)})}var m=text.match(/"download_url"\\\\s*:\\\\s*"((?:\\\\\\\\.|[^"])*)"/);if(m){console.info("[ChatGPT Download Fix Bridge v0.005] inspect regex matched",m[1]);try{cand(JSON.parse("\\\"" + m[1].replace(/\\\\\\\\/g,"\\\\\\\\\\\\\\\\").replace(/\\"/g,"\\\\\\\\\\"") + "\\\""),requestUrl,"",source)}catch(error2){console.warn("[ChatGPT Download Fix Bridge v0.005] inspect regex JSON decode failed, using fallback",{error:String(error2&&error2.message?error2.message:error2)});cand(m[1].replace(/\\\\\\\\\\//g,"/").replace(/\\\\\\\\"/g,"\\""),requestUrl,"",source)}}else{console.info("[ChatGPT Download Fix Bridge v0.005] inspect found no regex match",{requestUrl:requestUrl,source:source})}}' +
-            'if(typeof fetch==="function"){console.info("[ChatGPT Download Fix Bridge v0.005] patching page fetch");var of=fetch;window.fetch=function(){var args=[].slice.call(arguments);var url=norm(args[0]&&args[0].url?args[0].url:args[0]);console.info("[ChatGPT Download Fix Bridge v0.005] page fetch called",{url:url,args:args});req(url,"page.fetch");return of.apply(this,args).then(function(resp){try{var ct=resp.headers.get("content-type")||"";console.info("[ChatGPT Download Fix Bridge v0.005] page fetch response",{url:url,status:resp.status,ok:resp.ok,contentType:ct});if(url.indexOf(location.origin+"/backend-api/")===0&&(ct.indexOf("json")!==-1)){resp.clone().text().then(function(text){console.info("[ChatGPT Download Fix Bridge v0.005] page fetch cloned text ready",{url:url,length:text?text.length:0});inspect(text,url,"page.fetch")}).catch(function(error){console.error("[ChatGPT Download Fix Bridge v0.005] page fetch clone text failed",error)})}else{console.info("[ChatGPT Download Fix Bridge v0.005] page fetch response not inspected",{url:url,contentType:ct})}}catch(error){console.error("[ChatGPT Download Fix Bridge v0.005] page fetch response handling failed",error)}return resp}).catch(function(error){console.error("[ChatGPT Download Fix Bridge v0.005] page fetch rejected",{url:url,error:error});throw error})}}else{console.warn("[ChatGPT Download Fix Bridge v0.005] no page fetch available")}' +
-            'if(typeof XMLHttpRequest==="function"){console.info("[ChatGPT Download Fix Bridge v0.005] patching page XHR");var oo=XMLHttpRequest.prototype.open;var os=XMLHttpRequest.prototype.send;XMLHttpRequest.prototype.open=function(method,url){this.__cdf_url=norm(url);console.info("[ChatGPT Download Fix Bridge v0.005] page XHR open",{method:method,url:url,normalizedUrl:this.__cdf_url});return oo.apply(this,arguments)};XMLHttpRequest.prototype.send=function(){console.info("[ChatGPT Download Fix Bridge v0.005] page XHR send",{url:this.__cdf_url||"",responseType:this.responseType});req(this.__cdf_url||"","page.xhr");this.addEventListener("loadend",function(){try{var url=this.__cdf_url||"";var ct=this.getResponseHeader("content-type")||"";console.info("[ChatGPT Download Fix Bridge v0.005] page XHR loadend",{url:url,status:this.status,responseType:this.responseType,contentType:ct});if(url.indexOf(location.origin+"/backend-api/")!==0||ct.indexOf("json")==-1){console.info("[ChatGPT Download Fix Bridge v0.005] page XHR response not inspected",{url:url,contentType:ct});return}var text=this.responseType==="json"?JSON.stringify(this.response):(this.responseType===""||this.responseType==="text"?this.responseText||"":"");console.info("[ChatGPT Download Fix Bridge v0.005] page XHR text ready",{url:url,length:text?text.length:0});inspect(text,url,"page.xhr")}catch(error){console.error("[ChatGPT Download Fix Bridge v0.005] page XHR loadend handling failed",error)}});return os.apply(this,arguments)}}else{console.warn("[ChatGPT Download Fix Bridge v0.005] no page XHR available")}' +
-            'console.info("[ChatGPT Download Fix Bridge v0.005] bridge installed successfully");' +
-            '})();';
+        function emit(detail) {
+            try {
+                window.dispatchEvent(new CustomEvent(config.eventName, {
+                    detail: detail
+                }));
+            }
+            catch (error) {
+                bridgeLog('error', 'emit failed', {
+                    error: String(error && error.message ? error.message : error),
+                    detail: detail
+                });
+            }
+        }
 
-        const script = document.createElement('script');
-        script.id = CFG.scriptId;
-        script.textContent = src;
-        document.documentElement.appendChild(script);
-        script.remove();
+        function emitRequest(url, source) {
+            const normalized = normalizeBridgeUrl(url);
 
-        debugLog('info', 'injectBridge complete');
+            if (!shouldTrackBridgeRequest(normalized, source)) {
+                return;
+            }
+
+            bridgeLog('info', 'emitRequest', {
+                url: normalized,
+                source: source || 'page'
+            });
+
+            emit({
+                type: 'request',
+                url: normalized,
+                source: source || 'page'
+            });
+        }
+
+        function emitCandidate(downloadUrl, requestUrl, fileName, source) {
+            const normalized = normalizeBridgeUrl(downloadUrl);
+
+            if (!/^https?:\/\//i.test(normalized)) {
+                bridgeLog('warn', 'emitCandidate ignored non-http downloadUrl', {
+                    downloadUrl: downloadUrl,
+                    requestUrl: requestUrl,
+                    fileName: fileName,
+                    source: source || 'page'
+                });
+                return;
+            }
+
+            bridgeLog('info', 'emitCandidate', {
+                downloadUrl: normalized,
+                requestUrl: requestUrl,
+                fileName: fileName,
+                source: source || 'page'
+            });
+
+            emit({
+                type: 'candidate',
+                downloadUrl: normalized,
+                requestUrl: normalizeBridgeUrl(requestUrl || ''),
+                fileName: String(fileName || '').trim(),
+                source: source || 'page'
+            });
+        }
+
+        function inspectPayloadObject(node, requestUrl, source, depth) {
+            if (depth > 8 || node === null || node === undefined) {
+                return;
+            }
+
+            if (typeof node !== 'object') {
+                return;
+            }
+
+            if (typeof node.download_url === 'string' && node.download_url) {
+                emitCandidate(node.download_url, requestUrl, node.file_name || '', source);
+            }
+
+            if (Array.isArray(node)) {
+                for (const item of node) {
+                    inspectPayloadObject(item, requestUrl, source, depth + 1);
+                }
+                return;
+            }
+
+            for (const key of Object.keys(node)) {
+                inspectPayloadObject(node[key], requestUrl, source, depth + 1);
+            }
+        }
+
+        function inspectText(text, requestUrl, source) {
+            if (!text) {
+                return;
+            }
+
+            try {
+                const payload = JSON.parse(text);
+                inspectPayloadObject(payload, requestUrl, source, 0);
+                return;
+            }
+            catch (error) {
+                bridgeLog('debug', 'inspectText JSON parse failed, trying regex', {
+                    requestUrl: requestUrl,
+                    source: source,
+                    error: String(error && error.message ? error.message : error)
+                });
+            }
+
+            const regex = /"download_url"\s*:\s*"((?:\\.|[^"])*)"/g;
+            let match = regex.exec(text);
+
+            while (match) {
+                const rawValue = match[1];
+                let decoded = rawValue;
+
+                try {
+                    decoded = JSON.parse('"' + rawValue + '"');
+                }
+                catch (error) {
+                    decoded = rawValue.replace(/\\\//g, '/').replace(/\\"/g, '"');
+                }
+
+                emitCandidate(decoded, requestUrl, '', source);
+                match = regex.exec(text);
+            }
+        }
+
+        if (typeof window.fetch === 'function') {
+            const originalFetch = window.fetch;
+
+            window.fetch = function () {
+                const args = Array.prototype.slice.call(arguments);
+                const requestUrl = normalizeBridgeUrl(args[0] && args[0].url ? args[0].url : args[0]);
+
+                emitRequest(requestUrl, 'page.fetch');
+
+                return originalFetch.apply(this, args).then(function (response) {
+                    try {
+                        const contentType = response.headers.get('content-type') || '';
+
+                        if (requestUrl.indexOf(location.origin + '/backend-api/') === 0 && contentType.toLowerCase().indexOf('json') !== -1) {
+                            response.clone().text().then(function (text) {
+                                inspectText(text, requestUrl, 'page.fetch');
+                            }).catch(function (error) {
+                                bridgeLog('error', 'page fetch clone text failed', {
+                                    requestUrl: requestUrl,
+                                    error: String(error && error.message ? error.message : error)
+                                });
+                            });
+                        }
+                    }
+                    catch (error) {
+                        bridgeLog('error', 'page fetch response handling failed', {
+                            requestUrl: requestUrl,
+                            error: String(error && error.message ? error.message : error)
+                        });
+                    }
+
+                    return response;
+                }).catch(function (error) {
+                    bridgeLog('error', 'page fetch rejected', {
+                        requestUrl: requestUrl,
+                        error: String(error && error.message ? error.message : error)
+                    });
+                    throw error;
+                });
+            };
+        }
+
+        if (typeof window.XMLHttpRequest === 'function') {
+            const originalOpen = XMLHttpRequest.prototype.open;
+            const originalSend = XMLHttpRequest.prototype.send;
+
+            XMLHttpRequest.prototype.open = function (method, url) {
+                this.__chatgptDownloadFixBridgeUrlV008 = normalizeBridgeUrl(url);
+                return originalOpen.apply(this, arguments);
+            };
+
+            XMLHttpRequest.prototype.send = function () {
+                emitRequest(this.__chatgptDownloadFixBridgeUrlV008 || '', 'page.xhr');
+
+                this.addEventListener('loadend', function () {
+                    try {
+                        const requestUrl = this.__chatgptDownloadFixBridgeUrlV008 || '';
+                        const contentType = this.getResponseHeader('content-type') || '';
+
+                        if (requestUrl.indexOf(location.origin + '/backend-api/') !== 0 || contentType.toLowerCase().indexOf('json') === -1) {
+                            return;
+                        }
+
+                        let text = '';
+
+                        if (this.responseType === '' || this.responseType === 'text') {
+                            text = this.responseText || '';
+                        }
+                        else if (this.responseType === 'json') {
+                            text = JSON.stringify(this.response);
+                        }
+
+                        inspectText(text, requestUrl, 'page.xhr');
+                    }
+                    catch (error) {
+                        bridgeLog('error', 'page XHR loadend handling failed', {
+                            error: String(error && error.message ? error.message : error)
+                        });
+                    }
+                });
+
+                return originalSend.apply(this, arguments);
+            };
+        }
+
+        if (typeof HTMLAnchorElement !== 'undefined' && HTMLAnchorElement.prototype && typeof HTMLAnchorElement.prototype.click === 'function') {
+            const originalAnchorClick = HTMLAnchorElement.prototype.click;
+
+            HTMLAnchorElement.prototype.click = function () {
+                try {
+                    if (this && this.dataset && this.dataset.chatgptDownloadFixTemp === '1') {
+                        bridgeLog('debug', 'ignored synthetic temp anchor click');
+                    }
+                    else {
+                        emitRequest(this.href || '', 'page.anchor.click');
+                    }
+                }
+                catch (error) {
+                    bridgeLog('error', 'page anchor click handling failed', {
+                        error: String(error && error.message ? error.message : error)
+                    });
+                }
+
+                return originalAnchorClick.apply(this, arguments);
+            };
+        }
+
+        if (typeof window.open === 'function') {
+            const originalWindowOpen = window.open;
+
+            window.open = function (url) {
+                try {
+                    emitRequest(url || '', 'page.window.open');
+                }
+                catch (error) {
+                    bridgeLog('error', 'page window.open handling failed', {
+                        error: String(error && error.message ? error.message : error)
+                    });
+                }
+
+                return originalWindowOpen.apply(this, arguments);
+            };
+        }
+
+        if (typeof Location !== 'undefined' && Location.prototype) {
+            if (typeof Location.prototype.assign === 'function') {
+                const originalAssign = Location.prototype.assign;
+
+                Location.prototype.assign = function (url) {
+                    try {
+                        emitRequest(url || '', 'page.location.assign');
+                    }
+                    catch (error) {
+                        bridgeLog('error', 'location.assign handling failed', {
+                            error: String(error && error.message ? error.message : error)
+                        });
+                    }
+
+                    return originalAssign.apply(this, arguments);
+                };
+            }
+
+            if (typeof Location.prototype.replace === 'function') {
+                const originalReplace = Location.prototype.replace;
+
+                Location.prototype.replace = function (url) {
+                    try {
+                        emitRequest(url || '', 'page.location.replace');
+                    }
+                    catch (error) {
+                        bridgeLog('error', 'location.replace handling failed', {
+                            error: String(error && error.message ? error.message : error)
+                        });
+                    }
+
+                    return originalReplace.apply(this, arguments);
+                };
+            }
+        }
+
+        bridgeLog('info', 'bridge installed successfully');
+    }
+
+    function injectBridge() {
+        if (document.getElementById(CFG.scriptId)) {
+            return;
+        }
+
+        try {
+            const script = document.createElement('script');
+            script.id = CFG.scriptId;
+            script.textContent = '(' + pageBridgeMain.toString() + ')(' + JSON.stringify({
+                eventName: CFG.eventName,
+                debugEnabled: CFG.debugEnabled,
+                debugLevel: CFG.debugLevel
+            }) + ');';
+            document.documentElement.appendChild(script);
+            script.remove();
+            debugLog('info', 'injectBridge complete');
+        }
+        catch (error) {
+            debugLog('error', 'injectBridge failed', {
+                error: String(error && error.message ? error.message : error)
+            });
+        }
     }
 
     function onBridgeEvent(event) {
         const detail = event && event.detail ? event.detail : null;
 
-        debugLog('info', 'onBridgeEvent received', {
-            detail: detail
-        });
-
         if (!detail || typeof detail !== 'object') {
-            debugLog('warn', 'onBridgeEvent ignored invalid detail', {
-                detail: detail
-            });
             return;
         }
 
         if (detail.type === 'request') {
-            debugLog('log', 'onBridgeEvent processing request detail', detail);
             recordRequest(detail.url || '', detail.source || 'bridge');
             return;
         }
 
         if (detail.type === 'candidate') {
-            debugLog('log', 'onBridgeEvent processing candidate detail', detail);
             enqueueCandidate(detail.downloadUrl || '', detail.requestUrl || '', detail.fileName || '', detail.source || 'bridge');
-            return;
         }
-
-        debugLog('warn', 'onBridgeEvent ignored unknown detail type', detail);
-    }
-
-    async function requestMetadata(job) {
-        const sandboxPath = '/mnt/data/' + job.label;
-        const url = location.origin +
-            '/backend-api/conversation/' + encodeURIComponent(job.conversationId) +
-            '/interpreter/download?message_id=' + encodeURIComponent(job.messageId) +
-            '&sandbox_path=' + encodeURIComponent(sandboxPath);
-
-        debugLog('info', 'requestMetadata begin', {
-            job: job,
-            sandboxPath: sandboxPath,
-            url: url
-        });
-
-        recordRequest(url, 'fallback.metadata');
-
-        const response = await fetch(url, { credentials: 'include' });
-
-        debugLog('info', 'requestMetadata response received', {
-            url: url,
-            status: response.status,
-            ok: response.ok
-        });
-
-        if (!response.ok) {
-            throw new Error('Metadata request HTTP ' + response.status);
-        }
-
-        const payload = await response.json();
-
-        debugLog('info', 'requestMetadata payload', {
-            url: url,
-            payload: payload
-        });
-
-        if (!payload || payload.status !== 'success' || typeof payload.download_url !== 'string' || !payload.download_url) {
-            throw new Error('Metadata response did not contain a usable download_url');
-        }
-
-        const candidate = enqueueCandidate(payload.download_url, url, payload.file_name || job.label, 'fallback.metadata');
-
-        debugLog('info', 'requestMetadata returning candidate', {
-            job: job,
-            candidate: candidate
-        });
-
-        return candidate;
-    }
-
-    function parseContentDisposition(headerValue) {
-        debugLog('log', 'parseContentDisposition begin', {
-            headerValue: headerValue
-        });
-
-        if (!headerValue) {
-            debugLog('log', 'parseContentDisposition no headerValue');
-            return null;
-        }
-
-        let match = headerValue.match(/filename\*=UTF-8''([^;]+)/i);
-        if (match && match[1]) {
-            try {
-                const decoded = decodeURIComponent(match[1]);
-                debugLog('info', 'parseContentDisposition matched filename*', {
-                    raw: match[1],
-                    decoded: decoded
-                });
-                return decoded;
-            }
-            catch (error) {
-                debugLog('warn', 'parseContentDisposition filename* decode failed', {
-                    raw: match[1],
-                    error: String(error && error.message ? error.message : error)
-                });
-                return match[1];
-            }
-        }
-
-        match = headerValue.match(/filename="([^"]+)"/i);
-        if (match && match[1]) {
-            debugLog('info', 'parseContentDisposition matched quoted filename', {
-                filename: match[1]
-            });
-            return match[1];
-        }
-
-        match = headerValue.match(/filename=([^;]+)/i);
-        if (match && match[1]) {
-            const trimmed = match[1].trim();
-            debugLog('info', 'parseContentDisposition matched bare filename', {
-                filename: trimmed
-            });
-            return trimmed;
-        }
-
-        debugLog('log', 'parseContentDisposition no filename match', {
-            headerValue: headerValue
-        });
-
-        return null;
     }
 
     async function saveBlob(downloadUrl, preferredFilename) {
@@ -612,7 +954,9 @@
 
         recordRequest(downloadUrl, 'fallback.file');
 
-        const response = await fetch(downloadUrl, { credentials: 'include' });
+        const response = await fetch(downloadUrl, {
+            credentials: 'include'
+        });
 
         debugLog('info', 'saveBlob response received', {
             downloadUrl: downloadUrl,
@@ -627,21 +971,19 @@
 
         const blob = await response.blob();
 
-        debugLog('info', 'saveBlob blob received', {
-            size: blob.size,
-            type: blob.type
-        });
-
-        const filename = sanitizeFilename(
+        const resolvedFilename =
             parseContentDisposition(response.headers.get('content-disposition')) ||
-            preferredFilename
-        );
+            trimFilename(preferredFilename || '') ||
+            'download.bin';
 
+        const filename = sanitizeFilename(resolvedFilename);
         const objectUrl = URL.createObjectURL(blob);
 
-        debugLog('info', 'saveBlob object URL created', {
+        debugLog('info', 'saveBlob prepared object URL', {
             filename: filename,
-            objectUrl: objectUrl
+            objectUrl: objectUrl,
+            size: blob.size,
+            type: blob.type
         });
 
         try {
@@ -649,31 +991,19 @@
             anchor.href = objectUrl;
             anchor.download = filename;
             anchor.style.display = 'none';
+            anchor.dataset.chatgptDownloadFixTemp = '1';
 
             (document.body || document.documentElement).appendChild(anchor);
-
-            debugLog('info', 'saveBlob clicking temporary anchor', {
-                filename: filename,
-                anchorHref: anchor.href,
-                anchorDownload: anchor.download
-            });
-
             anchor.click();
             anchor.remove();
-
-            debugLog('info', 'saveBlob temporary anchor removed', {
-                filename: filename
-            });
         }
         finally {
             setTimeout(function () {
-                debugLog('log', 'saveBlob revoking object URL', {
-                    filename: filename,
-                    objectUrl: objectUrl
-                });
                 URL.revokeObjectURL(objectUrl);
             }, 10000);
         }
+
+        return filename;
     }
 
     async function evaluateJob(job) {
@@ -681,105 +1011,54 @@
             job: job
         });
 
-        await new Promise(function (resolve) {
-            debugLog('log', 'evaluateJob waiting probeWaitMs', {
-                probeWaitMs: CFG.probeWaitMs,
-                job: job
-            });
-            setTimeout(resolve, CFG.probeWaitMs);
-        });
+        const candidate = await waitForCandidate(job.startedAt, CFG.candidateWaitMs);
 
-        debugLog('info', 'evaluateJob probe wait finished', {
+        debugLog('info', 'evaluateJob candidate wait finished', {
             job: job,
-            currentCandidates: runtime.candidates.slice(),
-            currentRequests: runtime.requestLog.slice()
-        });
-
-        let candidate = pickBestCandidate(job.startedAt);
-
-        debugLog('info', 'evaluateJob initial candidate lookup result', {
-            job: job,
-            candidate: candidate
+            candidate: candidate,
+            currentCandidates: runtime.candidates.slice()
         });
 
         if (!candidate) {
-            try {
-                debugLog('info', 'evaluateJob no candidate found, requesting metadata', {
-                    job: job
-                });
-                candidate = await requestMetadata(job);
-                debugLog('info', 'evaluateJob metadata request produced candidate', {
-                    job: job,
-                    candidate: candidate
-                });
-            }
-            catch (error) {
-                debugLog('warn', 'evaluateJob metadata probe failed', {
-                    job: job,
-                    error: String(error && error.message ? error.message : error)
-                });
-            }
-        }
-
-        if (!candidate) {
-            debugLog('warn', 'evaluateJob still no candidate after metadata attempt', {
-                job: job
-            });
-
             if (visibleTextExists('Starting download')) {
-                debugLog('warn', 'evaluateJob saw visible "Starting download" with no candidate', {
-                    job: job
-                });
-
                 writeState({
                     status: 'broken',
+                    nativeStatus: 'broken',
+                    workaroundStatus: 'unavailable',
                     lastBrokenAt: nowMs(),
-                    lastMessage: 'No usable download URL was captured for ' + job.label
+                    lastMessage: 'No usable download URL was recovered for ' + job.label
                 });
 
                 showToast('Download fix needs another update', 'No usable download URL was recovered for ' + job.label + '.');
                 return;
             }
 
-            debugLog('info', 'evaluateJob no candidate and no visible spinner, marking healthy', {
-                job: job
-            });
-
             writeState({
                 status: 'healthy',
+                nativeStatus: 'healthy',
+                workaroundStatus: 'not_needed',
                 lastHealthyAt: nowMs(),
-                lastMessage: 'No fallback needed for ' + job.label
+                lastMessage: 'No workaround needed for ' + job.label
             });
 
             return;
         }
 
-        await new Promise(function (resolve) {
-            debugLog('log', 'evaluateJob waiting nativeFollowupWaitMs', {
-                nativeFollowupWaitMs: CFG.nativeFollowupWaitMs,
-                job: job,
-                candidate: candidate
-            });
-            setTimeout(resolve, CFG.nativeFollowupWaitMs);
-        });
+        await waitMs(CFG.nativeFollowupWaitMs);
 
         const requestObserved = wasRequestObservedSince(candidate.downloadUrl, Math.min(job.startedAt, candidate.observedAt));
 
         debugLog('info', 'evaluateJob native followup check complete', {
             job: job,
             candidate: candidate,
-            requestObserved: requestObserved,
-            requests: runtime.requestLog.slice()
+            requestObserved: requestObserved
         });
 
         if (requestObserved) {
-            debugLog('info', 'evaluateJob observed native file request, marking healthy', {
-                job: job,
-                candidate: candidate
-            });
-
             writeState({
                 status: 'healthy',
+                nativeStatus: 'healthy',
+                workaroundStatus: 'not_needed',
                 lastHealthyAt: nowMs(),
                 lastMessage: 'Observed native request for returned download URL for ' + job.label
             });
@@ -789,75 +1068,60 @@
 
         candidate.used = true;
 
-        debugLog('warn', 'evaluateJob did not observe native file request, running fallback saveBlob', {
-            job: job,
-            candidate: candidate
-        });
-
         writeState({
-            status: 'broken',
-            lastBrokenAt: nowMs(),
-            lastMessage: 'No native request was observed for returned download URL for ' + job.label
+            status: 'working',
+            nativeStatus: 'broken',
+            workaroundStatus: 'running',
+            lastMessage: 'Running fallback download for ' + job.label
         });
 
         showToast('Fixing stuck download', 'Fetching ' + job.label + ' directly from ChatGPT\'s returned download URL.');
 
-        await saveBlob(candidate.downloadUrl, candidate.fileName || job.label);
+        const savedFilename = await saveBlob(candidate.downloadUrl, candidate.fileName || job.label);
+
+        writeState({
+            status: 'worked_around',
+            nativeStatus: 'broken',
+            workaroundStatus: 'succeeded',
+            lastWorkedAroundAt: nowMs(),
+            lastMessage: 'Fallback saveBlob succeeded for ' + savedFilename
+        });
 
         debugLog('info', 'evaluateJob fallback saveBlob completed', {
             job: job,
-            candidate: candidate
+            candidate: candidate,
+            savedFilename: savedFilename
         });
     }
 
     function handleClick(event) {
-        debugLog('info', 'handleClick begin', {
-            eventType: event && event.type ? event.type : '',
-            target: event ? event.target : null
-        });
-
         const control = event.target instanceof Element ? event.target.closest('button, a, [role="button"]') : null;
 
-        debugLog('log', 'handleClick nearest control', {
-            control: control
-        });
-
         if (!control) {
-            debugLog('log', 'handleClick ignored, no clickable control found');
+            return;
+        }
+
+        if (control.dataset && control.dataset.chatgptDownloadFixTemp === '1') {
+            debugLog('debug', 'handleClick ignored synthetic temp control');
             return;
         }
 
         const rawText = String(control.textContent || '');
         const normalizedText = rawText.replace(/\s+/g, ' ').trim();
-        const label = sanitizeFilename(normalizedText);
-
-        debugLog('log', 'handleClick computed label', {
-            rawText: rawText,
-            normalizedText: normalizedText,
-            label: label
-        });
+        const label = trimFilename(normalizedText);
 
         if (!/\.[A-Za-z0-9]{1,12}$/.test(label)) {
-            debugLog('log', 'handleClick ignored, label does not look like filename', {
-                label: label
-            });
             return;
         }
 
         if (!control.closest('[data-message-id]')) {
-            debugLog('log', 'handleClick ignored, control not inside [data-message-id]', {
-                label: label,
-                control: control
-            });
             return;
         }
 
         const job = {
             id: runtime.nextJobId++,
             startedAt: nowMs(),
-            label: label,
-            messageId: getMessageId(control),
-            conversationId: parseConversationId()
+            label: label
         };
 
         debugLog('info', 'handleClick created job', {
@@ -876,6 +1140,8 @@
 
             writeState({
                 status: 'broken',
+                nativeStatus: 'broken',
+                workaroundStatus: 'failed',
                 lastBrokenAt: nowMs(),
                 lastMessage: 'Fix failed for ' + job.label + ': ' + message
             });
@@ -884,19 +1150,8 @@
         });
     }
 
-    debugLog('info', 'userscript bootstrap begin', {
-        locationHref: location.href,
-        CFG: CFG
-    });
-
     injectBridge();
-
-    debugLog('info', 'adding bridge event listener', {
-        eventName: CFG.eventName
-    });
     window.addEventListener(CFG.eventName, onBridgeEvent, true);
-
-    debugLog('info', 'adding click event listener');
     document.addEventListener('click', handleClick, true);
 
     window.addEventListener('load', function () {
@@ -904,10 +1159,14 @@
         debugLog('info', 'window load fired', {
             state: state,
             requestLogLength: runtime.requestLog.length,
-            candidatesLength: runtime.candidates.length
+            candidatesLength: runtime.candidates.length,
+            waiterCount: runtime.candidateWaiters.length
         });
         console.info('[ChatGPT Download Fix] Loaded:', state);
     });
 
-    debugLog('info', 'userscript bootstrap complete');
+    debugLog('info', 'userscript bootstrap complete', {
+        locationHref: location.href,
+        debugLevel: CFG.debugLevel
+    });
 })();
