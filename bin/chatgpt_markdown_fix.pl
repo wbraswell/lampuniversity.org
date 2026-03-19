@@ -35,7 +35,7 @@ use strict;
 use warnings;
 use types;
 
-our $VERSION = 0.180;
+our $VERSION = 0.191;
 use Getopt::Long qw(GetOptions);
 use Digest::SHA qw(sha256_hex);
 
@@ -815,6 +815,7 @@ sub canonicalize_for_verify {
 
     my arrayref $out = [];
 
+
     for my $raw (@{$lines}) {
         my string $line = $raw;
         $line = '' if !defined $line;
@@ -1292,10 +1293,50 @@ sub canonicalize_non_diff_code_region_for_verify {
         }
         next if $l =~ /^\s*(?:```|~~~)[A-Za-z0-9_+\-]+\s*\z/s;
 
+        next if $l eq '';
+
         push @{$out}, $l;
     }
 
     return join("\n", @{$out});
+}
+
+
+
+sub blank_counts_non_diff_code_region_for_verify {
+    my string $body = shift;
+    $body = '' if !defined $body;
+    $body = normalize_line_endings($body);
+
+    my arrayref $lines = [ split(/\n/, $body, -1) ];
+
+    my integer $blank = 0;
+    my integer $nonblank = 0;
+
+    for my $raw (@{$lines}) {
+        my string $l = $raw;
+        $l = '' if !defined $l;
+
+        next if $l =~ /^Updated\s+file:\s/;
+        next if $l =~ /^Deleted\s+file:\s/;
+        next if $l =~ /^New\s+file:\s/;
+        next if $l =~ /<a\s+data-start=/i;
+
+        $l =~ s/[ \t]+\z//s;
+
+        if ($l =~ /^\s*(?:```|~~~)/s) {
+            $l =~ s/^\s+//s;
+        }
+        next if $l =~ /^\s*(?:```|~~~)[A-Za-z0-9_+\-]+\s*\z/s;
+
+        if ($l eq '') {
+            $blank++;
+        } else {
+            $nonblank++;
+        }
+    }
+
+    return ($blank, $nonblank);
 }
 
 sub canonicalize_code_segment_for_verify {
@@ -1483,10 +1524,19 @@ sub canonical_lines_for_verify_anywhere {
         $l =~ s/^\s+//s;
         $l =~ s/\s+\z//s;
 
-        next if $l =~ /^\s*---\s*\z/s;
+        $l =~ s/(\*\*|__)\s+(.+?)\s+\1/$1$2$1/sg;
+        $l =~ s/(?<!\*)\*(?!\*)\s+(.+?)\s+(?<!\*)\*(?!\*)/*$1*/sg;
+        $l =~ s/(?<!_)_(?!_)\s+(.+?)\s+(?<!_)_(?!_)/_$1_/sg;
+
+        $l =~ s/(^|[^A-Za-z0-9_])__([A-Za-z0-9][^_]*?[A-Za-z0-9])__([^A-Za-z0-9_]|$)/$1**$2**$3/sg;
+        $l =~ s/(^|[^A-Za-z0-9_])_([A-Za-z0-9][^_]*?[A-Za-z0-9])_([^A-Za-z0-9_]|$)/$1*$2*$3/sg;
+
+        next if $l =~ /^\s*[-=]{3,}\s*\z/s;
 
         $l =~ s/<\s*(NEED[^>]+?)\s*>/$1/sg;
         $l =~ s/\[\s*(NEED[^\]]+?)\s*\]/$1/sg;
+        $l =~ s/<\s*(https?:\/\/[^>]+?)\s*>/$1/sg;
+        $l =~ s/<\s*(mailto:[^>]+?)\s*>/$1/sg;
 
 
         if ($l =~ /^<\s*(https?:\/\/[^>]+)\s*>\z/s) {
@@ -1575,7 +1625,63 @@ sub verify_no_data_lost {
         return 0;
     }
 
-    # Some malformed containers (notably <code> blocks) can swallow prose in the input;
+    
+    my arrayref $in_blank_stats = [];
+    my arrayref $out_blank_stats = [];
+    my integer $in_blank_total = 0;
+    my integer $out_blank_total = 0;
+
+    for my $seg (@{$in_code_segments}) {
+        next if is_diff_like_code_region($seg);
+        my ($b, $nb) = blank_counts_non_diff_code_region_for_verify($seg);
+        push @{$in_blank_stats}, [ $b, $nb ];
+        $in_blank_total += $b;
+    }
+
+    for my $seg (@{$out_code_segments}) {
+        next if is_diff_like_code_region($seg);
+        my ($b, $nb) = blank_counts_non_diff_code_region_for_verify($seg);
+        push @{$out_blank_stats}, [ $b, $nb ];
+        $out_blank_total += $b;
+    }
+
+    my integer $in_regions = scalar(@{$in_blank_stats});
+    my integer $out_regions = scalar(@{$out_blank_stats});
+    my integer $blank_delta_total = $out_blank_total - $in_blank_total;
+
+    if ($blank_delta_total != 0 or $in_regions != $out_regions) {
+        push @{$messages}, 'VERIFY WARN: blank-line delta in non-diff strict code regions: in_blanks='
+            . $in_blank_total
+            . ' out_blanks='
+            . $out_blank_total
+            . ' delta='
+            . $blank_delta_total
+            . ' in_regions='
+            . $in_regions
+            . ' out_regions='
+            . $out_regions;
+
+        my integer $limit = 10;
+        my integer $min = ($in_regions < $out_regions ? $in_regions : $out_regions);
+        for (my integer $i = 0; $i < $min; $i++) {
+            my integer $b_in = $in_blank_stats->[$i]->[0];
+            my integer $b_out = $out_blank_stats->[$i]->[0];
+            my integer $d = $b_out - $b_in;
+            next if $d == 0;
+            push @{$messages}, 'VERIFY WARN: code region '
+                . ($i + 1)
+                . ' blank_in='
+                . $b_in
+                . ' blank_out='
+                . $b_out
+                . ' delta='
+                . $d;
+            $limit--;
+            last if $limit <= 0;
+        }
+    }
+
+# Some malformed containers (notably <code> blocks) can swallow prose in the input;
     # the fixer may legitimately restore that content to prose. Ensure these loose segments
     # still exist somewhere in the output, without requiring they remain inside code regions.
     my string $loose_blob = join("\n", @{$in_loose_segments});
@@ -2069,6 +2175,7 @@ sub looks_like_chat_boundary_soon_after_pre_close {
         return 1 if $t =~ /^\*\*(You|ChatGPT):\*\*/;
         return 1 if $t =~ /^\*\s*\*\s*\*\s*\z/;
         return 1 if $t =~ /^<a\s+data-start=/;
+        return 1 if $t =~ /^\s*#{1,6}\s/;
 
         if ($t =~ /^\s*---\s*\z/) {
             my integer $k = $j + 1;
@@ -2089,6 +2196,7 @@ sub looks_like_chat_boundary_soon_after_pre_close {
                 return 1 if $t2 =~ /^\*\*(You|ChatGPT)\*\*:/;
                 return 1 if $t2 =~ /^\*\*(You|ChatGPT):\*\*/;
                 return 1 if $t2 =~ /^\*\s*\*\s*\*\s*\z/;
+                return 1 if $t2 =~ /^\s*#{1,6}\s/;
             }
         }
 
@@ -4228,6 +4336,69 @@ for my $path (@{$input_paths}) {
                 if ($md040_s_j < scalar(@{$out_lines})) {
                     my string $md040_s_first = $out_lines->[$md040_s_j];
 
+                    # Also remove an empty defaulted '```text' wrapper fence produced earlier in the pipeline.
+                    # Pattern: speaker header, optional blank lines, '```text', only blank lines, closing '```', then '```lang'.
+                    if ($md040_s_first =~ /^(\s*(?:>\s*)*)([ 	]{0,12})(```|~~~)\s*text\s*\z/s) {
+                        my string $md040_s_prefix = $1;
+                        my string $md040_s_indent = $2;
+                        my string $md040_s_marker = $3;
+
+                        my integer $md040_s_close = -1;
+                        my integer $md040_s_m = $md040_s_j + 1;
+
+                        while ($md040_s_m < scalar(@{$out_lines})) {
+                            my string $md040_s_mid = $out_lines->[$md040_s_m];
+                            if ($md040_s_mid =~ /^\s*\z/s or $md040_s_mid =~ /^\s*(?:>\s*)+\z/s) {
+                                $md040_s_m++;
+                                next;
+                            }
+
+                            if ($md040_s_mid =~ /^(\s*(?:>\s*)*)([ 	]{0,12})(```|~~~)\s*\z/s) {
+                                my string $md040_s_mid_prefix = $1;
+                                my string $md040_s_mid_indent = $2;
+                                my string $md040_s_mid_marker = $3;
+
+                                if ($md040_s_mid_prefix eq $md040_s_prefix
+                                    and $md040_s_mid_indent eq $md040_s_indent
+                                    and $md040_s_mid_marker eq $md040_s_marker) {
+                                    $md040_s_close = $md040_s_m;
+                                }
+                            }
+                            last;
+                        }
+
+                        if ($md040_s_close >= 0) {
+                            my integer $md040_s_k = $md040_s_close + 1;
+
+                            while ($md040_s_k < scalar(@{$out_lines})) {
+                                my string $md040_s_after = $out_lines->[$md040_s_k];
+                                last if ($md040_s_after !~ /^\s*\z/s and $md040_s_after !~ /^\s*(?:>\s*)+\z/s);
+                                $md040_s_k++;
+                            }
+
+                            if ($md040_s_k < scalar(@{$out_lines})) {
+                                my string $md040_s_after = $out_lines->[$md040_s_k];
+
+                                if ($md040_s_after =~ /^(\s*(?:>\s*)*)([ 	]{0,12})(```|~~~)\s*([A-Za-z0-9_+\-]+)\s*\z/s) {
+                                    my string $md040_s_after_prefix = $1;
+                                    my string $md040_s_after_indent = $2;
+                                    my string $md040_s_after_marker = $3;
+                                    my string $md040_s_after_lang = $4;
+
+                                    if ($md040_s_after_lang ne ''
+                                        and $md040_s_after_prefix eq $md040_s_prefix
+                                        and $md040_s_after_indent eq $md040_s_indent
+                                        and $md040_s_after_marker eq $md040_s_marker) {
+                                        $md040_speaker_removed++;
+                                        $cnt_markdownlint_md040_removed_stray_fences++;
+                                        $md040_s_i = $md040_s_k;
+                                        next;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     if ($md040_s_first =~ /^(\s*(?:>\s*)*)([ 	]{0,12})(```|~~~)\s*\z/s) {
                         my string $md040_s_prefix = $1;
                         my string $md040_s_indent = $2;
@@ -6258,7 +6429,10 @@ dbg('markdownlint: md012_collapsed_blank_lines=' . $cnt_markdownlint_md012_colla
         my arrayref $vmsg = [];
         my boolean $vpass = verify_no_data_lost($path, $planned_out_path, $vmsg);
         if ($vpass) {
-            print STDERR 'VERIFY PASS ' . "'" . $planned_out_path . "'" . "\n";
+            print STDERR 'VERIFY PASS ' . q{'} . $planned_out_path . q{'} . "\n";
+            for my $m (@{$vmsg}) {
+                print STDERR '  ' . $m . "\n";
+            }
         } else {
             print STDERR 'VERIFY FAIL ' . "'" . $planned_out_path . "'" . "\n";
             for my $m (@{$vmsg}) {

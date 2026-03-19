@@ -1,7 +1,9 @@
 # chatgpt_bad
 
-v0.006
+<!-- no-compare-next-line -->
+v0.013
 
+<!-- no-compare-next-line -->
 This file is the expected output when fixing chatgpt_bad.md with --markdownlint --verify.
 
 ## Verifier anchors and sentinels
@@ -25,7 +27,7 @@ This case ensures a jump from H2 to H4 is reduced to H3.
 
 ### MD003 - setext heading converted to ATX
 
-## Setext heading converted
+## Heading should use ATX style after cleanup
 
 This case ensures Setext underline headings are converted to ATX headings.
 
@@ -37,13 +39,13 @@ This case ensures Setext underline headings are converted to ATX headings.
 ### MD007 - unordered list indentation uses 4-space steps
 
 - Parent item
-    - Nested item indented by 4 spaces
+    - Nested item should be indented by 4 spaces
 
 ### MD009 - trailing spaces normalized to 0-or-2
 
-Line with no trailing spaces.
-Line with exactly two trailing spaces.  
-Line with no trailing spaces after cleanup.
+This line should end with 0 trailing spaces after cleanup.
+This line should end with 2 trailing spaces after cleanup.  
+This line should end with 0 trailing spaces after cleanup.
 
 ### MD012 - multiple consecutive blank lines collapsed
 
@@ -53,7 +55,7 @@ Line below the blank block.
 
 ### MD019 - no multiple spaces after '#'
 
-## Heading with one space
+## Heading should have 1 space after '#' after cleanup
 
 ### MD022 - headings surrounded by blank lines
 
@@ -67,11 +69,11 @@ Text below the heading.
 
 ## Extra top heading
 
-This H1 was demoted to H2.
+This extra top heading should be demoted to H2 after cleanup.
 
 ### MD026 - strip trailing punctuation from headings
 
-## Heading without trailing punctuation
+## Heading should have no trailing punctuation after cleanup
 
 ### MD029 - ordered list item prefix and numeric label escaping
 
@@ -96,8 +98,8 @@ This H1 was demoted to H2.
 
 ### MD030 - exactly one space after list markers
 
-- One space after marker
-1. One space after marker
+- This list item should have 1 space after its marker after cleanup
+1. This ordered list item should have 1 space after its marker after cleanup
 
 ### MD031 - blank lines around fenced code blocks
 
@@ -125,7 +127,7 @@ Text below the list.
 
 ### MD034 - no bare URLs
 
-This URL is autolinked: <https://example.com/autolink>
+This URL should be autolinked after cleanup: <https://example.com/autolink>
 
 This URL stays inside code: `https://example.com/inside-code`
 
@@ -141,30 +143,30 @@ This paragraph is intentionally boring.
 
 #### Case 2 - bold-only line converted to a heading
 
-## Bold line becomes heading
+## This bold-only line should become a heading after cleanup
 
-#### Case 3 - emphasized quote converted to a blockquote
+### Case 3 - emphasized quote converted to a blockquote
 
 quote context
 
-> This is a long italic quote line that was converted to a blockquote for readability and linting
+> This long italic quote line should become a blockquote after cleanup for readability and linting
 
 ### MD037 - no spaces inside emphasis markers
 
-This emphasis has no inner spaces: **bold** and __bold__ and _italic_.
+This emphasis should have no inner spaces after cleanup: **bold** and __bold__ and _italic_.
 
 This line should not be touched: =item * POD bullet marker
 
 ### MD038 - no spaces inside inline code spans
 
-Inline code span trimmed: `code` and `two words`.
+Inline code spans should have no inner spaces after cleanup: `code` and `two words`.
 
 ### MD040 - fenced code blocks have a language and stray wrapper fences are removed
 
 #### Case 1 - missing fence language defaults to 'text'
 
 ```text
-This fence has an explicit language after cleanup.
+This fence should have an explicit language after cleanup.
 ```
 
 #### Case 2 - stray speaker wrapper fence removed
@@ -178,18 +180,18 @@ print $x;
 
 ### MD041 - first line is an H1
 
-The bad fixture starts without an H1, so the fixer inserts '# chatgpt_bad' based on the output filename.
+This file should start with an H1 after cleanup.
 
 ### MD048 - code fence style uses backticks, not tildes
 
 ```text
-tilde fence converted to backticks
+This fence should use backticks after cleanup.
     ```embedded fence-like line
 ```
 
 ### MD049 - emphasis style uses underscores, not single asterisks
 
-This emphasis uses underscores: _emph_.
+This emphasis should use underscores after cleanup: _emph_.
 
 ## Verify stress tests
 
@@ -213,21 +215,21 @@ LOOSE-CODE-SENTINEL-001
 ```diff
 --- a/docs/file_a.md
 +++ b/docs/file_a.md
-@@ -1,3 +1,4 @@
+@@ -1,2 +1,3 @@
 - Title: Example
 - Version: v0.001
 + Title: Example
 + Version: v0.002
 + Note: Added line
-@@ -10,1 +10,2 @@
+@@ -10,4 +10,5 @@
  Context line that should still be inside the same diff block
 + Another added line
-```
+ ```
 
-```diff
+ ```diff
 --- a/src/module.pm
 +++ b/src/module.pm
-@@ -5,2 +5,2 @@
+@@ -5,1 +5,1 @@
 -my \`literal\` backticks
 +my `literal` backticks
 ```

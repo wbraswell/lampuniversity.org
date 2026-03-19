@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-# chatgpt_markdown_fix_repo.sh v0.012
+# chatgpt_markdown_fix_repo.sh v0.014
 
 set -o pipefail
 shopt -s nullglob
@@ -45,6 +45,11 @@ Wrapper options (must appear before "--"):
       Run the built-in regression fixtures before processing inputs.
       If used without --repo and --inputs, run the self-check only and exit.
 
+      Self-check comparisons can ignore intentionally-different lines.
+      Use this marker comment on its own line:
+          <!-- no-compare-next-line -->
+      The marker line and the immediately following line are excluded from comparisons.
+
   -h, --help
       Show this help.
 
@@ -63,6 +68,16 @@ Examples:
 
 USAGE
 }
+
+_self_check_strip_no_compare() {
+    awk '
+        (skip_next == 1) { skip_next = 0; next; }
+        (/^[[:space:]]*<!--[[:space:]]*no-compare-next-line[[:space:]]*-->[[:space:]]*$/) { skip_next = 1; next; }
+        (/^##[[:space:]]+no[[:space:]]+compare[[:space:]]/) { next; }
+        { print; }
+    '
+}
+
 
 # Defaults
 REPO_DIR=""
@@ -296,9 +311,15 @@ if (( SELF_CHECK == 1 )); then
     fi
 
     if [[ -f "${GOOD_FIXED}" ]]; then
-        if ! cmp -s "${SELF_DIR}/chatgpt_good.md" "${GOOD_FIXED}"; then
+        GOOD_IDEMP_SRC="${SELF_DIR}/chatgpt_good__idempotent_src.md"
+        GOOD_IDEMP_FIXED="${SELF_DIR}/chatgpt_good__idempotent_fixed.md"
+
+        _self_check_strip_no_compare < "${SELF_DIR}/chatgpt_good.md" > "${GOOD_IDEMP_SRC}"
+        _self_check_strip_no_compare < "${GOOD_FIXED}" > "${GOOD_IDEMP_FIXED}"
+
+        if ! cmp -s "${GOOD_IDEMP_SRC}" "${GOOD_IDEMP_FIXED}"; then
             echo 'SELF-CHECK FAIL: good changed (not idempotent)' | tee -a "${RUN_LOG}"
-            diff -u "${SELF_DIR}/chatgpt_good.md" "${GOOD_FIXED}" >> "${SELF_DIFF}" 2>&1 || true
+            diff -u "${GOOD_IDEMP_SRC}" "${GOOD_IDEMP_FIXED}" >> "${SELF_DIFF}" 2>&1 || true
             SELF_EXIT=2
         else
             echo 'SELF-CHECK OK: good is idempotent' | tee -a "${RUN_LOG}"
@@ -306,9 +327,15 @@ if (( SELF_CHECK == 1 )); then
     fi
 
     if [[ -f "${BAD_FIXED}" ]]; then
-        if ! cmp -s "${SELF_DIR}/chatgpt_good.md" "${BAD_FIXED}"; then
+        GOOD_CMP="${SELF_DIR}/chatgpt_good__compare.md"
+        BAD_CMP="${SELF_DIR}/chatgpt_bad__fixed__compare.md"
+
+        _self_check_strip_no_compare < "${SELF_DIR}/chatgpt_good.md" > "${GOOD_CMP}"
+        _self_check_strip_no_compare < "${BAD_FIXED}" > "${BAD_CMP}"
+
+        if ! cmp -s "${GOOD_CMP}" "${BAD_CMP}"; then
             echo 'SELF-CHECK FAIL: bad fixed does not match good' | tee -a "${RUN_LOG}"
-            diff -u "${SELF_DIR}/chatgpt_good.md" "${BAD_FIXED}" >> "${SELF_DIFF}" 2>&1 || true
+            diff -u "${GOOD_CMP}" "${BAD_CMP}" >> "${SELF_DIFF}" 2>&1 || true
             SELF_EXIT=2
         else
             echo 'SELF-CHECK OK: bad fixed matches good' | tee -a "${RUN_LOG}"
