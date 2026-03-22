@@ -1,5 +1,5 @@
 <!-- no-compare-next-line -->
-v0.023
+v0.025
 
 <!-- no-compare-next-line -->
 This file is an intentionally malformed regression fixture for chatgpt_markdown_fix.pl. After running --markdownlint --verify on this file, the output should match chatgpt_good.md.
@@ -217,7 +217,7 @@ print 'ok';
 + Title: Example
 + Version: v0.002
 + Note: Added line
-@@ -10,4 +10,5 @@
+@@ -10,1 +10,2 @@
  Context line that should still be inside the same diff block
 + Another added line
 ```
@@ -229,3 +229,11 @@ print 'ok';
 -my \`literal\` backticks
 +my `literal` backticks
 ```
+
+### Loose unified diff run should become a fenced diff block after cleanup
+
+--- a/config/policy.json
++++ b/config/policy.json
+@@ -1,1 +1,1 @@
+- "allow": false
++ "allow": true

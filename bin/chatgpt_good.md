@@ -1,7 +1,7 @@
 # chatgpt_bad
 
 <!-- no-compare-next-line -->
-v0.013
+v0.016
 
 <!-- no-compare-next-line -->
 This file is the expected output when fixing chatgpt_bad.md with --markdownlint --verify.
@@ -221,15 +221,25 @@ LOOSE-CODE-SENTINEL-001
 + Title: Example
 + Version: v0.002
 + Note: Added line
-@@ -10,4 +10,5 @@
+@@ -10,1 +10,2 @@
  Context line that should still be inside the same diff block
 + Another added line
- ```
+```
 
- ```diff
+```diff
 --- a/src/module.pm
 +++ b/src/module.pm
 @@ -5,1 +5,1 @@
 -my \`literal\` backticks
 +my `literal` backticks
+```
+
+### Loose unified diff run should become a fenced diff block after cleanup
+
+```diff
+--- a/config/policy.json
++++ b/config/policy.json
+@@ -1,1 +1,1 @@
+- "allow": false
++ "allow": true
 ```

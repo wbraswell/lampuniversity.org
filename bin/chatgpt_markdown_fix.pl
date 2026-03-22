@@ -35,7 +35,7 @@ use strict;
 use warnings;
 use types;
 
-our $VERSION = 0.191;
+our $VERSION = 0.196;
 use Getopt::Long qw(GetOptions);
 use Digest::SHA qw(sha256_hex);
 
@@ -135,6 +135,7 @@ my integer $cnt_markdownlint_fenced_grep_blocks = 0;
 my integer $cnt_markdownlint_fenced_patch_blocks = 0;
 my integer $cnt_markdownlint_fenced_ed_diff_blocks = 0;
 my integer $cnt_markdownlint_repaired_broken_diff_fences = 0;
+my integer $cnt_markdownlint_fenced_loose_unified_diff_runs = 0;
 my integer $cnt_markdownlint_fenced_diff_continuations = 0;
 my integer $cnt_markdownlint_md031_inserted_blank_lines = 0;
 my integer $cnt_markdownlint_md012_collapsed_blank_lines = 0;
@@ -2142,6 +2143,10 @@ sub looks_like_chat_boundary_soon_after_pre_close {
     # Special case: inside a diff hunk, consecutive bare triple-fence lines are
     # frequently the close of an inner code fence immediately followed by the
     # close of the outer ```diff block. Treat the first fence as diff payload.
+    #
+    # But if the next nonblank line is a new fenced opener with an info string
+    # such as ```diff, the current bare fence is the real close of the current
+    # block and must not be absorbed into diff payload.
     my integer $k = $idx + 1;
     while ($k < scalar(@{$aref})) {
         my $l1 = $aref->[$k];
@@ -2155,6 +2160,8 @@ sub looks_like_chat_boundary_soon_after_pre_close {
 
         next if $t1 =~ /^\s*\z/;
 
+        my ($t1_is_fence, $t1_lang) = is_triple_fence_line($t1);
+        return 0 if ($t1_is_fence && defined($t1_lang) && ($t1_lang ne ''));
         return 1 if $t1 =~ /^```\s*\z/;
         last;
     }
@@ -2220,6 +2227,10 @@ sub should_treat_triple_fence_as_diff_payload {
     # Special case: inside a diff hunk, consecutive bare triple-fence lines are
     # frequently the close of an inner code fence immediately followed by the
     # close of the outer ```diff block. Treat the first fence as diff payload.
+    #
+    # But if the next nonblank line is a new fenced opener with an info string
+    # such as ```diff, the current bare fence is the real close of the current
+    # block and must not be absorbed into diff payload.
     my integer $k = $idx + 1;
     while ($k < scalar(@{$aref})) {
         my $l1 = $aref->[$k];
@@ -2233,6 +2244,8 @@ sub should_treat_triple_fence_as_diff_payload {
 
         next if $t1 =~ /^\s*\z/;
 
+        my ($t1_is_fence, $t1_lang) = is_triple_fence_line($t1);
+        return 0 if ($t1_is_fence && defined($t1_lang) && ($t1_lang ne ''));
         return 1 if $t1 =~ /^```\s*\z/;
         last;
     }
@@ -2261,6 +2274,7 @@ sub should_treat_triple_fence_as_diff_payload {
         return 0 if $t =~ /^\*\*(You|ChatGPT):\*\*/;
         return 0 if $t =~ /^\*\s*\*\s*\*\s*\z/;
         return 0 if $t =~ /^<a\s+data-start=/;
+        return 0 if $t =~ /^\s*#{1,6}\s/;
         return 0 if $t =~ /^\s*---\s*\z/;
 
         $seen++;
@@ -2296,6 +2310,22 @@ sub block_contains_code_signals {
 
 
 # Diff helpers
+sub is_loose_unified_diff_payload_line {
+    my string $line = shift;
+    return 0 if !defined $line;
+
+    return 1 if $line =~ /^\s*\z/s;
+    return 1 if $line =~ /^\@\@(?:\s|\z)/s;
+    return 1 if $line =~ /^---\s+/s;
+    return 1 if $line =~ /^\+\+\+\s+/s;
+    return 1 if $line =~ /^diff --git\b/s;
+    return 1 if $line =~ /^(?:index|new file mode|deleted file mode|similarity index|rename from|rename to|old mode|new mode)\b/s;
+    return 1 if $line =~ /^[+-].*/s;
+
+    return 0;
+}
+
+
 sub infer_single_file_path_for_diff_context {
     my integer $idx = shift;
     my arrayref $aref = shift;
@@ -4548,6 +4578,71 @@ for my $path (@{$input_paths}) {
             dbg('markdownlint: repaired_broken_diff_fences_added=' . $ml_repaired_here);
         }
 
+        # Fence standalone unified-diff runs that still sit loose in transcript prose.
+        # Trigger only from a real hunk header, then absorb the surrounding contiguous diff payload.
+        my integer $ml_loose_here = 0;
+        my arrayref $ml_loose_lines = [];
+        my integer $ml_loose_i = 0;
+        my boolean $ml_loose_in_block = 0;
+
+        while ($ml_loose_i < scalar(@{$out_lines})) {
+            my string $ml_loose_line = $out_lines->[$ml_loose_i];
+
+            my boolean $ml_loose_is_fence = 0;
+            my string $ml_loose_f_lang = '';
+            ($ml_loose_is_fence, $ml_loose_f_lang) = is_triple_fence_line($ml_loose_line);
+            if ($ml_loose_is_fence) {
+                push @{$ml_loose_lines}, $ml_loose_line;
+                $ml_loose_in_block = ($ml_loose_in_block ? 0 : 1);
+                $ml_loose_i++;
+                next;
+            }
+
+            if (!$ml_loose_in_block && $ml_loose_line =~ /^\@\@(?:\s|\z)/s) {
+                my integer $ml_loose_start = $ml_loose_i;
+                while ($ml_loose_start > 0) {
+                    my string $ml_loose_prev = $out_lines->[$ml_loose_start - 1];
+                    last if !is_loose_unified_diff_payload_line($ml_loose_prev);
+                    $ml_loose_start--;
+                }
+
+                my integer $ml_loose_end = $ml_loose_i + 1;
+                while ($ml_loose_end < scalar(@{$out_lines}) && is_loose_unified_diff_payload_line($out_lines->[$ml_loose_end])) {
+                    $ml_loose_end++;
+                }
+
+                while ($ml_loose_start < $ml_loose_end && $out_lines->[$ml_loose_start] =~ /^\s*\z/s) {
+                    $ml_loose_start++;
+                }
+                while ($ml_loose_end > $ml_loose_start && $out_lines->[$ml_loose_end - 1] =~ /^\s*\z/s) {
+                    $ml_loose_end--;
+                }
+
+                if ($ml_loose_start < $ml_loose_end) {
+                    while (scalar(@{$ml_loose_lines}) > $ml_loose_start) {
+                        pop @{$ml_loose_lines};
+                    }
+                    push @{$ml_loose_lines}, '```diff';
+                    for (my integer $ml_loose_j = $ml_loose_start; $ml_loose_j < $ml_loose_end; $ml_loose_j++) {
+                        push @{$ml_loose_lines}, $out_lines->[$ml_loose_j];
+                    }
+                    push @{$ml_loose_lines}, '```';
+                    $ml_loose_here++;
+                    $ml_loose_i = $ml_loose_end;
+                    next;
+                }
+            }
+
+            push @{$ml_loose_lines}, $ml_loose_line;
+            $ml_loose_i++;
+        }
+
+        if ($ml_loose_here > 0) {
+            $out_lines = $ml_loose_lines;
+            $cnt_markdownlint_fenced_loose_unified_diff_runs += $ml_loose_here;
+            dbg('markdownlint: fenced_loose_unified_diff_runs=' . $ml_loose_here);
+        }
+
 
         # MD003: heading style. Convert Setext headings to ATX headings (atx).
         my boolean $md003_in_block = 0;
@@ -6359,6 +6454,58 @@ for (my integer $md012_i = 0; $md012_i < scalar(@{$out_lines}); $md012_i++) {
 
 $out_lines = $md012_new_lines;
 dbg('markdownlint: md012_collapsed_blank_lines=' . $cnt_markdownlint_md012_collapsed_blank_lines);
+    }
+
+    if ($markdownlint) {
+        my hashref $re_tiers = {};
+
+        if ($tierA_enabled) {
+            my hashref $tierA_r = validate_tierA_output($out_lines);
+            my boolean $tierA_pass = 1;
+            $tierA_pass = 0 if ($tierA_r->{'unbalanced_fences'} != 0);
+            $tierA_pass = 0 if ($tierA_r->{'pre_close'} != 0);
+            $tierA_pass = 0 if ($tierA_r->{'diff_markers_outside'} != 0);
+            $re_tiers->{'A'} = { pass => $tierA_pass, details => $tierA_r };
+        }
+
+        if ($tierB_enabled) {
+            my hashref $tierB_r = validate_tierB_output($out_lines);
+            my boolean $tierB_pass = 1;
+            $tierB_pass = 0 if ($tierB_r->{'code_tag_openers_outside'} != 0);
+            $tierB_pass = 0 if ($tierB_r->{'malformed_lang_openers_outside'} != 0);
+
+            if ($policy_backtick_unescape ne 'off') {
+                $tierB_pass = 0 if ($tierB_r->{'backslash_backticks_outside'} != 0);
+            }
+
+            if (!$no_diff_fixes) {
+                $tierB_pass = 0 if ($tierB_r->{'diff_bare_atat_lines'} != 0);
+                $tierB_pass = 0 if ($tierB_r->{'diff_invalid_hunk_lines'} != 0);
+            }
+
+            if ($policy_contamination eq 'deny') {
+                $tierB_pass = 0 if ($tierB_r->{'diff_missing_headers_before_hunk'} != 0);
+            }
+
+            $re_tiers->{'B'} = { pass => $tierB_pass, details => $tierB_r };
+        }
+
+        if ($tierD_enabled) {
+            my boolean $tierD_pass = 1;
+            $tierD_pass = 0 if ($cnt_diff_tierD_forbidden_rewrites != 0);
+
+            $re_tiers->{'D'} = {
+                pass => $tierD_pass,
+                details => {
+                    allowed_rewrites => $cnt_diff_tierD_allowed_rewrites,
+                    forbidden_rewrites => $cnt_diff_tierD_forbidden_rewrites,
+                    dropped_bare_atat => $cnt_diff_tierD_dropped_bare_atat,
+                },
+            };
+        }
+
+        $result->{'fixed_lines'} = $out_lines;
+        $result->{'tiers'} = $re_tiers;
     }
 
     if ($dry_run) {
