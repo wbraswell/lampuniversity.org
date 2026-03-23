@@ -35,7 +35,7 @@ use strict;
 use warnings;
 use types;
 
-our $VERSION = 0.196;
+our $VERSION = 0.200;
 use Getopt::Long qw(GetOptions);
 use Digest::SHA qw(sha256_hex);
 
@@ -136,6 +136,7 @@ my integer $cnt_markdownlint_fenced_patch_blocks = 0;
 my integer $cnt_markdownlint_fenced_ed_diff_blocks = 0;
 my integer $cnt_markdownlint_repaired_broken_diff_fences = 0;
 my integer $cnt_markdownlint_fenced_loose_unified_diff_runs = 0;
+my integer $cnt_markdownlint_fenced_loose_plus_runs = 0;
 my integer $cnt_markdownlint_fenced_diff_continuations = 0;
 my integer $cnt_markdownlint_md031_inserted_blank_lines = 0;
 my integer $cnt_markdownlint_md012_collapsed_blank_lines = 0;
@@ -2323,6 +2324,85 @@ sub is_loose_unified_diff_payload_line {
     return 1 if $line =~ /^[+-].*/s;
 
     return 0;
+}
+
+
+sub is_loose_unified_diff_context_line {
+    my string $line = shift;
+    return 0 if !defined $line;
+
+    return 1 if $line =~ /^\s*\z/s;
+
+    return 0 if $line =~ /^\s*```/s;
+    return 0 if $line =~ /^\s*~~~/s;
+    return 0 if $line =~ /^\s*\*\*(?:You|ChatGPT):\*\*/s;
+    return 0 if $line =~ /^\s*---\s*\z/s;
+    return 0 if $line =~ /^\s*<a\s+data-start=/s;
+
+    return 1;
+}
+
+sub is_horizontal_rule_followed_by_hunk {
+    my integer $idx = shift;
+    my arrayref $aref = shift;
+
+    return 0 if !defined $aref;
+    return 0 if ($idx < 0 || $idx >= scalar(@{$aref}));
+
+    my string $line = $aref->[$idx];
+    return 0 if !defined $line;
+    return 0 if $line !~ /^\s*---\s*\z/s;
+
+    my integer $probe = $idx + 1;
+    while ($probe < scalar(@{$aref})) {
+        my string $probe_line = $aref->[$probe];
+        return 0 if !defined $probe_line;
+
+        if ($probe_line =~ /^\s*\z/s) {
+            $probe++;
+            next;
+        }
+
+        return is_proper_hunk_header($probe_line);
+    }
+
+    return 0;
+}
+
+
+sub should_fence_loose_plus_run {
+    my integer $idx = shift;
+    my arrayref $aref = shift;
+
+    return 0 if !defined $aref;
+    return 0 if ($idx < 0 || $idx >= scalar(@{$aref}));
+
+    my string $line = $aref->[$idx];
+    return 0 if !defined $line;
+    return 0 if $line !~ /^\+/s;
+
+    my integer $j = $idx;
+    my integer $plus_count = 0;
+
+    while ($j < scalar(@{$aref})) {
+        my string $cur = $aref->[$j];
+        last if !defined $cur;
+
+        if ($cur =~ /^\+/s) {
+            $plus_count++;
+            $j++;
+            next;
+        }
+        if ($cur =~ /^\s*\z/s) {
+            $j++;
+            next;
+        }
+
+        last;
+    }
+
+    return 0 if ($plus_count < 2);
+    return 1;
 }
 
 
@@ -4607,8 +4687,23 @@ for my $path (@{$input_paths}) {
                 }
 
                 my integer $ml_loose_end = $ml_loose_i + 1;
-                while ($ml_loose_end < scalar(@{$out_lines}) && is_loose_unified_diff_payload_line($out_lines->[$ml_loose_end])) {
-                    $ml_loose_end++;
+                my boolean $ml_loose_seen_hunk = 1;
+                while ($ml_loose_end < scalar(@{$out_lines})) {
+                    my string $ml_loose_cur = $out_lines->[$ml_loose_end];
+                    last if !defined $ml_loose_cur;
+
+                    if (is_loose_unified_diff_payload_line($ml_loose_cur)) {
+                        $ml_loose_seen_hunk = 1 if ($ml_loose_cur =~ /^\@\@(?:\s|\z)/s);
+                        $ml_loose_end++;
+                        next;
+                    }
+
+                    if ($ml_loose_seen_hunk && is_loose_unified_diff_context_line($ml_loose_cur)) {
+                        $ml_loose_end++;
+                        next;
+                    }
+
+                    last;
                 }
 
                 while ($ml_loose_start < $ml_loose_end && $out_lines->[$ml_loose_start] =~ /^\s*\z/s) {
@@ -4641,6 +4736,71 @@ for my $path (@{$input_paths}) {
             $out_lines = $ml_loose_lines;
             $cnt_markdownlint_fenced_loose_unified_diff_runs += $ml_loose_here;
             dbg('markdownlint: fenced_loose_unified_diff_runs=' . $ml_loose_here);
+        }
+
+        # Fence standalone runs of transcript diff additions that still sit loose in prose
+        # before a later hunk header or other diff material.
+        my integer $ml_plus_here = 0;
+        my arrayref $ml_plus_lines = [];
+        my integer $ml_plus_i = 0;
+        my boolean $ml_plus_in_block = 0;
+
+        while ($ml_plus_i < scalar(@{$out_lines})) {
+            my string $ml_plus_line = $out_lines->[$ml_plus_i];
+
+            my boolean $ml_plus_is_fence = 0;
+            my string $ml_plus_f_lang = '';
+            ($ml_plus_is_fence, $ml_plus_f_lang) = is_triple_fence_line($ml_plus_line);
+            if ($ml_plus_is_fence) {
+                push @{$ml_plus_lines}, $ml_plus_line;
+                $ml_plus_in_block = ($ml_plus_in_block ? 0 : 1);
+                $ml_plus_i++;
+                next;
+            }
+
+            if (!$ml_plus_in_block && should_fence_loose_plus_run($ml_plus_i, $out_lines)) {
+                my integer $ml_plus_start = $ml_plus_i;
+                my integer $ml_plus_end = $ml_plus_i;
+
+                while ($ml_plus_end < scalar(@{$out_lines})) {
+                    my string $ml_plus_cur = $out_lines->[$ml_plus_end];
+                    last if !defined $ml_plus_cur;
+
+                    if ($ml_plus_cur =~ /^\+/s || $ml_plus_cur =~ /^\s*\z/s) {
+                        $ml_plus_end++;
+                        next;
+                    }
+
+                    last;
+                }
+
+                while ($ml_plus_start < $ml_plus_end && $out_lines->[$ml_plus_start] =~ /^\s*\z/s) {
+                    $ml_plus_start++;
+                }
+                while ($ml_plus_end > $ml_plus_start && $out_lines->[$ml_plus_end - 1] =~ /^\s*\z/s) {
+                    $ml_plus_end--;
+                }
+
+                if ($ml_plus_start < $ml_plus_end) {
+                    push @{$ml_plus_lines}, '```diff';
+                    for (my integer $ml_plus_j = $ml_plus_start; $ml_plus_j < $ml_plus_end; $ml_plus_j++) {
+                        push @{$ml_plus_lines}, $out_lines->[$ml_plus_j];
+                    }
+                    push @{$ml_plus_lines}, '```';
+                    $ml_plus_here++;
+                    $ml_plus_i = $ml_plus_end;
+                    next;
+                }
+            }
+
+            push @{$ml_plus_lines}, $ml_plus_line;
+            $ml_plus_i++;
+        }
+
+        if ($ml_plus_here > 0) {
+            $out_lines = $ml_plus_lines;
+            $cnt_markdownlint_fenced_loose_plus_runs += $ml_plus_here;
+            dbg('markdownlint: fenced_loose_plus_runs=' . $ml_plus_here);
         }
 
 
@@ -4851,6 +5011,15 @@ for (my integer $md036_i = 0; $md036_i < scalar(@{$out_lines}); $md036_i++) {
                 next;
             }
             next if $md001_in_block;
+
+            if ($md001_line =~ /^(\s{1,3})(#{1,6})\s+(.*)\z/s) {
+                my string $md001_new_line = $2 . ' ' . $3;
+                if ($md001_new_line ne $md001_line) {
+                    $out_lines->[$md001_i] = $md001_new_line;
+                    $cnt_markdownlint_md001_adjusted_headings++;
+                }
+                $md001_line = $out_lines->[$md001_i];
+            }
 
             if ($md001_line =~ /^(#{1,6})\s+(.*)\z/s) {
                 my integer $md001_level = length($1);
@@ -5806,7 +5975,9 @@ for (my integer $verbatim_fence_i = 0; $verbatim_fence_i < scalar(@{$out_lines})
                 ($verbatim_fence_scan_is_fence, $verbatim_fence_scan_f_lang) = is_triple_fence_line($verbatim_fence_scan_line);
                 last if $verbatim_fence_scan_is_fence;
 
-                last if $verbatim_fence_scan_line =~ /^\s*---\s*\z/s;
+                if ($verbatim_fence_scan_line =~ /^\s*---\s*\z/s) {
+                    last if !is_horizontal_rule_followed_by_hunk($verbatim_fence_scan_k, $out_lines);
+                }
 
                 if ($verbatim_fence_scan_line =~ /^\+/s) {
                     $verbatim_fence_plus++;
@@ -5841,7 +6012,9 @@ for (my integer $verbatim_fence_i = 0; $verbatim_fence_i < scalar(@{$out_lines})
                     ($verbatim_fence_diff_is_fence, $verbatim_fence_diff_f_lang) = is_triple_fence_line($verbatim_fence_diff_line);
                     last if $verbatim_fence_diff_is_fence;
 
-                    last if $verbatim_fence_diff_line =~ /^\s*---\s*\z/s;
+                    if ($verbatim_fence_diff_line =~ /^\s*---\s*\z/s) {
+                        last if !is_horizontal_rule_followed_by_hunk($verbatim_fence_diff_k, $out_lines);
+                    }
 
                     push @{$verbatim_fence_new_lines}, $verbatim_fence_diff_line;
                     $verbatim_fence_diff_k++;
