@@ -35,7 +35,7 @@ use strict;
 use warnings;
 use types;
 
-our $VERSION = 0.200;
+our $VERSION = 0.249;
 use Getopt::Long qw(GetOptions);
 use Digest::SHA qw(sha256_hex);
 
@@ -1998,6 +1998,16 @@ sub parse_triple_fence_line {
 }
 
 
+sub parse_tierB_fence_line {
+    my $line = shift;
+    return (0, undef) if !defined $line;
+
+    my string $trimmed = $line;
+    $trimmed =~ s/^[ 	]+//;
+    return is_triple_fence_line($trimmed);
+}
+
+
 sub is_indented_triple_fence_line {
     my $line = shift;
     return (0, undef) if !defined $line;
@@ -2110,6 +2120,9 @@ sub looks_like_new_block_opener_line {
 sub looks_like_code_continuation_after_pre_close {
     my string $next_line = shift;
     my string $block_lang = shift;
+    my integer $idx = shift;
+    my arrayref $aref = shift;
+    my boolean $no_unescape_backticks = shift;
 
     return 0 if !defined $next_line;
 
@@ -2124,14 +2137,136 @@ sub looks_like_code_continuation_after_pre_close {
 
     return 1 if $next_line =~ /^@@/;
     return 1 if $next_line =~ /^(---|\+\+\+)\s/;
-    # NOTE: Do not treat generic leading space/plus/minus as continuation.
+    return 1 if $next_line =~ /^index\s+[0-9a-f]+\.\.[0-9a-f]+\b/;
+    return 1 if $next_line =~ /^diff --git\b/;
+    # NOTE: Do not treat generic leading space/plus/minus as immediate continuation.
     # That pattern matches normal Markdown prose (bullets, indented text) and can
     # incorrectly keep a diff block open, causing large spill and "extra blank" lines.
-    return 1 if $next_line =~ /^\\ No newline at end of file/;
+    return 1 if $next_line =~ /^\ No newline at end of file/;
+
+    # Some exported diffs insert a premature `</pre>` right before a Markdown heading
+    # like "#### **OO Method Specifications**", followed by more diff payload and the
+    # next @@ header a few lines later. Scan ahead for a real diff continuation before
+    # any clear chat / narrative boundary, but do not let this run arbitrarily far.
+    my integer $limit = 40;
+    my integer $seen = 0;
+    my integer $j = $idx + 1;
+    for (; defined($aref) && $j < scalar(@{$aref}) && $seen < $limit; $j++) {
+        my $l = $aref->[$j];
+        next if !defined $l;
+
+        my string $t = $l;
+        if (!$no_unescape_backticks) {
+            $t =~ s/\`/`/g;
+        }
+
+        next if $t =~ /^\s*\z/;
+
+        return 1 if $t =~ /^@@/;
+        return 1 if $t =~ /^(---|\+\+\+)\s/;
+        return 1 if $t =~ /^index\s+[0-9a-f]+\.\.[0-9a-f]+\b/;
+        return 1 if $t =~ /^diff --git\b/;
+        return 1 if $t =~ /^\ No newline at end of file/;
+
+        return 0 if $t =~ /^\*\*(You|ChatGPT)\*\*:/;
+        return 0 if $t =~ /^\*\*(You|ChatGPT):\*\*/;
+        return 0 if $t =~ /^\*\s*\*\s*\*\s*\z/;
+        return 0 if $t =~ /^<a\s+data-start=/;
+        return 0 if $t =~ /^\s*---\s*\z/;
+
+        if (is_malformed_pre_close($t)) {
+            $seen++;
+            next;
+        }
+
+        # Allow short runs of headings and diff-payload-looking lines while scanning
+        # toward the next strong diff marker.
+        if ($t =~ /^\s*#{1,6}\s/) {
+            $seen++;
+            next;
+        }
+        if ($t =~ /^(?:--|\+-)\s/) {
+            $seen++;
+            next;
+        }
+        if ($t =~ /^[\-\+ ]\s/) {
+            $seen++;
+            next;
+        }
+        if ($t =~ /^\s*#/) {
+            $seen++;
+            next;
+        }
+        if ($t =~ /^\s*[)}\]]\s*[,;]?\s*\z/) {
+            $seen++;
+            next;
+        }
+        if ($t =~ /^\s*(?:['"][^'"]+['"]\s*=>\s*\{?|[A-Za-z_][A-Za-z0-9_:]*\s*(?:=>|=|\{|\(|;))/) {
+            $seen++;
+            next;
+        }
+
+        last;
+    }
 
     return 0;
 }
 
+
+
+sub looks_like_pseudodiff_payload_line {
+    my $t = shift;
+    return 0 if !defined $t;
+
+    return 1 if (
+        $t =~ /^[\+\-](?:\s|[\+\-#`<]|[A-Za-z0-9_])/ ||
+        $t =~ /^ [^\s]/
+    );
+
+    return 0;
+}
+
+
+sub looks_like_pseudodiff_spill_after_pre_close {
+    my integer $idx = shift;
+    my arrayref $aref = shift;
+    my boolean $no_unescape_backticks = shift;
+
+    return 0 if !defined $aref;
+
+    my integer $limit = 40;
+    my integer $j = $idx + 1;
+    my boolean $saw_payload = 0;
+
+    for (; $j < scalar(@{$aref}) && ($j - $idx) <= $limit; $j++) {
+        my $l = $aref->[$j];
+        next if !defined $l;
+
+        my string $t = $l;
+        if (!$no_unescape_backticks) {
+            $t =~ s/\`/`/g;
+        }
+
+        next if $t =~ /^\s*\z/;
+
+        return 1 if ($saw_payload && is_malformed_pre_close($t));
+
+        return ($saw_payload ? 1 : 0) if $t =~ /^\*\*(You|ChatGPT)\*\*:/;
+        return ($saw_payload ? 1 : 0) if $t =~ /^\*\*(You|ChatGPT):\*\*/;
+        return ($saw_payload ? 1 : 0) if $t =~ /^\*\s*\*\s*\*\s*\z/;
+        return ($saw_payload ? 1 : 0) if $t =~ /^<a\s+data-start=/;
+        return ($saw_payload ? 1 : 0) if $t =~ /^\s*---\s*\z/;
+
+        if (looks_like_pseudodiff_payload_line($t)) {
+            $saw_payload = 1;
+            next;
+        }
+
+        return $saw_payload ? 1 : 0;
+    }
+
+    return $saw_payload ? 1 : 0;
+}
 
 sub looks_like_chat_boundary_soon_after_pre_close {
     my integer $idx = shift;
@@ -2168,6 +2303,7 @@ sub looks_like_chat_boundary_soon_after_pre_close {
     }
 
     my integer $j = $idx + 1;
+    my boolean $saw_pseudodiff_payload = 0;
     for (; $j < scalar(@{$aref}) && $seen < $limit; $j++) {
         my $l = $aref->[$j];
         next if !defined $l;
@@ -2179,13 +2315,22 @@ sub looks_like_chat_boundary_soon_after_pre_close {
 
         next if $t =~ /^\s*\z/;
 
-        return 1 if $t =~ /^\*\*(You|ChatGPT)\*\*:/;
-        return 1 if $t =~ /^\*\*(You|ChatGPT):\*\*/;
-        return 1 if $t =~ /^\*\s*\*\s*\*\s*\z/;
-        return 1 if $t =~ /^<a\s+data-start=/;
-        return 1 if $t =~ /^\s*#{1,6}\s/;
+        return ($saw_pseudodiff_payload ? 0 : 1) if $t =~ /^\*\*(You|ChatGPT)\*\*:/;
+        return ($saw_pseudodiff_payload ? 0 : 1) if $t =~ /^\*\*(You|ChatGPT):\*\*/;
+        return ($saw_pseudodiff_payload ? 0 : 1) if $t =~ /^\*\s*\*\s*\*\s*\z/;
+        return ($saw_pseudodiff_payload ? 0 : 1) if $t =~ /^<a\s+data-start=/;
+        # Markdown headings are not reliable chat-boundary markers here.
+        # Exported diffs can legitimately contain heading lines between a
+        # premature `</pre>` and the next real @@ hunk header.
+
+        $saw_pseudodiff_payload = 1 if looks_like_pseudodiff_payload_line($t);
 
         if ($t =~ /^\s*---\s*\z/) {
+            if ($saw_pseudodiff_payload) {
+                $seen++;
+                next;
+            }
+
             my integer $k = $j + 1;
             my integer $k_limit = $k + 6;
             my integer $aref_len = scalar(@{$aref});
@@ -2327,6 +2472,19 @@ sub is_loose_unified_diff_payload_line {
 }
 
 
+sub is_loose_unified_diff_header_meta_line {
+    my string $line = shift;
+    return 0 if !defined $line;
+
+    return 1 if $line =~ /^---\s+/s;
+    return 1 if $line =~ /^\+\+\+\s+/s;
+    return 1 if $line =~ /^diff --git\b/s;
+    return 1 if $line =~ /^(?:index|new file mode|deleted file mode|similarity index|rename from|rename to|old mode|new mode)/s;
+
+    return 0;
+}
+
+
 sub is_loose_unified_diff_context_line {
     my string $line = shift;
     return 0 if !defined $line;
@@ -2335,9 +2493,10 @@ sub is_loose_unified_diff_context_line {
 
     return 0 if $line =~ /^\s*```/s;
     return 0 if $line =~ /^\s*~~~/s;
-    return 0 if $line =~ /^\s*\*\*(?:You|ChatGPT):\*\*/s;
+    return 0 if $line =~ /^\s*\*\*(?:You|ChatGPT|Assistant|User)\*\*:\s*\z/s;
     return 0 if $line =~ /^\s*---\s*\z/s;
     return 0 if $line =~ /^\s*<a\s+data-start=/s;
+    return 0 if $line =~ /^\s*\[(?:Updated file|Full patch diff|Download)\b[^\]]*\]\([^)]*\)\s*\z/s;
 
     return 1;
 }
@@ -2507,6 +2666,8 @@ my boolean $diff_relabel_command_only_candidate = 1;
 my boolean $diff_relabel_saw_prompt_or_output = 0;
 my integer $diff_relabel_nonblank_lines = 0;
 my string  $diff_relabel_first_nonblank = '';
+my boolean $diff_relabel_saw_pseudodiff_payload = 0;
+my boolean $diff_relabel_all_nonblank_pseudodiff_payload = 1;
 
 sub reset_diff_block_relabel_state {
     $diff_saw_header_minus = 0;
@@ -2518,6 +2679,8 @@ sub reset_diff_block_relabel_state {
     $diff_relabel_saw_prompt_or_output = 0;
     $diff_relabel_nonblank_lines = 0;
     $diff_relabel_first_nonblank = '';
+    $diff_relabel_saw_pseudodiff_payload = 0;
+    $diff_relabel_all_nonblank_pseudodiff_payload = 1;
 }
 
 sub reset_diff_block_contamination_state {
@@ -2611,6 +2774,13 @@ sub note_diff_block_line_for_relabel {
         if (!defined($diff_relabel_first_nonblank) || $diff_relabel_first_nonblank eq '') {
             $diff_relabel_first_nonblank = $l;
         }
+
+        if (looks_like_pseudodiff_payload_line($l)) {
+            $diff_relabel_saw_pseudodiff_payload = 1;
+        }
+        else {
+            $diff_relabel_all_nonblank_pseudodiff_payload = 0;
+        }
     }
 
     if (looks_like_shell_prompt_line($l) || looks_like_shell_output_line($l)) {
@@ -2623,8 +2793,11 @@ sub note_diff_block_line_for_relabel {
 }
 
 sub choose_non_diff_language_for_diff_block {
+    my boolean $prefer_text = shift;
     my string $first = $diff_relabel_first_nonblank;
     $first //= '';
+
+    return 'text' if $prefer_text;
 
     if ($first =~ /^\s*#!\s*(?:\/bin\/sh|\/usr\/bin\/env\s+sh)\b/) {
         return 'sh';
@@ -2642,10 +2815,24 @@ sub maybe_relabel_non_diff_diff_block {
     return if !defined $block_lang || $block_lang ne 'diff';
     return if $block_open_out_idx < 0;
 
+    my boolean $headers_only_pseudo_diff =
+        (!$diff_saw_hunk_header)
+        && (!$diff_saw_git_header)
+        && $diff_saw_header_minus
+        && $diff_saw_header_plus;
+
+    my boolean $payload_only_pseudo_diff =
+        (!$diff_saw_hunk_header)
+        && (!$diff_saw_git_header)
+        && (!$diff_saw_header_minus)
+        && (!$diff_saw_header_plus)
+        && ($diff_relabel_nonblank_lines > 0)
+        && $diff_relabel_saw_pseudodiff_payload
+        && $diff_relabel_all_nonblank_pseudodiff_payload;
+
     my boolean $is_real_diff =
         $diff_saw_hunk_header
-        || $diff_saw_git_header
-        || ($diff_saw_header_minus && $diff_saw_header_plus);
+        || $diff_saw_git_header;
 
     if ($is_real_diff) {
         dbg("diff-relabel: keep as diff (real diff signals present) open_out_idx=$block_open_out_idx");
@@ -2660,7 +2847,9 @@ sub maybe_relabel_non_diff_diff_block {
     if ($policy_relabel eq 'only-when-certain') {
         my boolean $certain = 0;
 
-        $certain = 1 if $diff_relabel_saw_prompt_or_output;
+        $certain = 1 if $headers_only_pseudo_diff;
+        $certain = 1 if (!$certain && $payload_only_pseudo_diff);
+        $certain = 1 if (!$certain && $diff_relabel_saw_prompt_or_output);
         $certain = 1 if (!$certain && $diff_relabel_command_only_candidate && ($diff_relabel_nonblank_lines > 0));
 
         if (!$certain) {
@@ -2670,7 +2859,7 @@ sub maybe_relabel_non_diff_diff_block {
         }
     }
 
-    my string $lang = choose_non_diff_language_for_diff_block();
+    my string $lang = choose_non_diff_language_for_diff_block($headers_only_pseudo_diff || $payload_only_pseudo_diff);
     dbg("diff-relabel: relabel diff -> " . $lang . " open_out_idx=" . $block_open_out_idx
         . " first_nonblank='" . $diff_relabel_first_nonblank
         . "' saw_prompt_or_output=" . $diff_relabel_saw_prompt_or_output
@@ -2881,7 +3070,7 @@ sub validate_tierA_output {
 
         my boolean $is_fence = 0;
         my string $fence_lang = undef;
-        my @f = is_triple_fence_line($line);
+        my @f = parse_tierB_fence_line($line);
         if ($f[0]) {
             $is_fence = 1;
             $fence_lang = $f[1];
@@ -3444,21 +3633,50 @@ LINE: while ($i < scalar(@{$lines})) {
         my boolean $ignore_close = 0;
 
         # In a diff hunk, a stray `</pre>` is frequently a premature close injected
-        # by the exporter. Only treat it as a real close if the following region
-        # looks like a chat boundary (---, **You**:, **ChatGPT**:, download anchor).
-        if ($block_lang eq 'diff' && $diff_in_hunk) {
-            my boolean $is_boundary = looks_like_chat_boundary_soon_after_pre_close(
-                $i,
-                $lines,
-                $no_unescape_backticks,
-            );
-            $ignore_close = 1 if !$is_boundary;
-        }
+        # by the exporter. The same thing can happen in header-only pseudo-diff
+        # transcript spills that are going to be relabeled away from diff on close.
+        # Only treat it as a real close if the following region looks like a chat
+        # boundary (---, **You**:, **ChatGPT**:, download anchor).
+        if ($block_lang eq 'diff') {
+            my boolean $header_only_pseudo_diff =
+                (!$diff_in_hunk)
+                && (!$diff_saw_git_header)
+                && (!$diff_saw_hunk_header)
+                && $diff_saw_header_minus
+                && $diff_saw_header_plus;
 
-        if (!$ignore_close
-            && looks_like_code_continuation_after_pre_close($next, $block_lang))
-        {
-            $ignore_close = 1;
+            my boolean $is_pseudodiff_spill = 0;
+            if ($header_only_pseudo_diff) {
+                $is_pseudodiff_spill = looks_like_pseudodiff_spill_after_pre_close(
+                    $i,
+                    $lines,
+                    $no_unescape_backticks,
+                );
+            }
+
+            if ($diff_in_hunk || $is_pseudodiff_spill) {
+                my boolean $is_boundary = looks_like_chat_boundary_soon_after_pre_close(
+                    $i,
+                    $lines,
+                    $no_unescape_backticks,
+                );
+
+                my boolean $is_diff_continuation = 0;
+                if ($diff_in_hunk) {
+                    $is_diff_continuation = looks_like_code_continuation_after_pre_close(
+                        $next,
+                        $block_lang,
+                        $i,
+                        $lines,
+                        $no_unescape_backticks,
+                    );
+                }
+                else {
+                    $is_diff_continuation = $is_pseudodiff_spill;
+                }
+
+                $ignore_close = 1 if (!$is_boundary && $is_diff_continuation);
+            }
         }
 
         if ($ignore_close) {
@@ -3759,6 +3977,24 @@ LINE: while ($i < scalar(@{$lines})) {
 
 
         if ($diff_in_hunk) {
+            # Drop stray "@@" separator lines even inside hunks.
+            # These appear in some transcript diffs as visual separators, not real hunk headers.
+            if ($line =~ /^\s*@@\s*\z/) {
+                if ($policy_contamination eq 'flag') {
+                    mark_diff_contaminated($i);
+                }
+                $cnt_diff_contam_dropped_bare_atat++;
+                $diff_contam_curr_dropped_bare_atat++;
+
+                if ($tierD_enabled) {
+                    $cnt_diff_tierD_allowed_rewrites++;
+                    $cnt_diff_tierD_dropped_bare_atat++;
+                }
+
+                $i++;
+                next LINE;
+            }
+
             # In unified diffs, adding an empty line is represented as a single '+' line.
             # Do not rewrite it as '+ ' because that changes patch semantics.
             if ($line =~ /^\+\z/) {
@@ -3833,7 +4069,7 @@ LINE: while ($i < scalar(@{$lines})) {
 
         
         # Drop stray "@@" separator lines outside hunks.
-        if ($line =~ /^@@\s*\z/) {
+        if ($line =~ /^\s*@@\s*\z/) {
             if ($policy_contamination eq 'flag') {
                 mark_diff_contaminated($i);
             }
@@ -4593,7 +4829,31 @@ for my $path (@{$input_paths}) {
                             next;
                         }
 
-                        if ($ml_r_next =~ /^[+-]/s ||
+                        my boolean $ml_r_markdown_download_bullet = 0;
+                        $ml_r_markdown_download_bullet = 1 if $ml_r_next =~ /^[+-]\s+(?:\[(?:Updated file|Full patch diff|Download)\b|(?:Updated file|Full patch diff|Download)\b)/s;
+
+                        my boolean $ml_r_prose_bullet_before_heading = 0;
+                        if ((!$ml_r_markdown_download_bullet) && ($ml_r_next =~ /^[+-]\s+[A-Z]/s)) {
+                            my integer $ml_r_probe = $ml_r_k + 1;
+                            my integer $ml_r_probe_seen = 0;
+                            while ($ml_r_probe < scalar(@{$out_lines}) && $ml_r_probe_seen < 8) {
+                                my string $ml_r_probe_line = $out_lines->[$ml_r_probe];
+                                $ml_r_probe++;
+                                next if $ml_r_probe_line =~ /^\s*\z/s;
+                                if ($ml_r_probe_line =~ /^#{1,6}\s/s) {
+                                    $ml_r_prose_bullet_before_heading = 1;
+                                    last;
+                                }
+                                last if $ml_r_probe_line =~ /^\*\*(?:You|ChatGPT)\*\*:\s*\z/s;
+                                last if (($ml_r_probe_line =~ /^[+-]/s) ||
+                                         ($ml_r_probe_line =~ /^\@\@/s) ||
+                                         ($ml_r_probe_line =~ /^---\s+a\//s) ||
+                                         ($ml_r_probe_line =~ /^\+\+\+\s+b\//s));
+                                $ml_r_probe_seen++;
+                            }
+                        }
+
+                        if ((($ml_r_next =~ /^[+-]/s) && (!$ml_r_markdown_download_bullet) && (!$ml_r_prose_bullet_before_heading)) ||
                             $ml_r_next =~ /^\@\@/s ||
                             $ml_r_next =~ /^---\s+a\//s ||
                             $ml_r_next =~ /^\+\+\+\s+b\//s) {
@@ -4608,6 +4868,21 @@ for my $path (@{$input_paths}) {
                         my integer $ml_r_seek_limit = 10000;
 
                         for (my integer $ml_r_m = $ml_r_close_i + 1; $ml_r_m < scalar(@{$out_lines}) && ($ml_r_m - $ml_r_close_i) < $ml_r_seek_limit; $ml_r_m++) {
+                            if ($out_lines->[$ml_r_m] =~ /^[A-Za-z][A-Za-z0-9_+\-]*`/s) {
+                                $ml_r_end_i = $ml_r_m;
+                                last;
+                            }
+
+                            if ($out_lines->[$ml_r_m] =~ /^\s{0,3}#{1,6}\s/s) {
+                                $ml_r_end_i = $ml_r_m;
+                                last;
+                            }
+
+                            if ($out_lines->[$ml_r_m] =~ /^\s*\[(?:Updated file|Full patch diff|Download)\b[^\]]*\]\([^)]*\)\s*\z/s) {
+                                $ml_r_end_i = $ml_r_m;
+                                last;
+                            }
+
                             if ($out_lines->[$ml_r_m] =~ /^---\s*\z/s) {
                                 my integer $ml_r_n = $ml_r_m + 1;
                                 while ($ml_r_n < scalar(@{$out_lines}) && $out_lines->[$ml_r_n] =~ /^\s*\z/s) {
@@ -4633,9 +4908,10 @@ for my $path (@{$input_paths}) {
 
                         for (my integer $ml_r_p = $ml_r_open_i + 1; $ml_r_p < $ml_r_end_i; $ml_r_p++) {
                             my string $ml_r_payload = $out_lines->[$ml_r_p];
-                            if ($ml_r_payload =~ /^[ \t]{0,3}```/s) {
-                                $ml_r_payload = '    ' . $ml_r_payload;
-                            }
+                            my string $ml_r_payload_trimmed = $ml_r_payload;
+                            $ml_r_payload_trimmed =~ s/^[ \t]+//;
+                            my @ml_r_payload_fence = is_triple_fence_line($ml_r_payload_trimmed);
+                            next if $ml_r_payload_fence[0];
                             push @{$ml_repaired_lines}, $ml_r_payload;
                         }
 
@@ -4682,8 +4958,57 @@ for my $path (@{$input_paths}) {
                 my integer $ml_loose_start = $ml_loose_i;
                 while ($ml_loose_start > 0) {
                     my string $ml_loose_prev = $out_lines->[$ml_loose_start - 1];
-                    last if !is_loose_unified_diff_payload_line($ml_loose_prev);
+
+                    if ($ml_loose_prev =~ /^\s*\z/s) {
+                        my integer $ml_loose_probe = $ml_loose_start - 2;
+                        while ($ml_loose_probe >= 0 && $out_lines->[$ml_loose_probe] =~ /^\s*\z/s) {
+                            $ml_loose_probe--;
+                        }
+                        last if ($ml_loose_probe < 0);
+                        last if !(
+                            is_loose_unified_diff_header_meta_line($out_lines->[$ml_loose_probe]) ||
+                            ($out_lines->[$ml_loose_probe] =~ /^[+-].*/s)
+                        );
+                        $ml_loose_start--;
+                        next;
+                    }
+
+                    last if !(
+                        is_loose_unified_diff_header_meta_line($ml_loose_prev) ||
+                        ($ml_loose_prev =~ /^[+-].*/s)
+                    );
                     $ml_loose_start--;
+                }
+
+                my integer $ml_loose_label_idx = $ml_loose_start - 1;
+                while (($ml_loose_label_idx >= 0) && ($out_lines->[$ml_loose_label_idx] =~ /^\s*\z/s)) {
+                    $ml_loose_label_idx--;
+                }
+                if (($ml_loose_label_idx >= 0)
+                    and ($ml_loose_start < scalar(@{$out_lines}))
+                    and ($out_lines->[$ml_loose_start] =~ /^[+-]/s)) {
+                    my string $ml_loose_label = $out_lines->[$ml_loose_label_idx];
+                    if ($ml_loose_label =~ /^\s*[A-Za-z][A-Za-z0-9 ()_`\/+\-]{0,120}:\s*\z/s) {
+                        my integer $ml_loose_preface_start = $ml_loose_label_idx;
+                        while ($ml_loose_preface_start > 0) {
+                            my string $ml_loose_preface_prev = $out_lines->[$ml_loose_preface_start - 1];
+
+                            if ($ml_loose_preface_prev =~ /^\s*\z/s) {
+                                my integer $ml_loose_preface_probe = $ml_loose_preface_start - 2;
+                                while (($ml_loose_preface_probe >= 0) && ($out_lines->[$ml_loose_preface_probe] =~ /^\s*\z/s)) {
+                                    $ml_loose_preface_probe--;
+                                }
+                                last if ($ml_loose_preface_probe < 0);
+                                last if ($out_lines->[$ml_loose_preface_probe] !~ /^[+-].*/s);
+                                $ml_loose_preface_start--;
+                                next;
+                            }
+
+                            last if ($ml_loose_preface_prev !~ /^[+-].*/s);
+                            $ml_loose_preface_start--;
+                        }
+                        $ml_loose_start = $ml_loose_preface_start;
+                    }
                 }
 
                 my integer $ml_loose_end = $ml_loose_i + 1;
@@ -4718,8 +5043,20 @@ for my $path (@{$input_paths}) {
                         pop @{$ml_loose_lines};
                     }
                     push @{$ml_loose_lines}, '```diff';
+                    my boolean $ml_loose_copy_in_hunk = 0;
                     for (my integer $ml_loose_j = $ml_loose_start; $ml_loose_j < $ml_loose_end; $ml_loose_j++) {
-                        push @{$ml_loose_lines}, $out_lines->[$ml_loose_j];
+                        my string $ml_loose_copy = $out_lines->[$ml_loose_j];
+                        $ml_loose_copy_in_hunk = 1 if $ml_loose_copy =~ /^@@\s*-\d+/s;
+                        if ($ml_loose_copy_in_hunk
+                            and $ml_loose_copy !~ /^\s*\z/s
+                            and $ml_loose_copy !~ /^[\ \+\-]/s
+                            and $ml_loose_copy !~ /^@@\s*-\d+/s
+                            and $ml_loose_copy !~ /^diff --git\b/s
+                            and $ml_loose_copy !~ /^---\s+/s
+                            and $ml_loose_copy !~ /^\+\+\+\s+/s) {
+                            $ml_loose_copy = ' ' . $ml_loose_copy;
+                        }
+                        push @{$ml_loose_lines}, $ml_loose_copy;
                     }
                     push @{$ml_loose_lines}, '```';
                     $ml_loose_here++;
@@ -4762,11 +5099,28 @@ for my $path (@{$input_paths}) {
                 my integer $ml_plus_start = $ml_plus_i;
                 my integer $ml_plus_end = $ml_plus_i;
 
+                my boolean $ml_plus_seen_hunk = 0;
                 while ($ml_plus_end < scalar(@{$out_lines})) {
                     my string $ml_plus_cur = $out_lines->[$ml_plus_end];
                     last if !defined $ml_plus_cur;
 
                     if ($ml_plus_cur =~ /^\+/s || $ml_plus_cur =~ /^\s*\z/s) {
+                        $ml_plus_end++;
+                        next;
+                    }
+
+                    if (is_horizontal_rule_followed_by_hunk($ml_plus_end, $out_lines)) {
+                        $ml_plus_end++;
+                        next;
+                    }
+
+                    if (is_loose_unified_diff_payload_line($ml_plus_cur)) {
+                        $ml_plus_seen_hunk = 1 if ($ml_plus_cur =~ /^\@\@(?:\s|\z)/s);
+                        $ml_plus_end++;
+                        next;
+                    }
+
+                    if ($ml_plus_seen_hunk && is_loose_unified_diff_context_line($ml_plus_cur)) {
                         $ml_plus_end++;
                         next;
                     }
@@ -4781,6 +5135,44 @@ for my $path (@{$input_paths}) {
                     $ml_plus_end--;
                 }
 
+                # Keep trailing transcript diff lines when they sit immediately
+                # before a real hunk header. These transcript exports sometimes carry
+                # a mixed tail of deletions and additions before the next @@ header.
+                my integer $ml_plus_tail_probe = $ml_plus_end;
+                my boolean $ml_plus_tail_saw_diff = 0;
+                while ($ml_plus_tail_probe < scalar(@{$out_lines})) {
+                    my string $ml_plus_tail = $out_lines->[$ml_plus_tail_probe];
+                    last if !defined $ml_plus_tail;
+
+                    if ($ml_plus_tail =~ /^\s*\z/s) {
+                        $ml_plus_tail_probe++;
+                        next;
+                    }
+
+                    if ($ml_plus_tail =~ /^[+-].*/s) {
+                        $ml_plus_tail_saw_diff = 1;
+                        $ml_plus_tail_probe++;
+                        next;
+                    }
+
+                    last;
+                }
+                if (
+                    $ml_plus_tail_saw_diff &&
+                    ($ml_plus_tail_probe < scalar(@{$out_lines})) &&
+                    ($out_lines->[$ml_plus_tail_probe] =~ /^\@\@(?:\s|\z)/s)
+                ) {
+                    $ml_plus_end = $ml_plus_tail_probe;
+                }
+
+                my integer $ml_plus_resume_i = $ml_plus_end;
+                if ($ml_plus_resume_i < scalar(@{$out_lines}) && is_malformed_pre_close($out_lines->[$ml_plus_resume_i])) {
+                    $ml_plus_resume_i++;
+                }
+                if ($ml_plus_resume_i < scalar(@{$out_lines}) && $out_lines->[$ml_plus_resume_i] =~ /^```\s*\z/s) {
+                    $ml_plus_resume_i++;
+                }
+
                 if ($ml_plus_start < $ml_plus_end) {
                     push @{$ml_plus_lines}, '```diff';
                     for (my integer $ml_plus_j = $ml_plus_start; $ml_plus_j < $ml_plus_end; $ml_plus_j++) {
@@ -4788,7 +5180,7 @@ for my $path (@{$input_paths}) {
                     }
                     push @{$ml_plus_lines}, '```';
                     $ml_plus_here++;
-                    $ml_plus_i = $ml_plus_end;
+                    $ml_plus_i = $ml_plus_resume_i;
                     next;
                 }
             }
@@ -6627,58 +7019,78 @@ for (my integer $md012_i = 0; $md012_i < scalar(@{$out_lines}); $md012_i++) {
 
 $out_lines = $md012_new_lines;
 dbg('markdownlint: md012_collapsed_blank_lines=' . $cnt_markdownlint_md012_collapsed_blank_lines);
-    }
 
-    if ($markdownlint) {
-        my hashref $re_tiers = {};
+        # Safety-net: rerun a minimal final MD012 collapse immediately before output.
+        # Some earlier rewrite paths can still leave double blank lines in prose.
+        my boolean $md012_final_in_block = 0;
+        my arrayref $md012_final_lines = [];
+        my boolean $md012_final_prev_blank = 0;
 
-        if ($tierA_enabled) {
-            my hashref $tierA_r = validate_tierA_output($out_lines);
-            my boolean $tierA_pass = 1;
-            $tierA_pass = 0 if ($tierA_r->{'unbalanced_fences'} != 0);
-            $tierA_pass = 0 if ($tierA_r->{'pre_close'} != 0);
-            $tierA_pass = 0 if ($tierA_r->{'diff_markers_outside'} != 0);
-            $re_tiers->{'A'} = { pass => $tierA_pass, details => $tierA_r };
-        }
+        for (my integer $md012_final_i = 0; $md012_final_i < scalar(@{$out_lines}); $md012_final_i++) {
+            my string $md012_final_line = $out_lines->[$md012_final_i];
 
-        if ($tierB_enabled) {
-            my hashref $tierB_r = validate_tierB_output($out_lines);
-            my boolean $tierB_pass = 1;
-            $tierB_pass = 0 if ($tierB_r->{'code_tag_openers_outside'} != 0);
-            $tierB_pass = 0 if ($tierB_r->{'malformed_lang_openers_outside'} != 0);
-
-            if ($policy_backtick_unescape ne 'off') {
-                $tierB_pass = 0 if ($tierB_r->{'backslash_backticks_outside'} != 0);
+            my boolean $md012_final_is_fence = 0;
+            my string $md012_final_f_lang = '';
+            ($md012_final_is_fence, $md012_final_f_lang) = is_triple_fence_line($md012_final_line);
+            if (!$md012_final_is_fence) {
+                ($md012_final_is_fence, $md012_final_f_lang) = is_indented_triple_fence_line($md012_final_line);
             }
 
-            if (!$no_diff_fixes) {
-                $tierB_pass = 0 if ($tierB_r->{'diff_bare_atat_lines'} != 0);
-                $tierB_pass = 0 if ($tierB_r->{'diff_invalid_hunk_lines'} != 0);
+            if ($md012_final_is_fence) {
+                push @{$md012_final_lines}, $md012_final_line;
+                $md012_final_in_block = ($md012_final_in_block ? 0 : 1);
+                $md012_final_prev_blank = 0;
+                next;
             }
 
-            if ($policy_contamination eq 'deny') {
-                $tierB_pass = 0 if ($tierB_r->{'diff_missing_headers_before_hunk'} != 0);
+            if ($md012_final_in_block) {
+                push @{$md012_final_lines}, $md012_final_line;
+                next;
             }
 
-            $re_tiers->{'B'} = { pass => $tierB_pass, details => $tierB_r };
+            if ($md012_final_line =~ /^\s*\z/s) {
+                next if $md012_final_prev_blank;
+                push @{$md012_final_lines}, '';
+                $md012_final_prev_blank = 1;
+                next;
+            }
+
+            push @{$md012_final_lines}, $md012_final_line;
+            $md012_final_prev_blank = 0;
         }
 
-        if ($tierD_enabled) {
-            my boolean $tierD_pass = 1;
-            $tierD_pass = 0 if ($cnt_diff_tierD_forbidden_rewrites != 0);
+        $out_lines = $md012_final_lines;
 
-            $re_tiers->{'D'} = {
-                pass => $tierD_pass,
-                details => {
-                    allowed_rewrites => $cnt_diff_tierD_allowed_rewrites,
-                    forbidden_rewrites => $cnt_diff_tierD_forbidden_rewrites,
-                    dropped_bare_atat => $cnt_diff_tierD_dropped_bare_atat,
-                },
-            };
+        # Safety-net: drop bare @@ separator lines that still survive outside fenced blocks.
+        # These are transcript artifacts, not real content, and they still trip tierA
+        # as diff_markers_outside when they leak through late rewrite paths.
+        my boolean $final_bare_atat_in_block = 0;
+        my arrayref $final_bare_atat_lines = [];
+
+        for (my integer $final_bare_atat_i = 0; $final_bare_atat_i < scalar(@{$out_lines}); $final_bare_atat_i++) {
+            my string $final_bare_atat_line = $out_lines->[$final_bare_atat_i];
+
+            my boolean $final_bare_atat_is_fence = 0;
+            my string $final_bare_atat_lang = '';
+            ($final_bare_atat_is_fence, $final_bare_atat_lang) = is_triple_fence_line($final_bare_atat_line);
+            if (!$final_bare_atat_is_fence) {
+                ($final_bare_atat_is_fence, $final_bare_atat_lang) = is_indented_triple_fence_line($final_bare_atat_line);
+            }
+
+            if ($final_bare_atat_is_fence) {
+                push @{$final_bare_atat_lines}, $final_bare_atat_line;
+                $final_bare_atat_in_block = ($final_bare_atat_in_block ? 0 : 1);
+                next;
+            }
+
+            if ($final_bare_atat_line =~ /^\s*@@\s*\z/s) {
+                next;
+            }
+
+            push @{$final_bare_atat_lines}, $final_bare_atat_line;
         }
 
-        $result->{'fixed_lines'} = $out_lines;
-        $result->{'tiers'} = $re_tiers;
+        $out_lines = $final_bare_atat_lines;
     }
 
     if ($dry_run) {
@@ -6723,6 +7135,72 @@ dbg('markdownlint: md012_collapsed_blank_lines=' . $cnt_markdownlint_md012_colla
         $fail_count++;
         next;
     }
+
+    my arrayref $post_write_lines = [];
+    my filehandleref $post_write_fh;
+    if (!open($post_write_fh, '<', $planned_out_path)) {
+        print STDERR "Failed to reopen output file '$planned_out_path' for validation: $!\n";
+        $fail_count++;
+        next;
+    }
+    while (my $post_write_line = <$post_write_fh>) {
+        chomp $post_write_line;
+        push @{$post_write_lines}, $post_write_line;
+    }
+    if (!close($post_write_fh)) {
+        print STDERR "Failed to close re-opened output file '$planned_out_path': $!\n";
+        $fail_count++;
+        next;
+    }
+
+    my hashref $final_tiers = {};
+
+    if ($tierA_enabled) {
+        my hashref $tierA_r = validate_tierA_output($post_write_lines);
+        my boolean $tierA_pass = 1;
+        $tierA_pass = 0 if ($tierA_r->{'unbalanced_fences'} != 0);
+        $tierA_pass = 0 if ($tierA_r->{'pre_close'} != 0);
+        $tierA_pass = 0 if ($tierA_r->{'diff_markers_outside'} != 0);
+        $final_tiers->{'A'} = { pass => $tierA_pass, details => $tierA_r };
+    }
+
+    if ($tierB_enabled) {
+        my hashref $tierB_r = validate_tierB_output($post_write_lines);
+        my boolean $tierB_pass = 1;
+        $tierB_pass = 0 if ($tierB_r->{'code_tag_openers_outside'} != 0);
+        $tierB_pass = 0 if ($tierB_r->{'malformed_lang_openers_outside'} != 0);
+
+        if ($policy_backtick_unescape ne 'off') {
+            $tierB_pass = 0 if ($tierB_r->{'backslash_backticks_outside'} != 0);
+        }
+
+        if (!$no_diff_fixes) {
+            $tierB_pass = 0 if ($tierB_r->{'diff_bare_atat_lines'} != 0);
+            $tierB_pass = 0 if ($tierB_r->{'diff_invalid_hunk_lines'} != 0);
+        }
+
+        if ($policy_contamination eq 'deny') {
+            $tierB_pass = 0 if ($tierB_r->{'diff_missing_headers_before_hunk'} != 0);
+        }
+
+        $final_tiers->{'B'} = { pass => $tierB_pass, details => $tierB_r };
+    }
+
+    if ($tierD_enabled) {
+        my boolean $tierD_pass = 1;
+        $tierD_pass = 0 if ($cnt_diff_tierD_forbidden_rewrites != 0);
+        $final_tiers->{'D'} = {
+            pass => $tierD_pass,
+            details => {
+                allowed_rewrites => $cnt_diff_tierD_allowed_rewrites,
+                forbidden_rewrites => $cnt_diff_tierD_forbidden_rewrites,
+                dropped_bare_atat => $cnt_diff_tierD_dropped_bare_atat,
+            },
+        };
+    }
+
+    $result->{'fixed_lines'} = $post_write_lines;
+    $result->{'tiers'} = $final_tiers;
 
     my ($tier_s, $fail_s) = build_tier_report($result);
     print STDERR "WROTE '$planned_out_path'$tier_s$fail_s\n";
