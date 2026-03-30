@@ -26,6 +26,7 @@
 #   --debug                  Enable debug logging and write foo__fixed.debug files.
 #   --dry-run                Do not write any files; still run fixes and tier checks.
 #   --clean                  Delete foo__fixed.<suffix> and foo__fixed.debug outputs for each input; leaves inputs intact.
+#   --output-dir DIR         Write outputs under DIR while preserving each input's relative path.
 #   --double-fix             Allow processing inputs already tagged __fixed.<suffix> (disabled by default).
 #   --no-unescape-backticks   Do not convert "\`" to "`".
 #   --no-diff-fixes           Disable diff-specific cleanups.
@@ -35,9 +36,10 @@ use strict;
 use warnings;
 use types;
 
-our $VERSION = 0.249;
+our $VERSION = 0.256;
 use Getopt::Long qw(GetOptions);
 use Digest::SHA qw(sha256_hex);
+use File::Path qw(make_path);
 
 
 # Debugging (optional; to STDERR and optionally to per-file .debug files)
@@ -164,6 +166,7 @@ Usage:
   perl chatgpt_markdown_fix.pl --dry-run input.md
   perl chatgpt_markdown_fix.pl --clean input.md
   Output files are written alongside inputs as: foo__fixed.<suffix>
+  Use --output-dir DIR to write outputs under DIR while preserving input-relative paths.
   Supported input suffixes: .md .markdown .mdown .mkd .mkdn
 Options:
   --help, -h                 Show this help.
@@ -171,6 +174,7 @@ Options:
   --dry-run                  Do not write any files; still run fixes and tier checks.
   --verify                   Verify no data loss by comparing input to its output; fails if content is missing.
   --clean                    Delete foo__fixed.<suffix> and foo__fixed.debug outputs for each input; leaves inputs intact.
+  --output-dir DIR            Write outputs under DIR while preserving each input's relative path.
   --double-fix             Allow processing inputs already tagged __fixed.<suffix> (disabled by default).
   --debug                    Enable debug logging and write foo__fixed.debug files.
   --no-debug                 Disable debug logging and do not write .debug files.
@@ -207,7 +211,11 @@ sub is_already_fixed_input_filename {
 
 sub compute_fixed_output_path {
     my string $path = shift;
+    my string $target_output_dir = shift;
     return '' if !defined $path;
+
+    $target_output_dir = '' if !defined $target_output_dir;
+    $target_output_dir =~ s{/+\z}{};
 
     my string $out = $path;
     if ($out !~ /\.(md|markdown|mdown|mkd|mkdn)\z/) {
@@ -215,7 +223,58 @@ sub compute_fixed_output_path {
     }
 
     $out =~ s/\.(md|markdown|mdown|mkd|mkdn)\z/__fixed.$1/;
-    return $out;
+    return $out if $target_output_dir eq '';
+
+    my string $rel = $path;
+    $rel =~ s{^\./+}{};
+    $rel =~ s{^/+}{};
+    $rel =~ s/\.(md|markdown|mdown|mkd|mkdn)\z/__fixed.$1/;
+
+    return $target_output_dir . '/' . $rel;
+}
+
+
+sub compute_debug_output_path {
+    my string $fixed_path = shift;
+    return '' if !defined $fixed_path;
+
+    my string $dbg_path = $fixed_path;
+    $dbg_path =~ s/\.(md|markdown|mdown|mkd|mkdn)\z/.debug/;
+    if ($dbg_path eq $fixed_path) {
+        $dbg_path = $fixed_path . '.debug';
+    }
+
+    return $dbg_path;
+}
+
+
+sub ensure_parent_directory_exists {
+    my string $path = shift;
+    return '' if !defined $path;
+    return '' if $path eq '';
+
+    my string $parent = $path;
+    $parent =~ s{/[^/]+\z}{};
+
+    return '' if $parent eq $path;
+    return '' if $parent eq '';
+    return '' if -d $parent;
+
+    my arrayref $errors = [];
+    make_path($parent, { error => \$errors });
+
+    return '' if -d $parent;
+
+    if (@{$errors}) {
+        for my $error_entry (@{$errors}) {
+            my ($failed_path, $failed_message) = %{$error_entry};
+            next if !defined $failed_path;
+            next if !defined $failed_message;
+            return 'make_path failed for ' . $failed_path . ': ' . $failed_message;
+        }
+    }
+
+    return 'failed to create parent directory for path ' . $path;
 }
 
 
@@ -443,6 +502,7 @@ sub canonicalize_diff_region {
     for my $raw (@{$lines}) {
         my string $l = $raw;
         $l = '' if !defined $l;
+        $l = strip_leading_ui_svg_use_prefix_line($l);
 
         next if $l =~ /^\@\@/;
         next if $l =~ /^---\s/;
@@ -821,6 +881,7 @@ sub canonicalize_for_verify {
     for my $raw (@{$lines}) {
         my string $line = $raw;
         $line = '' if !defined $line;
+        $line = strip_leading_ui_svg_use_prefix_line($line);
 
         $line =~ s{<code\b[^>]*>}{}sig;
         $line =~ s{</code>}{}sig;
@@ -928,9 +989,36 @@ sub extract_anchors {
 }
 
 
+sub strip_leading_ui_svg_use_prefix_line {
+    my string $line = shift;
+    $line = '' if !defined $line;
+
+    $line =~ s/^(\s*)<use\b[^>]*>\s*<\/use>(?=\S)/$1/is;
+
+    # Some ChatGPT UI exports glue the block-type label directly onto the first
+    # payload line after the leading SVG icon, for example:
+    #   Diff--- a/file
+    #   Perlmy $x = 1;
+    #   Bashrm -rf tmp
+    #   Plain texttotal 6
+    # Strip only those known UI labels when the following payload strongly looks
+    # like diff / Perl / shell / plain-text output, so the real content begins at
+    # the start of the line again.
+    $line =~ s/^(\s*)Diff\s*(?=(?:---\s|\+\+\+\s|\@\@(?:\s|\z)|diff --git\b|##\s|#\s))/$1/is;
+    $line =~ s/^(\s*)Perl(?=(?:my\b|our\b|use\b|sub\b|package\b|#|\$|\@|%))/$1/is;
+    $line =~ s/^(\s*)Bash(?=(?:\$|#|rm\b|unset\b|for\b|grep\b|cd\b|ls\b|perl\b|prove\b|dzil\b|export\b|source\b|find\b|cat\b|git\b))/$1/is;
+    $line =~ s/^(\s*)Plain\ text(?=\S)/$1/is;
+
+    return $line;
+}
+
+
 sub _verify_strip_code_wrappers_line {
     my string $line = shift;
     $line = '' if !defined $line;
+
+    $line = normalize_simple_inline_code_tag_spans_to_backticks($line);
+    $line = strip_leading_ui_svg_use_prefix_line($line);
 
     $line =~ s{<pre\b[^>]*>}{}sig;
     $line =~ s{</pre>}{}sig;
@@ -1281,6 +1369,7 @@ sub canonicalize_non_diff_code_region_for_verify {
     for my $raw (@{$lines}) {
         my string $l = $raw;
         $l = '' if !defined $l;
+        $l = strip_leading_ui_svg_use_prefix_line($l);
 
         next if $l =~ /^Updated\s+file:\s/;
         next if $l =~ /^Deleted\s+file:\s/;
@@ -1318,6 +1407,7 @@ sub blank_counts_non_diff_code_region_for_verify {
     for my $raw (@{$lines}) {
         my string $l = $raw;
         $l = '' if !defined $l;
+        $l = strip_leading_ui_svg_use_prefix_line($l);
 
         next if $l =~ /^Updated\s+file:\s/;
         next if $l =~ /^Deleted\s+file:\s/;
@@ -1763,6 +1853,7 @@ my boolean $clean = 0;
 my boolean $double_fix = 0;
 my boolean $markdownlint = 0;
 my boolean $verify = 0;
+my string $output_dir = '';
 my string $profile = 'recommended-default';
 
 GetOptions(
@@ -1775,11 +1866,15 @@ GetOptions(
     'double-fix' => \$double_fix,
     'markdownlint' => \$markdownlint,
     'verify' => \$verify,
+    'output-dir=s' => \$output_dir,
     'debug!' => \$debug,
     'profile=s' => \$profile,
 ) or usage_exit(2);
 
 usage_exit(0) if $help;
+
+$output_dir = '' if !defined $output_dir;
+$output_dir =~ s{/+\z}{};
 
 if ($dry_run and $verify) {
     print STDERR "Refusing --verify with --dry-run because outputs are not written\n";
@@ -2117,6 +2212,14 @@ sub looks_like_new_block_opener_line {
     return 0;
 }
 
+sub is_transcript_diff_boundary_heading {
+    my string $line = shift;
+    return 0 if !defined $line;
+    return 0 if $line !~ /^\s*#{1,6}\s+/s;
+    return 1 if $line =~ /^\s*#{1,6}\s+(?:Minimal patch\b|Download\b|Direct download\b|Full patch diff\b|Updated file\b)/is;
+    return 0;
+}
+
 sub looks_like_code_continuation_after_pre_close {
     my string $next_line = shift;
     my string $block_lang = shift;
@@ -2134,6 +2237,7 @@ sub looks_like_code_continuation_after_pre_close {
     # Spill-continuation heuristics are only enabled for unified diffs.
     # Other block types (text/perl/etc.) should close on `</pre> by default.
     return 0 if (!defined($block_lang) || $block_lang ne 'diff');
+    return 0 if is_transcript_diff_boundary_heading($next_line);
 
     return 1 if $next_line =~ /^@@/;
     return 1 if $next_line =~ /^(---|\+\+\+)\s/;
@@ -2181,6 +2285,8 @@ sub looks_like_code_continuation_after_pre_close {
 
         # Allow short runs of headings and diff-payload-looking lines while scanning
         # toward the next strong diff marker.
+        return 0 if is_transcript_diff_boundary_heading($t);
+
         if ($t =~ /^\s*#{1,6}\s/) {
             $seen++;
             next;
@@ -3118,6 +3224,28 @@ sub validate_tierA_output {
 }
 
 
+sub line_has_escaped_literal_fence_example {
+    my string $line = shift;
+
+    return 0 if !defined $line;
+    return 1 if $line =~ /\\`\\`\\`/s;
+
+    return 0;
+}
+
+
+sub normalize_simple_inline_code_tag_spans_to_backticks {
+    my string $line = shift;
+
+    return $line if !defined $line;
+    return $line if $line =~ /^\s*<code>/s;
+
+    $line =~ s{(?<!`)<code>([^<`\n]+)`(?=[\s\.,;:!?\)\]\}]|\z)}{'`' . $1 . '`'}ge;
+
+    return $line;
+}
+
+
 sub validate_tierB_output {
     my arrayref $out_lines = shift;
 
@@ -3186,7 +3314,7 @@ sub validate_tierB_output {
             }
 
             if ($policy_backtick_unescape ne 'off') {
-                if (defined $line) {
+                if (defined $line && !line_has_escaped_literal_fence_example($line)) {
                     my integer $n = 0;
                     $n++ while ($line =~ /\\`/g);
                     $cnt_backslash_backticks_outside += $n;
@@ -3289,13 +3417,19 @@ LINE: while ($i < scalar(@{$lines})) {
             $allow_unescape_backticks = 1;
         }
     }
-    if ($allow_unescape_backticks) {
+    if ($allow_unescape_backticks && !line_has_escaped_literal_fence_example($line)) {
         my integer $n = ($line =~ s/\\`/`/g);
         $cnt_unescaped_backticks += $n if $n;
     }
 
     # If not in code, handle UI-export artifacts and other prose-level repairs.
     if (!$in_block) {
+        my string $ui_svg_old = $line;
+        $line = strip_leading_ui_svg_use_prefix_line($line);
+        if ($line ne $ui_svg_old) {
+            dbg('strip-ui-svg-use: input_idx=' . $i);
+        }
+
         # Unwrap ChatGPT UI export anchors like:
         #   <a ... class="cursor-pointer">Download ...</a>
         # Preserve only the visible text.
@@ -3307,6 +3441,12 @@ LINE: while ($i < scalar(@{$lines})) {
                 $cnt_unwrapped_html_anchors++;
                 dbg('unwrap-anchor: input_idx=' . $i);
             }
+        }
+
+        my string $inline_code_old = $line;
+        $line = normalize_simple_inline_code_tag_spans_to_backticks($line);
+        if ($line ne $inline_code_old) {
+            dbg('inline-code: normalized simple <code>...` span at input_idx=' . $i);
         }
 
         # If a UI export produced a multi-line inline code span that starts with
@@ -4381,7 +4521,7 @@ for my $path (@{$input_paths}) {
         # Allow directly cleaning a previously generated __fixed.<suffix> file when passed explicitly.
         $planned_out_path = $path;
     } else {
-        $planned_out_path = compute_fixed_output_path($path);
+        $planned_out_path = compute_fixed_output_path($path, $output_dir);
     }
     dbg("output: planned fixed path='" . $planned_out_path . "'");
 
@@ -4399,11 +4539,7 @@ for my $path (@{$input_paths}) {
     my boolean $blocked_dbg = 0;
 
     if ($debug || $clean) {
-        $planned_dbg_path = $planned_out_path;
-        $planned_dbg_path =~ s/\.(md|markdown|mdown|mkd|mkdn)\z/.debug/;
-        if ($planned_dbg_path eq $planned_out_path) {
-            $planned_dbg_path = $planned_out_path . '.debug';
-        }
+        $planned_dbg_path = compute_debug_output_path($planned_out_path);
         $dbg_exists = (-e $planned_dbg_path ? 1 : 0);
         $blocked_dbg = ($dbg_exists && !$overwrite ? 1 : 0);
         if ($debug && !$clean) {
@@ -5300,7 +5436,7 @@ for my $path (@{$input_paths}) {
             }
             next if $md025_in_block;
 
-            if ($md025_line =~ /^(\s*(?:>\s*)*)([ \t]{0,3})#\s+(\S.*)\z/s) {
+            if ($md025_line =~ /^((?:>\s*)*)([ \t]{0,3})#\s+(\S.*)\z/s) {
                 my string $md025_prefix = $1;
                 my string $md025_indent = $2;
                 my string $md025_rest = $3;
@@ -7122,6 +7258,13 @@ dbg('markdownlint: md012_collapsed_blank_lines=' . $cnt_markdownlint_md012_colla
         next;
     }
 
+    my string $out_parent_error = ensure_parent_directory_exists($planned_out_path);
+    if ($out_parent_error ne '') {
+        print STDERR "Failed to prepare output path '$planned_out_path': $out_parent_error\n";
+        $fail_count++;
+        next;
+    }
+
     my $out_fh;
     if (!open($out_fh, '>', $planned_out_path)) {
         print STDERR "Failed to open output file '$planned_out_path' for writing: $!\n";
@@ -7206,6 +7349,13 @@ dbg('markdownlint: md012_collapsed_blank_lines=' . $cnt_markdownlint_md012_colla
     print STDERR "WROTE '$planned_out_path'$tier_s$fail_s\n";
 
     if ($debug) {
+        my string $dbg_parent_error = ensure_parent_directory_exists($planned_dbg_path);
+        if ($dbg_parent_error ne '') {
+            print STDERR "Failed to prepare debug output path '$planned_dbg_path': $dbg_parent_error\n";
+            $fail_count++;
+            next;
+        }
+
         my $dbg_fh;
         if (!open($dbg_fh, '>', $planned_dbg_path)) {
             print STDERR "Failed to open debug output file '$planned_dbg_path' for writing: $!\n";

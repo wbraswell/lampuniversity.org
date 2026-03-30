@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-# chatgpt_markdown_fix_repo.sh v0.014
+# chatgpt_markdown_fix_repo.sh v0.016
 
 set -o pipefail
 shopt -s nullglob
@@ -26,6 +26,9 @@ Wrapper options (must appear before "--"):
 
   --artifacts-dir DIR
       Directory to write run log and tarball. Default: /tmp
+
+  --output-dir DIR
+      Write produced '*__fixed.*' outputs under DIR while preserving input-relative paths.
 
   --keep-artifacts
       Do not delete older chatgpt_markdown_fix__*.{log,tar.gz} files (and related lint logs) in artifacts-dir.
@@ -78,12 +81,55 @@ _self_check_strip_no_compare() {
     '
 }
 
+compute_fixed_output_path() {
+    local in_f="$1"
+    local output_dir="$2"
+    local out_f=''
+    local rel_f=''
+
+    if [[ "${in_f}" == *.* ]]; then
+        out_f="${in_f%.*}__fixed.${in_f##*.}"
+    else
+        out_f="${in_f}__fixed"
+    fi
+
+    if [[ -z "${output_dir}" ]]; then
+        printf '%s\n' "${out_f}"
+        return 0
+    fi
+
+    rel_f="${in_f#./}"
+    while [[ "${rel_f}" == /* ]]; do
+        rel_f="${rel_f#/}"
+    done
+
+    if [[ "${rel_f}" == *.* ]]; then
+        out_f="${rel_f%.*}__fixed.${rel_f##*.}"
+    else
+        out_f="${rel_f}__fixed"
+    fi
+
+    printf '%s\n' "${output_dir%/}/${out_f}"
+}
+
+compute_debug_output_path() {
+    local fixed_f="$1"
+    local dbg_f="${fixed_f}"
+
+    dbg_f="${dbg_f%.*}.debug"
+    if [[ "${dbg_f}" == "${fixed_f}" ]]; then
+        dbg_f="${fixed_f}.debug"
+    fi
+
+    printf '%s\n' "${dbg_f}"
+}
 
 # Defaults
 REPO_DIR=""
 REPO_DIR_SET=0
 INPUTS_SET=0
 ARTIFACTS_DIR="/tmp"
+OUTPUT_DIR=""
 KEEP_ARTIFACTS=0
 DO_CLEAN=1
 RUN_LINT=0
@@ -124,6 +170,14 @@ while (( $# )); do
             ;;
         --artifacts-dir=*)
             ARTIFACTS_DIR="${1#--artifacts-dir=}"
+            shift
+            ;;
+        --output-dir)
+            OUTPUT_DIR="$2"
+            shift 2
+            ;;
+        --output-dir=*)
+            OUTPUT_DIR="${1#--output-dir=}"
             shift
             ;;
         --keep-artifacts)
@@ -217,6 +271,11 @@ if (( KEEP_ARTIFACTS == 0 )); then
 fi
 
 : > "${RUN_LOG}"
+
+RUN_FIXER_ARGS=("${FIXER_ARGS[@]}")
+if (( SELF_CHECK_ONLY == 0 )) && [[ -n "${OUTPUT_DIR}" ]]; then
+    RUN_FIXER_ARGS+=(--output-dir "${OUTPUT_DIR}")
+fi
 
 SELF_DIR=""
 SELF_DIFF=""
@@ -447,6 +506,7 @@ echo "INPUT_COUNT: ${#INPUT_FILES[@]}" | tee -a "${RUN_LOG}"
 echo "RUN_LINT: ${RUN_LINT}" | tee -a "${RUN_LOG}"
 echo "PROMOTE: ${PROMOTE}" | tee -a "${RUN_LOG}"
 echo "SELF_CHECK: ${SELF_CHECK}" | tee -a "${RUN_LOG}"
+echo "OUTPUT_DIR: ${OUTPUT_DIR}" | tee -a "${RUN_LOG}"
 # Promotion mode requires verification and forbids --dry-run.
 if (( PROMOTE == 1 )); then
     RUN_LINT=1
@@ -474,7 +534,7 @@ fi
 CLEAN_EXIT=0
 if (( DO_CLEAN == 1 )); then
     echo "[[[ CLEANING... ]]]" | tee -a "${RUN_LOG}"
-    "${FIXER}" --clean "${FIXER_ARGS[@]}" "${INPUT_FILES[@]}" >> "${RUN_LOG}" 2>&1
+    "${FIXER}" --clean "${RUN_FIXER_ARGS[@]}" "${INPUT_FILES[@]}" >> "${RUN_LOG}" 2>&1
     CLEAN_EXIT=$?
     if (( CLEAN_EXIT != 0 )); then
         echo "Clean step failed with exit code ${CLEAN_EXIT}" 1>&2
@@ -484,7 +544,7 @@ if (( DO_CLEAN == 1 )); then
 fi
 
 echo "[[[ FIXING... ]]]" | tee -a "${RUN_LOG}"
-"${FIXER}" "${FIXER_ARGS[@]}" "${INPUT_FILES[@]}" >> "${RUN_LOG}" 2>&1
+"${FIXER}" "${RUN_FIXER_ARGS[@]}" "${INPUT_FILES[@]}" >> "${RUN_LOG}" 2>&1
 FIXER_EXIT=$?
 LINT_EXIT=0
 FIXED_FILES=()
@@ -492,12 +552,8 @@ FIXED_DEBUG_FILES=()
 
 # Determine expected fixed outputs for linting and promotion
 for in_f in "${INPUT_FILES[@]}"; do
-    if [[ "${in_f}" == *.* ]]; then
-        out_f="${in_f%.*}__fixed.${in_f##*.}"
-    else
-        out_f="${in_f}__fixed"
-    fi
-    dbg_f="${in_f%.*}__fixed.debug"
+    out_f="$(compute_fixed_output_path "${in_f}" "${OUTPUT_DIR}")"
+    dbg_f="$(compute_debug_output_path "${out_f}")"
 
     if [[ -f "${out_f}" ]]; then
         FIXED_FILES+=("${out_f}")
@@ -588,11 +644,7 @@ if (( PROMOTE == 1 )); then
         echo "[[[ PROMOTING (DELETING ORIGINAL INPUTS)... ]]]" | tee -a "${RUN_LOG}"
         for in_f in "${INPUT_FILES[@]}"; do
             # Only delete if the expected fixed output exists
-            if [[ "${in_f}" == *.* ]]; then
-                out_f="${in_f%.*}__fixed.${in_f##*.}"
-            else
-                out_f="${in_f}__fixed"
-            fi
+            out_f="$(compute_fixed_output_path "${in_f}" "${OUTPUT_DIR}")"
 
             if [[ ! -f "${out_f}" ]]; then
                 echo "PROMOTE: missing fixed output, refusing to delete: ${in_f}" | tee -a "${RUN_LOG}"
