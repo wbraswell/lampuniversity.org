@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-# chatgpt_markdown_fix_repo.sh v0.016
+# chatgpt_markdown_fix_repo.sh v0.018
 
 set -o pipefail
 shopt -s nullglob
@@ -52,6 +52,10 @@ Wrapper options (must appear before "--"):
       Use this marker comment on its own line:
           <!-- no-compare-next-line -->
       The marker line and the immediately following line are excluded from comparisons.
+
+  Automatic verifier preflight
+      When fixer args include --verify, this wrapper first runs
+      'chatgpt_markdown_fix.pl --verify-self-check' and aborts early on failure.
 
   -h, --help
       Show this help.
@@ -277,6 +281,14 @@ if (( SELF_CHECK_ONLY == 0 )) && [[ -n "${OUTPUT_DIR}" ]]; then
     RUN_FIXER_ARGS+=(--output-dir "${OUTPUT_DIR}")
 fi
 
+VERIFY_PRECHECK=0
+for arg in "${FIXER_ARGS[@]}"; do
+    if [[ "${arg}" == '--verify' ]] || [[ "${arg}" == '--verify='* ]]; then
+        VERIFY_PRECHECK=1
+        break
+    fi
+done
+
 SELF_DIR=""
 SELF_DIFF=""
 
@@ -473,6 +485,20 @@ if (( SELF_CHECK == 1 )); then
     fi
 fi
 
+if (( VERIFY_PRECHECK == 1 )); then
+    echo '[[[ STARTING VERIFY SELF-CHECK... ]]]' | tee -a "${RUN_LOG}"
+    echo "PWD: $(pwd)" | tee -a "${RUN_LOG}"
+    echo "FIXER: ${FIXER}" | tee -a "${RUN_LOG}"
+    "${FIXER}" --verify-self-check >> "${RUN_LOG}" 2>&1
+    VERIFY_PRECHECK_EXIT=$?
+    echo "VERIFY_PRECHECK_EXIT: ${VERIFY_PRECHECK_EXIT}" | tee -a "${RUN_LOG}"
+    if (( VERIFY_PRECHECK_EXIT != 0 )); then
+        echo '[[[ VERIFY SELF-CHECK FAIL ]]]' | tee -a "${RUN_LOG}"
+        exit "${VERIFY_PRECHECK_EXIT}"
+    fi
+    echo '[[[ VERIFY SELF-CHECK PASS ]]]' | tee -a "${RUN_LOG}"
+fi
+
 # Build input file list
 INPUT_FILES=()
 declare -A _seen
@@ -507,6 +533,8 @@ echo "RUN_LINT: ${RUN_LINT}" | tee -a "${RUN_LOG}"
 echo "PROMOTE: ${PROMOTE}" | tee -a "${RUN_LOG}"
 echo "SELF_CHECK: ${SELF_CHECK}" | tee -a "${RUN_LOG}"
 echo "OUTPUT_DIR: ${OUTPUT_DIR}" | tee -a "${RUN_LOG}"
+echo "STAGE_DUMP_DIR: ${CHATGPT_MARKDOWN_FIX_STAGE_DIR:-}" | tee -a "${RUN_LOG}"
+echo "STAGE_DUMP_MATCH: ${CHATGPT_MARKDOWN_FIX_STAGE_MATCH:-}" | tee -a "${RUN_LOG}"
 # Promotion mode requires verification and forbids --dry-run.
 if (( PROMOTE == 1 )); then
     RUN_LINT=1
@@ -615,6 +643,11 @@ fi
 
 if [[ -n "${SELF_DIFF}" && -f "${SELF_DIFF}" ]]; then
     TAR_FILES+=("$(realpath "${SELF_DIFF}")")
+fi
+
+# Include deterministic stage snapshots (if configured and present)
+if [[ -n "${CHATGPT_MARKDOWN_FIX_STAGE_DIR:-}" && -d "${CHATGPT_MARKDOWN_FIX_STAGE_DIR}" ]]; then
+    TAR_FILES+=("$(realpath "${CHATGPT_MARKDOWN_FIX_STAGE_DIR}")")
 fi
 
 # Include each input and its produced outputs (if present)
