@@ -36,7 +36,7 @@ use strict;
 use warnings;
 use types;
 
-our $VERSION = 0.348;
+our $VERSION = 0.369;
 use Getopt::Long qw(GetOptions);
 use Digest::SHA qw(sha256_hex);
 use File::Path qw(make_path);
@@ -931,6 +931,17 @@ sub multiset_contains_all {
     return 1;
 }
 
+sub verify_rest_looks_code_like_after_lang_residue {
+    my string $rest = shift;
+    $rest = '' if !defined $rest;
+
+    return 1 if $rest =~ /^\s*(?:return|if|elsif|else|for|foreach|while|sub|my|our|state|use|package|class|method|func|def|SELECT|INSERT|UPDATE|DELETE|\$|\@|\%|\{|\(|\[|\?|:|#)/i;
+    return 1 if $rest =~ /^\s*[A-Za-z_][A-Za-z0-9_]*(?:\s*=>|\s*=|\s*\(|\s*::|\s*->|\s*[;,])/s;
+
+    return 0;
+}
+
+
 sub fence_langs_seen_in_text {
     my string $s = shift;
     $s = '' if !defined $s;
@@ -986,11 +997,12 @@ sub canonicalize_for_verify {
 
         $line = normalize_escaped_inline_code_examples_line($line);
         $line =~ s/\\`/`/sg;
+        $line = normalize_verify_wrapped_list_marker_line($line);
 
         if ($line =~ /^\s{0,3}([A-Za-z0-9_][A-Za-z0-9_+\-]*)`(.*)\z/s) {
             my string $lang = lc($1);
             my string $rest = $2;
-            if (exists $langs->{$lang}) {
+            if ((exists $langs->{$lang}) or verify_rest_looks_code_like_after_lang_residue($rest)) {
                 $line = $rest;
             }
         }
@@ -1092,6 +1104,13 @@ sub extract_anchors {
 
     while ($s =~ m{\bv?[0-9]+\.[0-9]+(?:\.[0-9]+)?(?:_[0-9]+)?(?:_[0-9]+)?\b}sg) {
         my string $v = $&;
+        my integer $start = $-[0];
+        my string $prefix2 = ($start >= 2) ? substr($s, ($start - 2), 2) : '';
+
+        # Reject CSS utility fragments like 'py-0.5' from ChatGPT HTML exports.
+        # Those are styling tokens, not payload version anchors.
+        next if $prefix2 =~ /[A-Za-z]-\z/s;
+
         $uniq->{$v} = 1 if $v ne '';
     }
 
@@ -1258,8 +1277,19 @@ sub verify_line_has_odd_single_backticks_after_inline_strip {
     my string $line = shift;
     $line = '' if !defined $line;
 
-    my string $tmp = $line;
-    $tmp =~ s/`{2,}//g;
+    # Malformed language-openers like:
+    #   diff`--- a/file
+    # and standalone malformed close residue like:
+    #   `</pre>
+    # are handled by dedicated recovery logic elsewhere. If this generic odd-single-
+    # backtick detector fires on them first, verifier canonicalization can merge large
+    # unrelated transcript regions into one giant line.
+    return 0 if defined(parse_malformed_lang_opener($line));
+    return 0 if is_malformed_pre_close($line);
+
+    my string $tmp = normalize_escaped_inline_code_examples_line($line);
+    $tmp = _verify_normalize_inline_code_spans_line($tmp);
+    $tmp =~ s/`{3,}//g;
 
     my integer $count = 0;
     $count++ while ($tmp =~ /`/g);
@@ -1288,6 +1318,17 @@ sub split_verify_line_at_first_single_backtick {
 }
 
 
+sub split_verify_line_at_last_single_backtick {
+    my string $line = shift;
+    return (undef, undef) if !defined $line;
+
+    if ($line =~ /\A(.*)`([^`]*)\z/s) {
+        return ($1, $2);
+    }
+    return (undef, undef);
+}
+
+
 sub normalize_verify_merged_line {
     my string $line = shift;
     $line = '' if !defined $line;
@@ -1297,6 +1338,146 @@ sub normalize_verify_merged_line {
     $line =~ s/\s+\z//s;
 
     return $line;
+}
+
+
+sub normalize_verify_subsequence_candidate_window {
+    my arrayref $lines = shift;
+    $lines = [] if !defined $lines;
+
+    my arrayref $merged = merge_verify_lines_across_dangling_single_backticks($lines);
+    $merged = [] if !defined $merged;
+
+    my string $joined = join("
+", grep { defined $_ and $_ ne '' } @{$merged});
+    $joined = canonicalize_for_verify($joined, fence_langs_seen_in_text($joined));
+    $joined = normalize_verify_merged_line($joined);
+
+    return $joined;
+}
+
+
+sub normalize_verify_wrapped_list_marker_line {
+    my string $line = shift;
+    $line = '' if !defined $line;
+
+    $line =~ s/^(\s*)`((?:[-*+]|[0-9]+\.))`(\s+)/$1 . $2 . $3/se;
+
+    return $line;
+}
+
+
+sub canonicalize_single_verify_trace_line {
+    my string $line = shift;
+    my hashref $langs = shift;
+
+    $line = '' if !defined $line;
+    $langs = {} if !defined $langs;
+
+    my string $l = $line;
+
+    $l = _verify_strip_code_wrappers_line($l);
+
+    $l = normalize_escaped_inline_code_examples_line($l);
+    $l =~ s/\\`/`/sg;
+    $l = normalize_verify_wrapped_list_marker_line($l);
+
+    if ($l =~ /^\s{0,3}([A-Za-z0-9_][A-Za-z0-9_+\-]*)`(.*)\z/s) {
+        my string $lang = lc($1);
+        my string $rest = $2;
+        if ((exists $langs->{$lang}) or verify_rest_looks_code_like_after_lang_residue($rest)) {
+            $l = $rest;
+        }
+    }
+
+    my string $sb = parse_single_backtick_unterminated_line($l);
+    if (defined $sb) {
+        $l = $sb;
+    }
+
+    return '' if $l =~ /^\s*(?:```|~~~)\s*\z/s;
+    return '' if $l =~ /^\s*@@\s*\z/s;
+    return '' if $l =~ /^\s*@@\s*-\d+(?:,\d+)?\s+\+\d+(?:,\d+)?\s+@@/s;
+    return '' if is_malformed_pre_close($l);
+    return '' if $l =~ /^\s*<\/pre>\s*\z/i;
+    return '' if $l =~ /^\s*<\/code>\s*\z/i;
+
+    while ($l =~ /^\s{0,3}>\s?/s) {
+        $l =~ s/^\s{0,3}>\s?//s;
+    }
+
+    my integer $was_heading = 0;
+
+    if ($l =~ /^\s{0,3}#{1,6}\s+/s) {
+        $l =~ s/^\s{0,3}#{1,6}\s+//s;
+        $was_heading = 1;
+    }
+
+    while ($l =~ /^\s*(?:[-*+]|[0-9]+\\\.|[0-9]+\.)\s+/s) {
+        $l =~ s/^\s*(?:[-*+]|[0-9]+\\\.|[0-9]+\.)\s+//s;
+    }
+
+    if ($l =~ /^\s{0,3}([A-Za-z0-9_][A-Za-z0-9_+\-]*)`(.*)\z/s) {
+        my string $lang = lc($1);
+        my string $rest = $2;
+        if ((exists $langs->{$lang}) or verify_rest_looks_code_like_after_lang_residue($rest)) {
+            $l = $rest;
+        }
+    }
+
+    my integer $was_emph = 0;
+    if ($l =~ /^\s*(\*\*|__)(.+?)\1\s*\z/s) {
+        $l = $2;
+        $was_emph = 1;
+    }
+    elsif ($l =~ /^\s*(\*|_)(.+?)\1\s*\z/s) {
+        $l = $2;
+        $was_emph = 1;
+    }
+
+    $l =~ s/\s+/ /sg;
+    $l =~ s/^\s+//s;
+    $l =~ s/\s+\z//s;
+
+    $l = normalize_verify_emphasis_equivalence_line($l);
+
+    return '' if $l =~ /^\s*[-=]{3,}\s*\z/s;
+
+    $l =~ s/<\s*(NEED[^>]+?)\s*>/$1/sg;
+    $l =~ s/\[\s*(NEED[^\]]+?)\s*\]/$1/sg;
+    $l =~ s/<\s*(https?:\/\/[^>]+?)\s*>/$1/sg;
+    $l =~ s/<\s*(mailto:[^>]+?)\s*>/$1/sg;
+
+    if ($l =~ /^<\s*(https?:\/\/[^>]+)\s*>\z/s) {
+        $l = $1;
+    }
+
+    if ($l =~ /^<\s*(mailto:[^>]+)\s*>\z/s) {
+        $l = $1;
+    }
+
+    if ($l =~ /^<\s*(NEED[^>]+)\s*>\z/s) {
+        $l = $1;
+    }
+
+    if ($l =~ /^\[\s*(NEED[^\]]+)\s*\]\z/s) {
+        $l = $1;
+    }
+
+    if ($was_emph) {
+        $l =~ s/[:;,.!?]+\z//s;
+    }
+
+    if ($was_heading) {
+        $l =~ s/[:,.!?]+\z//s;
+    }
+
+    return '' if $l =~ /^`+\z/s;
+    return '' if $l =~ /^[_*]+\z/s;
+
+    return '' if $l eq '';
+
+    return $l;
 }
 
 
@@ -1310,10 +1491,17 @@ sub merge_verify_lines_across_dangling_single_backticks {
         my string $line = $raw;
         $line = '' if !defined $line;
 
+        my string $merged_tail_after_backtick = '';
+        if (scalar(@{$merged}) > 0) {
+            my (undef, $tmp_tail_after_backtick) = split_verify_line_at_last_single_backtick($merged->[-1]);
+            $merged_tail_after_backtick = $tmp_tail_after_backtick if defined $tmp_tail_after_backtick;
+        }
+
         if ((scalar(@{$merged}) > 0)
             and !verify_line_is_standalone_fence_line($merged->[-1])
             and !verify_line_is_standalone_fence_line($line)
-            and verify_line_has_odd_single_backticks_after_inline_strip($merged->[-1])) {
+            and verify_line_has_odd_single_backticks_after_inline_strip($merged->[-1])
+            and _verify_first_nonblank_line_looks_like_code($merged_tail_after_backtick)) {
             my ($prefix, $suffix) = split_verify_line_at_first_single_backtick($line);
 
             if (defined $prefix) {
@@ -1441,6 +1629,57 @@ sub _verify_bare_fenced_block_is_confident_code {
 }
 
 
+sub _verify_fenced_payload_line_looks_like_outside_prose {
+    my string $line = shift;
+    $line = '' if !defined $line;
+
+    my string $t = $line;
+    $t =~ s/^\s+//s;
+    $t =~ s/\s+\z//s;
+
+    return 0 if $t eq '';
+    return 0 if _verify_first_nonblank_line_looks_like_code($t);
+
+    return 1 if $t =~ /^(?:[-*+]|[0-9]+\.)\s+/s;
+    return 1 if $t =~ /^#{1,6}\s+/s;
+    return 1 if $t =~ /^---+\s*\z/s;
+    return 1 if $t =~ /^(?:user|assistant|chatgpt|codex|system)\b/is;
+
+    return 0;
+}
+
+
+sub _verify_explicit_fence_implicit_close_offset {
+    my arrayref $payload_lines = shift;
+    $payload_lines = [] if !defined $payload_lines;
+
+    my integer $seen_codeish = 0;
+
+    for (my integer $idx = 0; $idx < scalar(@{$payload_lines}); $idx++) {
+        my string $l = $payload_lines->[$idx];
+        $l = '' if !defined $l;
+
+        my string $t = $l;
+        $t =~ s/^\s+//s;
+        $t =~ s/\s+\z//s;
+        next if $t eq '';
+
+        if (_verify_first_nonblank_line_looks_like_code($t)) {
+            $seen_codeish = 1;
+            next;
+        }
+
+        next if not $seen_codeish;
+
+        if (_verify_fenced_payload_line_looks_like_outside_prose($t)) {
+            return $idx;
+        }
+    }
+
+    return -1;
+}
+
+
 sub _verify_fenced_block_looks_like_transcript_noise {
     my string $buf = shift;
     $buf = '' if !defined $buf;
@@ -1551,13 +1790,45 @@ sub extract_code_segments_and_prose_lines_for_verify {
 
             my string $buf = '';
             my integer $k = $i + 1;
+            my arrayref $payload_lines = [];
             for (; $k < $end; $k++) {
                 my string $l = $lines->[$k];
                 $l = '' if !defined $l;
+                push @{$payload_lines}, $l;
                 $buf .= $l . "\n";
             }
             my boolean $is_bare_fence = 0;
             $is_bare_fence = 1 if $line =~ /^\s*[`~]{3,}\s*\z/s;
+
+            if (($close_idx >= 0) and (not $is_bare_fence)) {
+                my integer $implicit_close_offset = _verify_explicit_fence_implicit_close_offset($payload_lines);
+
+                if ($implicit_close_offset >= 0) {
+                    my string $strict_buf = '';
+                    for (my integer $pi = 0; $pi < $implicit_close_offset; $pi++) {
+                        my string $l = $payload_lines->[$pi];
+                        $l = '' if !defined $l;
+                        $strict_buf .= $l . "\n";
+                    }
+
+                    if ($strict_buf ne '') {
+                        if (_verify_fenced_block_looks_like_transcript_noise($strict_buf)) {
+                            push @{$code_segments_loose}, $strict_buf;
+                        } else {
+                            push @{$code_segments_strict}, $strict_buf;
+                        }
+                    }
+
+                    for (my integer $pi = $implicit_close_offset; $pi < scalar(@{$payload_lines}); $pi++) {
+                        my string $l = $payload_lines->[$pi];
+                        $l = '' if !defined $l;
+                        push @{$prose_lines}, $l;
+                    }
+
+                    $i = $close_idx + 1;
+                    next;
+                }
+            }
 
             if ($close_idx >= 0) {
                 if (_verify_fenced_block_looks_like_transcript_noise($buf)) {
@@ -1913,6 +2184,27 @@ sub line_subsequence_check {
                 $hi++;
                 last;
             }
+
+            my arrayref $candidate_lines = [ $have ];
+            my string $merged_have = $have;
+            my integer $merge_hi = $hi;
+
+            while (($merge_hi + 1) < $h_len and (($merge_hi - $hi) < 2)) {
+                my string $next_have = $haystack->[ $merge_hi + 1 ];
+                $next_have = '' if !defined $next_have;
+                $merge_hi++;
+
+                push @{$candidate_lines}, $next_have;
+                $merged_have = normalize_verify_subsequence_candidate_window($candidate_lines);
+
+                if ($merged_have eq $want) {
+                    $found = 1;
+                    $hi = $merge_hi + 1;
+                    last;
+                }
+            }
+
+            last if $found;
         }
 
         if (not $found) {
@@ -1951,7 +2243,54 @@ sub line_multiset_inclusion_check {
         $want = '' if !defined $want;
 
         if (!exists $counts->{$want} or $counts->{$want} <= 0) {
-            return (0, $want, $ni);
+            my arrayref $used = [];
+            for (my integer $ui = 0; $ui < scalar(@{$haystack}); $ui++) {
+                push @{$used}, 0;
+            }
+
+            my integer $scan_ni = 0;
+            while ($scan_ni < scalar(@{$needle})) {
+                my string $scan_want = $needle->[$scan_ni];
+                $scan_want = '' if !defined $scan_want;
+
+                my integer $matched = 0;
+
+                for (my integer $hi = 0; $hi < scalar(@{$haystack}); $hi++) {
+                    next if $used->[$hi];
+
+                    my string $have = $haystack->[$hi];
+                    $have = '' if !defined $have;
+
+                    next if (($have ne $scan_want)
+                        and ((length $scan_want) < 40)
+                        and (index($have, $scan_want) < 0));
+                    next if (($have ne $scan_want)
+                        and ((length $scan_want) >= 40)
+                        and (index($have, $scan_want) < 0));
+
+                    $used->[$hi] = 1;
+                    $matched = 1;
+
+                    my integer $next_ni = $scan_ni + 1;
+                    while ($next_ni < scalar(@{$needle})) {
+                        my string $next_want = $needle->[$next_ni];
+                        $next_want = '' if !defined $next_want;
+                        last if $next_want eq '';
+                        last if (length $next_want) < 40;
+                        last if index($have, $next_want) < 0;
+                        $next_ni++;
+                    }
+
+                    $scan_ni = $next_ni;
+                    last;
+                }
+
+                if (not $matched) {
+                    return (0, $scan_want, $scan_ni);
+                }
+            }
+
+            return (1, undef, -1);
         }
 
         $counts->{$want}--;
@@ -1979,12 +2318,13 @@ sub canonical_lines_for_verify_anywhere {
 
         $l = normalize_escaped_inline_code_examples_line($l);
         $l =~ s/\\`/`/sg;
+        $l = normalize_verify_wrapped_list_marker_line($l);
 
 
         if ($l =~ /^\s{0,3}([A-Za-z0-9_][A-Za-z0-9_+\-]*)`(.*)\z/s) {
             my string $lang = lc($1);
             my string $rest = $2;
-            if (exists $langs->{$lang}) {
+            if ((exists $langs->{$lang}) or verify_rest_looks_code_like_after_lang_residue($rest)) {
                 $l = $rest;
             }
         }
@@ -2020,7 +2360,7 @@ sub canonical_lines_for_verify_anywhere {
         if ($l =~ /^\s{0,3}([A-Za-z0-9_][A-Za-z0-9_+\-]*)`(.*)\z/s) {
             my string $lang = lc($1);
             my string $rest = $2;
-            if (exists $langs->{$lang}) {
+            if ((exists $langs->{$lang}) or verify_rest_looks_code_like_after_lang_residue($rest)) {
                 $l = $rest;
             }
         }
@@ -2094,7 +2434,7 @@ sub canonical_lines_for_verify_anywhere {
         if ($l =~ /^\s{0,3}([A-Za-z0-9_][A-Za-z0-9_+\-]*)`(.*)\z/s) {
             my string $lang = lc($1);
             my string $rest = $2;
-            if (exists $langs->{$lang}) {
+            if ((exists $langs->{$lang}) or verify_rest_looks_code_like_after_lang_residue($rest)) {
                 $l = $rest;
             }
         }
@@ -2214,6 +2554,106 @@ sub verify_artifact_best_output_center_idx {
 }
 
 
+sub verify_artifact_best_raw_center_idx {
+    my string $missing_line = shift;
+    my arrayref $raw_lines = shift;
+    my hashref $langs = shift;
+
+    $missing_line = '' if !defined $missing_line;
+    $raw_lines = [] if !defined $raw_lines;
+    $langs = {} if !defined $langs;
+
+    my integer $count = scalar(@{$raw_lines});
+    return -1 if $count == 0;
+
+    my arrayref $needles = [];
+    while ($missing_line =~ /([A-Za-z0-9_]{4,}|`[^`]+`)/g) {
+        my string $tok = $1;
+        next if !defined $tok;
+        next if $tok eq '';
+        push @{$needles}, $tok;
+    }
+
+    return 0 if scalar(@{$needles}) == 0;
+
+    my integer $best_idx = -1;
+    my integer $best_score = -1;
+
+    for (my integer $i = 0; $i < $count; $i++) {
+        my string $raw = $raw_lines->[$i];
+        $raw = '' if !defined $raw;
+
+        my string $canon = canonicalize_single_verify_trace_line($raw, $langs);
+        next if $canon eq '';
+
+        my integer $score = 0;
+        for my $tok (@{$needles}) {
+            next if !defined $tok;
+            $score++ if index($canon, $tok) >= 0;
+        }
+
+        if ($score > $best_score) {
+            $best_score = $score;
+            $best_idx = $i;
+        }
+    }
+
+    return 0 if $best_score <= 0;
+    return $best_idx;
+}
+
+
+sub build_verify_raw_trace_excerpt_lines {
+    my string $raw_text = shift;
+    my string $missing_line = shift;
+    my string $label = shift;
+    my hashref $langs = shift;
+    my integer $radius = shift;
+
+    $raw_text = '' if !defined $raw_text;
+    $missing_line = '' if !defined $missing_line;
+    $label = '' if !defined $label;
+    $langs = {} if !defined $langs;
+    $radius = 5 if !defined $radius;
+
+    my arrayref $raw_lines = [ split(/\n/, normalize_line_endings($raw_text), -1) ];
+    my arrayref $out = [];
+
+    push @{$out}, 'BEGIN ' . $label;
+
+    if (scalar(@{$raw_lines}) == 0) {
+        push @{$out}, '[empty]';
+        push @{$out}, 'END ' . $label;
+        return $out;
+    }
+
+    my integer $center_idx = verify_artifact_best_raw_center_idx($missing_line, $raw_lines, $langs);
+    my integer $start = $center_idx - $radius;
+    my integer $end = $center_idx + $radius;
+    $start = 0 if $start < 0;
+    $end = (scalar(@{$raw_lines}) - 1) if $end > (scalar(@{$raw_lines}) - 1);
+
+    push @{$out}, 'TRACE CENTER IDX: ' . $center_idx;
+
+    for (my integer $i = $start; $i <= $end; $i++) {
+        my string $raw = $raw_lines->[$i];
+        $raw = '' if !defined $raw;
+
+        my string $canon = canonicalize_single_verify_trace_line($raw, $langs);
+        my integer $odd_bt = verify_line_has_odd_single_backticks_after_inline_strip($raw);
+        my integer $fence = verify_line_is_standalone_fence_line($raw);
+        my string $canon_shown = ($canon eq '' ? '[dropped]' : $canon);
+
+        push @{$out}, sprintf('%6d: RAW: %s', ($i + 1), $raw);
+        push @{$out}, '        TRACE odd_single_backticks=' . $odd_bt . ' standalone_fence=' . $fence;
+        push @{$out}, '        TRACE canon=' . $canon_shown;
+    }
+
+    push @{$out}, 'END ' . $label;
+    return $out;
+}
+
+
 sub build_verify_debug_artifact_lines {
     my string $kind = shift;
     my string $in_path = shift;
@@ -2223,6 +2663,9 @@ sub build_verify_debug_artifact_lines {
     my arrayref $out_lines = shift;
     my integer $missing_idx = shift;
     my integer $search_idx = shift;
+    my string $in_raw_text = shift;
+    my string $out_raw_text = shift;
+    my hashref $langs = shift;
 
     $kind = '' if !defined $kind;
     $in_path = '' if !defined $in_path;
@@ -2230,6 +2673,9 @@ sub build_verify_debug_artifact_lines {
     $missing_line = '' if !defined $missing_line;
     $in_lines = [] if !defined $in_lines;
     $out_lines = [] if !defined $out_lines;
+    $in_raw_text = '' if !defined $in_raw_text;
+    $out_raw_text = '' if !defined $out_raw_text;
+    $langs = {} if !defined $langs;
 
     my integer $out_center = $search_idx;
     if ($out_center < 0) {
@@ -2244,6 +2690,14 @@ sub build_verify_debug_artifact_lines {
     push @{$artifact}, 'VERIFY ARTIFACT first_missing_line=' . $missing_line;
     push @{$artifact}, @{verify_context_excerpt_lines($in_lines, $missing_idx, 'INPUT CANONICAL CONTEXT', 5)};
     push @{$artifact}, @{verify_context_excerpt_lines($out_lines, $out_center, 'OUTPUT CANONICAL CONTEXT', 5)};
+
+    if ($in_raw_text ne '') {
+        push @{$artifact}, @{build_verify_raw_trace_excerpt_lines($in_raw_text, $missing_line, 'INPUT RAW TRACE CONTEXT', $langs, 5)};
+    }
+
+    if ($out_raw_text ne '') {
+        push @{$artifact}, @{build_verify_raw_trace_excerpt_lines($out_raw_text, $missing_line, 'OUTPUT RAW TRACE CONTEXT', $langs, 5)};
+    }
 
     return $artifact;
 }
@@ -2307,6 +2761,9 @@ sub verify_no_data_lost {
             $out_code_lines,
             $missing_idx,
             $search_idx,
+            join("\n", @{$in_code_lines}),
+            join("\n", @{$out_code_lines}),
+            $langs,
         )};
 
         return 0;
@@ -2400,6 +2857,9 @@ sub verify_no_data_lost {
                 $out_any_lines,
                 $loose_missing_idx,
                 $loose_search_idx,
+                $loose_blob,
+                $out_raw,
+                $langs,
             )};
 
             return 0;
@@ -2435,6 +2895,9 @@ sub verify_no_data_lost {
             $sub_out_lines,
             $sub_missing_idx,
             $sub_search_idx,
+            $in_ordered,
+            $out_raw,
+            $langs,
         )};
 
         return 0;
@@ -2783,6 +3246,26 @@ sub parse_malformed_lang_opener {
         # corrupt the following list item ordering.
         return if $lang =~ /^[0-9]/;
 
+        my string $lang_lc = lc($lang);
+
+        # Unknown prose tokens like:
+        #   DISTRIBUTION` calls - those are simple loop-control statements
+        # are not real malformed language openers. Only keep unknown lang`...
+        # patterns when the payload clearly looks code-like; otherwise verifier
+        # extraction can drop ordinary prose tokens and create false negatives.
+        return if ((not is_known_fence_lang($lang_lc))
+            and (not is_lang_unwrap_candidate($lang_lc))
+            and (not verify_rest_looks_code_like_after_lang_residue($rest)));
+
+        # Reject transcript-table/header collisions like:
+        #   FileC1C2Notes`t/00_depend.t`FAILFAIL...
+        # Those are collapsed prose/table payload, not real language openers.
+        return if (($lang !~ /^[a-z0-9_+\-]+\z/)
+            and (not is_known_fence_lang($lang_lc))
+            and (not is_lang_unwrap_candidate($lang_lc))
+            and ($rest =~ /^\s*(?:[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+|[A-Za-z0-9_.-]+\.(?:t|pm|md)\b)/s)
+            and ($rest =~ /`/));
+
         return ($lang, $prefix . $rest);
     }
     return;
@@ -3041,6 +3524,7 @@ sub is_known_fence_lang {
     return 1 if $lang eq 'perl';
     return 1 if $lang eq 'diff';
     return 1 if $lang eq 'css';
+    return 1 if $lang eq 'html';
     return 1 if $lang eq 'dockerfile';
     return 1 if $lang eq 'bash';
     return 1 if $lang eq 'sh';
@@ -4369,9 +4853,8 @@ sub normalize_simple_inline_code_tag_spans_to_backticks {
     my string $line = shift;
 
     return $line if !defined $line;
-    return $line if $line =~ /^\s*<code>/s;
 
-    $line =~ s{(?<!`)<code>([^<`\n]+)`(?=[\s\.,;:!?\)\]\}]|\z)}{'`' . $1 . '`'}ge;
+    $line =~ s{(?<!`)<code\b[^>]*>([^<`\n]+)`(?=[\s\.,;:!?\)\]\}]|\z)}{'`' . $1 . '`'}ge;
 
     return $line;
 }
@@ -8373,6 +8856,12 @@ for (my integer $md034_i = 0; $md034_i < scalar(@{$out_lines}); $md034_i++) {
         next;
     }
     next if $md034_in_block;
+
+    # Do not autolink bare URLs inside malformed lang` payload lines such as:
+    #   php-template`https://gitlab.com/<namespace>/<project>/-/archive/...
+    # These are fence-like transcript artifacts, not prose URLs. Wrapping the URL
+    # in <...> changes verifier canonical content and creates false negatives.
+    next if $md034_line =~ /^\s*[A-Za-z0-9_][A-Za-z0-9_+\-]*`https?:\/\//s;
 
     # Preserve simple inline code spans while fixing bare URLs.
     my arrayref $md034_spans = [];
