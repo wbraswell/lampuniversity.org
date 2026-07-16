@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # LAMP Installer Script
-VERSION='0.535_000'
+VERSION='0.537_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -2989,16 +2989,47 @@ if [ $SECTION_CHOICE -le 31 ]; then
         
         S $EDITOR /etc/apache2/apache2.conf
 
-        echo '[ SSL & https Support, Install Apache Certbot Packages ]'
+        echo '[ SSL & https Support, Install cURL For URL Validation ]'
         S apt-get update
-        S apt-get install software-properties-common
-        S add-apt-repository ppa:certbot/certbot
-        S apt-get update
-        S apt-get install python-certbot-apache 
-        echo '[ SSL & https Support, Apache Certbot Certificates, Enable Automatic Configuration ]'
-        S certbot --apache --server https://acme-v02.api.letsencrypt.org/directory
-        echo '[ SSL & https Support, Apache Certbot Certificates, Test Automatic Renewal ]'
-        S certbot renew --dry-run
+        S apt-get install curl
+
+        echo '[ SSL & https Support, Prefer Existing Working Certbot Installation ]'
+        CERTBOT_WORKING='no'
+        if command -v certbot > /dev/null 2>&1 && certbot --version > /dev/null 2>&1 && certbot plugins 2> /dev/null | grep -q apache; then
+            CERTBOT_WORKING='yes'
+            echo '[ Existing Certbot Installation Is Working, Keep It Unchanged ]'
+        fi
+
+        if [ $CERTBOT_WORKING == 'no' ]; then
+            echo '[ No Working Certbot Found, Try APT Installation First ]'
+            S "apt-get install certbot python3-certbot-apache || apt-get install certbot python-certbot-apache || true"
+            if command -v certbot > /dev/null 2>&1 && certbot --version > /dev/null 2>&1 && certbot plugins 2> /dev/null | grep -q apache; then
+                CERTBOT_WORKING='yes'
+                echo '[ APT Certbot Installation Is Working ]'
+            fi
+        fi
+
+        if [ $CERTBOT_WORKING == 'no' ]; then
+            echo '[ APT Certbot Installation Is Unavailable Or Not Working, Fall Back To Snap ]'
+            S "apt-get remove certbot python-certbot-apache python3-certbot-apache || true"
+            S apt-get install snapd
+            S snap install core
+            S snap refresh core
+            S snap install --classic certbot
+            S ln -sf /snap/bin/certbot /usr/bin/certbot
+            if command -v certbot > /dev/null 2>&1 && certbot --version > /dev/null 2>&1 && certbot plugins 2> /dev/null | grep -q apache; then
+                CERTBOT_WORKING='yes'
+                echo '[ Snap Certbot Installation Is Working ]'
+            fi
+        fi
+
+        if [ $CERTBOT_WORKING == 'no' ]; then
+            echo 'ERROR: Certbot With The Apache Plugin Is Not Working After Existing, APT, And Snap Checks.'
+            exit 1
+        fi
+
+        echo '[ Check Certbot Installation; Certificate Configuration Occurs Per-Domain In Section 32 ]'
+        B certbot --version
 
     elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
@@ -3008,6 +3039,9 @@ fi
 
 # SECTION 32 VARIABLES
 ADMIN_EMAIL='__EMPTY__'
+CERTIFICATE_NAME='__EMPTY__'
+CERTIFICATE_DOMAIN_NAMES=''
+CERTBOT_DOMAIN_ARGUMENTS=''
 
 if [ $SECTION_CHOICE -le 32 ]; then
     echo '32. [[[ APACHE, CONFIGURE DOMAIN(S) ]]]'
@@ -3079,11 +3113,42 @@ if [ $SECTION_CHOICE -le 32 ]; then
         S chown -R www-data.www-data /srv/www
         S chmod -R g+rwX /srv/www
         S chmod -R o-w /srv/www
-        echo '[ Check If Apache Is Running & You Can Successfully Load The Live Page ]'
+        echo '[ Check If Apache Is Running & You Can Successfully Load The Live HTTP Page ]'
         echo
         echo " http://$DOMAIN_NAME"
         echo
         C 'Please load the URL above in your web browser.'
+
+        echo '[ SSL & https Support, Configure Certificate After HTTP Domain Is Enabled ]'
+        D $CERTIFICATE_NAME "existing shared Certbot certificate name, or new certificate name for first domain" "$DOMAIN_NAME"
+        CERTIFICATE_NAME=$USER_INPUT
+        echo '[ Existing Certificate: Preserve All Current Domain Names & Add New Domain Names ]'
+        echo '[ New Certificate: Add New Domain Names ]'
+        CERTIFICATE_DOMAIN_NAMES=`sudo openssl x509 -in /etc/letsencrypt/live/$CERTIFICATE_NAME/cert.pem -noout -text 2>/dev/null | awk '/Subject Alternative Name/{getline; gsub(/DNS:/, ""); gsub(/,/, ""); print}'`
+        if [ -n "$CERTIFICATE_DOMAIN_NAMES" ]; then
+            CERTBOT_DOMAIN_ARGUMENTS=''
+            for CERTIFICATE_DOMAIN_NAME in $CERTIFICATE_DOMAIN_NAMES $DOMAIN_NAME www.$DOMAIN_NAME; do
+                if [[ " $CERTBOT_DOMAIN_ARGUMENTS " != *" -d $CERTIFICATE_DOMAIN_NAME "* ]]; then
+                    CERTBOT_DOMAIN_ARGUMENTS="$CERTBOT_DOMAIN_ARGUMENTS -d $CERTIFICATE_DOMAIN_NAME"
+                fi
+            done
+            S "certbot --apache --server https://acme-v02.api.letsencrypt.org/directory --cert-name $CERTIFICATE_NAME --expand --redirect $CERTBOT_DOMAIN_ARGUMENTS"
+        else
+            S certbot --apache --server https://acme-v02.api.letsencrypt.org/directory --cert-name $CERTIFICATE_NAME --redirect -d $DOMAIN_NAME -d www.$DOMAIN_NAME
+        fi
+
+        echo '[ Validate & Reload Apache After Certbot Configuration ]'
+        S apache2ctl configtest
+        S service apache2 reload
+        echo '[ Display Apache Virtual Hosts; Confirm Domain Appears Under Ports 80 & 443 ]'
+        S apache2ctl -S
+        echo '[ Test All Four Domain URL Forms; HTTP Must Redirect & HTTPS Must Load Successfully ]'
+        B curl -IL http://$DOMAIN_NAME/
+        B curl -IL http://www.$DOMAIN_NAME/
+        B curl -I https://$DOMAIN_NAME/
+        B curl -I https://www.$DOMAIN_NAME/
+        echo '[ SSL & https Support, Apache Certbot Certificates, Test Automatic Renewal ]'
+        S certbot renew --dry-run
 
     elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
         echo "Nothing To Do On Existing Machine!"
