@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # LAMP Installer Script
-VERSION='0.537_000'
+VERSION='0.538_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -130,7 +130,14 @@ CURRENT_SECTION_COMPLETE () {
     echo
     echo '[[[ SECTION' $CURRENT_SECTION 'COMPLETE ]]]'
     echo
-    CURRENT_SECTION=$((CURRENT_SECTION+1))
+    case $CURRENT_SECTION in
+        12 ) CURRENT_SECTION=20;;
+        27 ) CURRENT_SECTION=30;;
+        36 ) CURRENT_SECTION=40;;
+        60 ) CURRENT_SECTION=70;;
+        70 ) CURRENT_SECTION=80;;
+        *  ) CURRENT_SECTION=$((CURRENT_SECTION+1));;
+    esac
     while true; do
         read -p "Continue to section $CURRENT_SECTION, yes or no?  [yes] " -n 1 PROMPT_INPUT
         case $PROMPT_INPUT in
@@ -365,59 +372,60 @@ if [ $SECTION_CHOICE == '__EMPTY__' ]; then
     echo \ '8. [[[        LINUX, INSTALL LAMP UNIVERSITY TOOLS ]]]'
     echo \ '9. [[[ UBUNTU LINUX, INSTALL HEIRLOOM TOOLS (including bdiff) ]]]'
     echo  '10. [[[ UBUNTU LINUX, INSTALL BROADCOM B43 WIFI ]]]'
-    echo  '11. [[[ UBUNTU LINUX, PERFORMANCE BENCHMARKING ]]]'
+    echo  '11. [[[ UBUNTU LINUX, INSTALL WHISPERX CPU-ONLY TRANSCRIPTION & SPEAKER DIARIZATION ]]]'
+    echo  '12. [[[ UBUNTU LINUX, PERFORMANCE BENCHMARKING ]]]'
     echo
     echo  '        <<< LOCAL GUI SECTIONS >>>'
-    echo  '12. [[[ UBUNTU LINUX, INSTALL BASE GUI OPERATING SYSTEM PACKAGES ]]]'
-    echo  '13. [[[ UBUNTU LINUX, INSTALL EXTRA GUI OPERATING SYSTEM PACKAGES ]]]'
-    echo  '14. [[[ UBUNTU LINUX, INSTALL VNC & XPRA ]]]'
-    echo  '15. [[[ UBUNTU LINUX, INSTALL VIRTUALBOX GUEST ADDITIONS ]]]'
-    echo  '16. [[[ UBUNTU LINUX, UNINSTALL HUD & BLUETOOTH & MODEMMANAGER & GVFS & EXTRA GUI PACKAGES ]]]'
-    echo  '17. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER ]]]'
-    echo  '18. [[[ UBUNTU LINUX, CONFIGURE XFCE WINDOW MANAGER ]]]'
-    echo  '19. [[[ UBUNTU LINUX, ENABLE AUTOMATIC SECURITY UPDATES ]]]'
+    echo  '20. [[[ UBUNTU LINUX, INSTALL BASE GUI OPERATING SYSTEM PACKAGES ]]]'
+    echo  '21. [[[ UBUNTU LINUX, INSTALL EXTRA GUI OPERATING SYSTEM PACKAGES ]]]'
+    echo  '22. [[[ UBUNTU LINUX, INSTALL VNC & XPRA ]]]'
+    echo  '23. [[[ UBUNTU LINUX, INSTALL VIRTUALBOX GUEST ADDITIONS ]]]'
+    echo  '24. [[[ UBUNTU LINUX, UNINSTALL HUD & BLUETOOTH & MODEMMANAGER & GVFS & EXTRA GUI PACKAGES ]]]'
+    echo  '25. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER ]]]'
+    echo  '26. [[[ UBUNTU LINUX, CONFIGURE XFCE WINDOW MANAGER ]]]'
+    echo  '27. [[[ UBUNTU LINUX, ENABLE AUTOMATIC SECURITY UPDATES ]]]'
     echo
     echo  '         <<< PERL & RPERL SECTIONS >>>'
-    echo  '20. [[[        LINUX,   INSTALL  PERL DEPENDENCIES ]]]'
-    echo  '21. [[[        LINUX,   INSTALL  PERL & CPANM ]]]'
-    echo  '22. [[[        LINUX,   PACKAGE RPERL DEPENDENCIES, DEVELOPERS ONLY ]]]'
-    echo  '23. [[[        LINUX,   INSTALL RPERL DEPENDENCIES ]]]'
-    echo  '24. [[[  PERL,          INSTALL RPERL ]]]'
-    echo  '25. [[[ RPERL,          RUN COMPILER TESTS ]]]'
-    echo  '26. [[[ RPERL,          INSTALL RPERL APPS & RUN DEMOS ]]]'
+    echo  '30. [[[        LINUX,   INSTALL  PERL DEPENDENCIES ]]]'
+    echo  '31. [[[        LINUX,   INSTALL  PERL & CPANM ]]]'
+    echo  '32. [[[        LINUX,   PACKAGE RPERL DEPENDENCIES, DEVELOPERS ONLY ]]]'
+    echo  '33. [[[        LINUX,   INSTALL RPERL DEPENDENCIES ]]]'
+    echo  '34. [[[  PERL,          INSTALL RPERL ]]]'
+    echo  '35. [[[ RPERL,          RUN COMPILER TESTS ]]]'
+    echo  '36. [[[ RPERL,          INSTALL RPERL APPS & RUN DEMOS ]]]'
     echo
     echo  '         <<< SERVICE SECTIONS >>>'
-    echo  '30. [[[ UBUNTU LINUX,   INSTALL NFS & DBXFS]]]'
-    echo  '31. [[[ UBUNTU LINUX,   INSTALL APACHE & MOD_PERL ]]]'
-    echo  '32. [[[ APACHE,         CONFIGURE DOMAIN(S) ]]]'
-    echo  '33. [[[ UBUNTU LINUX,   INSTALL MYSQL & PHPMYADMIN ]]]'
-    echo  '34. [[[ APACHE & MYSQL, CONFIGURE PHPMYADMIN ]]]'
-    echo  '35. [[[ UBUNTU LINUX,   INSTALL WEBMIN ]]]'
-    echo  '36. [[[ UBUNTU LINUX,   INSTALL POSTFIX ]]]'
-    echo  '37. [[[ PERL,           INSTALL     LATEST CATALYST ]]]'
-    echo  '38. [[[ UBUNTU LINUX,   INSTALL NON-LATEST CATALYST ]]]'
-    echo  '39. [[[ PERL,           CHECK CATALYST VERSIONS ]]]'
-    echo  '40. [[[ PERL,           INSTALL RAPIDAPP ]]]'
-    echo  '41. [[[ UBUNTU LINUX,   INSTALL SHINYCMS DEPENDENCIES ]]]'
-    echo  '42. [[[ PERL SHINYCMS,  INSTALL SHINYCMS DEPENDENCIES & SHINYCMS ]]]'
-    echo  '43. [[[ PERL SHINYCMS,  CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES ]]]'
-    echo  '44. [[[ PERL SHINYCMS,  BUILD DEMO DATA & RUN TESTS ]]]'
-    echo  '45. [[[ PERL SHINYCMS,  BACKUP & RESTORE DATABASE ]]]'
-    echo  '46. [[[ PERL SHINYCMS,  CONFIGURE APACHE MOD_FASTCGI ]]]'
-    echo  '47. [[[ PERL SHINYCMS,  CONFIGURE APACHE MOD_PERL ]]]'
-    echo  '48. [[[ PERL SHINYCMS,  CREATE    APACHE DIRECTORIES & ENABLE STATIC  PAGE ]]]'
-    echo  '49. [[[ PERL SHINYCMS,  CONFIGURE APACHE PERMISSIONS & ENABLE DYNAMIC PAGES ]]]'
-    echo  '50. [[[ PERL SHINYCMS,  CONFIGURE SHINY ]]]'
+    echo  '40. [[[ UBUNTU LINUX,   INSTALL NFS & DBXFS]]]'
+    echo  '41. [[[ UBUNTU LINUX,   INSTALL APACHE & MOD_PERL ]]]'
+    echo  '42. [[[ APACHE,         CONFIGURE DOMAIN(S) ]]]'
+    echo  '43. [[[ UBUNTU LINUX,   INSTALL MYSQL & PHPMYADMIN ]]]'
+    echo  '44. [[[ APACHE & MYSQL, CONFIGURE PHPMYADMIN ]]]'
+    echo  '45. [[[ UBUNTU LINUX,   INSTALL WEBMIN ]]]'
+    echo  '46. [[[ UBUNTU LINUX,   INSTALL POSTFIX ]]]'
+    echo  '47. [[[ PERL,           INSTALL     LATEST CATALYST ]]]'
+    echo  '48. [[[ UBUNTU LINUX,   INSTALL NON-LATEST CATALYST ]]]'
+    echo  '49. [[[ PERL,           CHECK CATALYST VERSIONS ]]]'
+    echo  '50. [[[ PERL,           INSTALL RAPIDAPP ]]]'
+    echo  '51. [[[ UBUNTU LINUX,   INSTALL SHINYCMS DEPENDENCIES ]]]'
+    echo  '52. [[[ PERL SHINYCMS,  INSTALL SHINYCMS DEPENDENCIES & SHINYCMS ]]]'
+    echo  '53. [[[ PERL SHINYCMS,  CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES ]]]'
+    echo  '54. [[[ PERL SHINYCMS,  BUILD DEMO DATA & RUN TESTS ]]]'
+    echo  '55. [[[ PERL SHINYCMS,  BACKUP & RESTORE DATABASE ]]]'
+    echo  '56. [[[ PERL SHINYCMS,  CONFIGURE APACHE MOD_FASTCGI ]]]'
+    echo  '57. [[[ PERL SHINYCMS,  CONFIGURE APACHE MOD_PERL ]]]'
+    echo  '58. [[[ PERL SHINYCMS,  CREATE    APACHE DIRECTORIES & ENABLE STATIC  PAGE ]]]'
+    echo  '59. [[[ PERL SHINYCMS,  CONFIGURE APACHE PERMISSIONS & ENABLE DYNAMIC PAGES ]]]'
+    echo  '60. [[[ PERL SHINYCMS,  CONFIGURE SHINY ]]]'
     echo
-    echo  '60. [[[        LINUX,   INSTALL MONGODB ]]]'
+    echo  '70. [[[        LINUX,   INSTALL MONGODB ]]]'
     echo
-    echo  '70. [[[ PERL CLOUDFORFREE, INSTALL ]]]'
+    echo  '80. [[[ PERL CLOUDFORFREE, INSTALL ]]]'
     echo
 
     while true; do
         read -p 'Please type your chosen main menu section number, or press <ENTER> for 0... ' SECTION_CHOICE
         case $SECTION_CHOICE in
-            [0123456789]|[1234][0123456789]|5[01]|60 ) echo; break;;
+            [0123456789]|1[012]|2[01234567]|3[0123456]|4[0123456789]|5[0123456789]|60|70|80 ) echo; break;;
             '' ) echo; SECTION_CHOICE=0; break;;
             * ) echo 'Please choose a section number from the menu!'; echo;;
         esac
@@ -847,12 +855,56 @@ END_HEREDOC
 fi
 
 # SECTION 11 VARIABLES
+NONPERL_PYTHON_VENV_ROOT="${NONPERL_PYTHON_VENV_ROOT:-$HOME/.venv}"
+export NONPERL_PYTHON_VENV_ROOT
+
+if [ $SECTION_CHOICE -le 11 ]; then
+    echo '11. [[[ UBUNTU LINUX, INSTALL WHISPERX CPU-ONLY TRANSCRIPTION & SPEAKER DIARIZATION ]]]'
+    echo
+    VERIFY_UBUNTU
+    if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
+        echo '[ Install WhisperX System Dependencies ]'
+        S apt-get update
+        S apt-get install ffmpeg git python3 python3-pip python3-venv
+        S apt-get -f install
+
+        echo '[ Create Shared Python Virtual Environment If Missing ]'
+        B 'if [ ! -f "$NONPERL_PYTHON_VENV_ROOT/bin/activate" ]; then python3 -m venv "$NONPERL_PYTHON_VENV_ROOT"; else echo "Python virtual environment already exists at $NONPERL_PYTHON_VENV_ROOT"; fi'
+
+        echo '[ Upgrade Python Package Installation Tools Inside Shared Virtual Environment ]'
+        B '"$NONPERL_PYTHON_VENV_ROOT/bin/python" -m pip install --upgrade pip setuptools wheel'
+
+        echo '[ Install Exact CPU-Only PyTorch Packages Required By WhisperX ]'
+        B '"$NONPERL_PYTHON_VENV_ROOT/bin/python" -m pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cpu'
+
+        echo '[ Install WhisperX From Official GitHub Repository ]'
+        B '"$NONPERL_PYTHON_VENV_ROOT/bin/python" -m pip install git+https://github.com/m-bain/whisperx.git'
+
+        echo '[ Check WhisperX Python Package Dependencies ]'
+        B '"$NONPERL_PYTHON_VENV_ROOT/bin/python" -m pip check'
+
+        echo '[ Confirm WhisperX And CPU-Only PyTorch Package Versions ]'
+        B '"$NONPERL_PYTHON_VENV_ROOT/bin/python" -m pip list | grep -E "^(whisperx|torch|torchaudio|torchvision)[[:space:]]"'
+
+        echo '[ Confirm WhisperX Command-Line Interface Runs ]'
+        B '"$NONPERL_PYTHON_VENV_ROOT/bin/whisperx" --help'
+
+        echo '[ Hugging Face Token Is Required At Runtime For Pyannote Speaker Diarization ]'
+        echo '[ SECURITY: HF_TOKEN Must Exist Only As An Environment Variable; Never Save It In This Installer Or Another File ]'
+        B 'if [ -n "${HF_TOKEN:-}" ]; then echo "HF_TOKEN environment variable is set"; else echo "NOTE: HF_TOKEN environment variable is not currently set"; fi'
+    elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
+        echo "Nothing To Do On Existing Machine!"
+    fi
+    CURRENT_SECTION_COMPLETE
+fi
+
+# SECTION 12 VARIABLES
 CPUMINER_SERVER='__EMPTY__'
 CPUMINER_USERNAME='__EMPTY__'
 CPUMINER_PASSWORD='__EMPTY__'
 
-if [ $SECTION_CHOICE -le 11 ]; then
-    echo '11. [[[ UBUNTU LINUX, PERFORMANCE BENCHMARKING ]]]'
+if [ $SECTION_CHOICE -le 12 ]; then
+    echo '12. [[[ UBUNTU LINUX, PERFORMANCE BENCHMARKING ]]]'
     echo
     VERIFY_UBUNTU
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
@@ -876,11 +928,11 @@ if [ $SECTION_CHOICE -le 11 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-# SECTION 12 VARIABLES
+# SECTION 20 VARIABLES
 UBUNTU_RELEASE_NAME='__EMPTY__'
 
-if [ $SECTION_CHOICE -le 12 ]; then
-    echo '12. [[[ UBUNTU LINUX, INSTALL BASE GUI OPERATING SYSTEM PACKAGES ]]]'
+if [ $SECTION_CHOICE -le 20 ]; then
+    echo '20. [[[ UBUNTU LINUX, INSTALL BASE GUI OPERATING SYSTEM PACKAGES ]]]'
     echo
     VERIFY_UBUNTU
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
@@ -1019,8 +1071,8 @@ END_HEREDOC
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 13 ]; then
-    echo '13. [[[ UBUNTU LINUX, INSTALL EXTRA GUI OPERATING SYSTEM PACKAGES ]]]'
+if [ $SECTION_CHOICE -le 21 ]; then
+    echo '21. [[[ UBUNTU LINUX, INSTALL EXTRA GUI OPERATING SYSTEM PACKAGES ]]]'
     echo
     VERIFY_UBUNTU
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
@@ -1112,16 +1164,16 @@ user_pref("layers.acceleration.force-enabled", false);
     CURRENT_SECTION_COMPLETE
 fi
 
-# SECTION 14 VARIABLES
+# SECTION 22 VARIABLES
 LOCAL_HOSTNAME='__EMPTY__'
 
-if [ $SECTION_CHOICE -le 14 ]; then
-    echo '14. [[[ UBUNTU LINUX, INSTALL VNC & XPRA ]]]'
+if [ $SECTION_CHOICE -le 22 ]; then
+    echo '22. [[[ UBUNTU LINUX, INSTALL VNC & XPRA ]]]'
     echo
     VERIFY_UBUNTU
 
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
-        echo '14.0 [ VNC Server, Install VNC ]'
+        echo '22.0 [ VNC Server, Install VNC ]'
         S apt-get install x11vnc
 
         # VNC server, start VNC independent of client
@@ -1130,13 +1182,13 @@ if [ $SECTION_CHOICE -le 14 ]; then
 #        S x11vnc -wait 50 -noxdamage -passwd PASSWORD -display :0 -forever -o /var/log/x11vnc.log -bg  # run at startup, put this inside startup file
 
     elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
-        echo '14.0 [ VNC Client, Install VNC ]'
+        echo '22.0 [ VNC Client, Install VNC ]'
         S apt-get install ssvnc
     fi
 
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
-        C 'Please run section 14.0 on the existing local machine before proceeding.'
-        echo '14.1a [ If VNC Server has Private IP via NAT, and '
+        C 'Please run section 22.0 on the existing local machine before proceeding.'
+        echo '22.1a [ If VNC Server has Private IP via NAT, and '
         echo '        If VNC Client has Private IP via NAT with SSH Pinhole AKA Port Forwarding'
         echo '        Then: VNC Server, Start Reverse SSH Tunnel; and '
         echo '              VNC Client, Start Double-Reverse SSH Tunnel; and VNC Server, Start VNC'
@@ -1148,8 +1200,8 @@ if [ $SECTION_CHOICE -le 14 ]; then
         B ssh -R 19999:localhost:22 $LOCAL_USERNAME@$LOCAL_HOSTNAME
 
     elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
-        C 'Please run sections 14.0 & 14.1 on the new remote machine before proceeding.'
-        echo '14.1a [ If VNC Server has Private IP via NAT, and '
+        C 'Please run sections 22.0 & 22.1 on the new remote machine before proceeding.'
+        echo '22.1a [ If VNC Server has Private IP via NAT, and '
         echo '        If VNC Client has Private IP via NAT with SSH Pinhole AKA Port Forwarding'
         echo '        Then: VNC Server, Start Reverse SSH Tunnel; and '
         echo '              VNC Client, Start Double-Reverse SSH Tunnel; and VNC Server, Start VNC'
@@ -1161,7 +1213,7 @@ if [ $SECTION_CHOICE -le 14 ]; then
 #        B scp -P 19999 $LOCAL_PATH/$LOCAL_FILENAME $REMOTE_USERNAME@localhost:$REMOTE_PATH  # template for SCP over reverse SSH tunnel
         B ssh $REMOTE_USERNAME@localhost -p 19999 -t -L 5900:localhost:5900 'x11vnc -localhost -display :0'
             # __OR__
-        echo '14.1b [ If VNC Server has Public IP, and '
+        echo '22.1b [ If VNC Server has Public IP, and '
         echo '        If VNC Client has Private IP via NAT with SSH Pinhole AKA Port Forwarding'
         echo '        Then: VNC Client, Start Reverse SSH Tunnel; and VNC Server, Start VNC ]'
         C 'Please read the instructions above to determine if you should run the following 1 command.'
@@ -1169,7 +1221,7 @@ if [ $SECTION_CHOICE -le 14 ]; then
         REMOTE_HOSTNAME=$USER_INPUT
         B ssh $REMOTE_HOSTNAME -t -L 5900:localhost:5900 'x11vnc -localhost -display :0'
 
-        echo '14.2 [ VNC Client, Start VNC ]'
+        echo '22.2 [ VNC Client, Start VNC ]'
         B ssvncviewer localhost:0
     fi
 
@@ -1181,7 +1233,7 @@ if [ $SECTION_CHOICE -le 14 ]; then
         LOCAL_HOSTNAME=$USER_INPUT
         B "export DISPLAY=$LOCAL_HOSTNAME:0.0; xclock"
         echo '[ Install, Start, Test xpra Multi-Session Service ]'
-        echo '[ NOTE: If You Have xpra Installation Issues, Please See The Directions In This Same Section 14 For Existing Machines ]'
+        echo '[ NOTE: If You Have xpra Installation Issues, Please See The Directions In This Same Section 22 For Existing Machines ]'
         S apt-get install xpra
         B 'xpra start :100 --start-child=xfce4-terminal'
         echo '[ Test xpra Multi-Session Connection ]'
@@ -1255,11 +1307,11 @@ if [ $SECTION_CHOICE -le 14 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-# SECTION 15 VARIABLES
+# SECTION 23 VARIABLES
 ISO_MOUNT_POINT='__EMPTY__'
 
-if [ $SECTION_CHOICE -le 15 ]; then
-    echo '15. [[[ UBUNTU LINUX, INSTALL VIRTUALBOX GUEST ADDITIONS ]]]'
+if [ $SECTION_CHOICE -le 23 ]; then
+    echo '23. [[[ UBUNTU LINUX, INSTALL VIRTUALBOX GUEST ADDITIONS ]]]'
     echo
     VERIFY_UBUNTU
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
@@ -1276,8 +1328,8 @@ if [ $SECTION_CHOICE -le 15 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 16 ]; then
-    echo '16. [[[ UBUNTU LINUX, UNINSTALL HUD & BLUETOOTH & MODEMMANAGER & GVFS & EXTRA GUI PACKAGES ]]]'
+if [ $SECTION_CHOICE -le 24 ]; then
+    echo '24. [[[ UBUNTU LINUX, UNINSTALL HUD & BLUETOOTH & MODEMMANAGER & GVFS & EXTRA GUI PACKAGES ]]]'
     echo
     VERIFY_UBUNTU
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
@@ -1307,8 +1359,8 @@ if [ $SECTION_CHOICE -le 16 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 17 ]; then
-    echo '17. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER & CONFIGURE SPACE TELESCOPE IMAGES & CONFIGURE FLYING TOASTERS ]]]'
+if [ $SECTION_CHOICE -le 25 ]; then
+    echo '25. [[[ UBUNTU LINUX, FIX BROKEN SCREENSAVER & CONFIGURE SPACE TELESCOPE IMAGES & CONFIGURE FLYING TOASTERS ]]]'
     echo
     VERIFY_UBUNTU
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
@@ -1348,8 +1400,8 @@ if [ $SECTION_CHOICE -le 17 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 18 ]; then
-    echo '18. [[[ UBUNTU LINUX, CONFIGURE XFCE WINDOW MANAGER ]]]'
+if [ $SECTION_CHOICE -le 26 ]; then
+    echo '26. [[[ UBUNTU LINUX, CONFIGURE XFCE WINDOW MANAGER ]]]'
     echo
     VERIFY_UBUNTU
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
@@ -1382,8 +1434,8 @@ fi
 # NEED UPDATE: do not require X interface (or any interactivity at all) to enable automatic security updates, directly modify the appropriate config files instead
 # NEED UPDATE: do not require X interface (or any interactivity at all) to enable automatic security updates, directly modify the appropriate config files instead
 
-if [ $SECTION_CHOICE -le 19 ]; then
-    echo '19. [[[ UBUNTU LINUX, ENABLE AUTOMATIC SECURITY UPDATES ]]]'
+if [ $SECTION_CHOICE -le 27 ]; then
+    echo '27. [[[ UBUNTU LINUX, ENABLE AUTOMATIC SECURITY UPDATES ]]]'
     echo
     VERIFY_UBUNTU
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
@@ -1402,8 +1454,8 @@ if [ $SECTION_CHOICE -le 19 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 20 ]; then
-    echo '20. [[[ LINUX, INSTALL PERL DEPENDENCIES ]]]'
+if [ $SECTION_CHOICE -le 30 ]; then
+    echo '30. [[[ LINUX, INSTALL PERL DEPENDENCIES ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ Overview Of Perl Dependencies In This Section ]'
@@ -1511,38 +1563,38 @@ if [ $SECTION_CHOICE -le 20 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-# SECTION 21 VARIABLES
+# SECTION 31 VARIABLES
 #PERL_INSTALL_CHOICE='__EMPTY__'  # this is now a global variable for command-line args, see top of file
 
-if [ $SECTION_CHOICE -le 21 ]; then
-    echo '21. [[[ LINUX, INSTALL PERL & CPANM ]]]'
+if [ $SECTION_CHOICE -le 31 ]; then
+    echo '31. [[[ LINUX, INSTALL PERL & CPANM ]]]'
 
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         if [ $PERL_INSTALL_CHOICE == '__EMPTY__' ]; then
             echo 'Please carefully read the following instructions, in order to choose a Perl installation option...'
             echo
-            echo '21a. [[[ LINUX, INSTALL SINGLE-USER PERL LOCAL::LIB & CPANM ]]]'
-            echo '    [ You SHOULD Use This Instead Of Perlbrew Or Perl From Source Or System Perl In Sections 21b & 21c & 21d, Unless You Have No Choice ]'
+            echo '31a. [[[ LINUX, INSTALL SINGLE-USER PERL LOCAL::LIB & CPANM ]]]'
+            echo '    [ You SHOULD Use This Instead Of Perlbrew Or Perl From Source Or System Perl In Sections 31b & 31c & 31d, Unless You Have No Choice ]'
             echo '    [ This Option Will Contain All Perl Code In Your Home Directory Under The ~/perl5 Subdirectory ]'
-            echo '    [ This Option May  Not Work With Older Versions Of Debian GNU/Linux Which Include A Broken Perl v5.14, Use Perlbrew in Section 21b Instead ]'
-            echo '    [ This Option Will Not Work With Older Versions Of Perl Which Are Not At Least v5.10 Or Newer, Use Perlbrew in Section 21b Instead ]'
+            echo '    [ This Option May  Not Work With Older Versions Of Debian GNU/Linux Which Include A Broken Perl v5.14, Use Perlbrew in Section 31b Instead ]'
+            echo '    [ This Option Will Not Work With Older Versions Of Perl Which Are Not At Least v5.10 Or Newer, Use Perlbrew in Section 31b Instead ]'
             echo
             echo '__OR__ '
             echo
-            echo '21b. [[[ LINUX, INSTALL SINGLE-USER PERLBREW & CPANM ]]]'
-            echo '    [ You SHOULD NOT Use This Instead Of local::lib In Section 21a, Unless You Have No Choice ]'
+            echo '31b. [[[ LINUX, INSTALL SINGLE-USER PERLBREW & CPANM ]]]'
+            echo '    [ You SHOULD NOT Use This Instead Of local::lib In Section 31a, Unless You Have No Choice ]'
             echo '    [ This Option WILL Work With Older Versions Of Debian GNU/Linux Which Include A Broken Perl v5.14 ]'
             echo '    [ This Option WILL Work With Older Versions Of Perl Which Are Not At Least v5.10 Or Newer ]'
             echo
             echo '__OR__ '
             echo
-            echo '21c. [[[ LINUX, INSTALL SYSTEM-WIDE PERL FROM SOURCE & CPANM ]]]'
-            echo '    [ You SHOULD NOT Use This Instead Of local::lib In Section 21a, Unless You Have No Choice ]'
+            echo '31c. [[[ LINUX, INSTALL SYSTEM-WIDE PERL FROM SOURCE & CPANM ]]]'
+            echo '    [ You SHOULD NOT Use This Instead Of local::lib In Section 31a, Unless You Have No Choice ]'
             echo
             echo '__OR__ '
             echo
-            echo '21d. [[[ LINUX, INSTALL SYSTEM-WIDE SYSTEM PERL & CPANM ]]]'
-            echo '[ You SHOULD NOT Use This Instead Of local::lib In Section 21a, Unless You Have No Choice ]'
+            echo '31d. [[[ LINUX, INSTALL SYSTEM-WIDE SYSTEM PERL & CPANM ]]]'
+            echo '[ You SHOULD NOT Use This Instead Of local::lib In Section 31a, Unless You Have No Choice ]'
             echo '[ This Option Will Install Both Perl & cpanminus System-Wide ]'
             echo '[ Also, All Future CPAN Distributions Will Install System-Wide In A Hard-To Control Manner ]'
             echo
@@ -1555,7 +1607,7 @@ if [ $SECTION_CHOICE -le 21 ]; then
 
         if [ $PERL_INSTALL_CHOICE == 'a' ] || [ $PERL_INSTALL_CHOICE == 'locallib' ]; then
 
-            echo '21a. [[[ LINUX, INSTALL SINGLE-USER PERL LOCAL::LIB & CPANM ]]]'
+            echo '31a. [[[ LINUX, INSTALL SINGLE-USER PERL LOCAL::LIB & CPANM ]]]'
             echo '[ Install local::lib & CPANM in ~/perl5 ]'
             B 'curl -L cpanmin.us | perl - -l $HOME/perl5 App::cpanminus local::lib'
             echo '[ Enable local::lib In .bashrc Run Commands Startup File ]'
@@ -1585,7 +1637,7 @@ if [ $SECTION_CHOICE -le 21 ]; then
 
         elif [ $PERL_INSTALL_CHOICE == 'b' ] || [ $PERL_INSTALL_CHOICE == 'perlbrew' ]; then
 
-            echo '21b. [[[ LINUX, INSTALL SINGLE-USER PERLBREW & CPANM ]]]'
+            echo '31b. [[[ LINUX, INSTALL SINGLE-USER PERLBREW & CPANM ]]]'
             echo '[ You Should Use Ubuntu Or CentOS Instead Of curl Below, Unless You Are Not In Ubuntu Or CentOS, Or You Have No Choice ]'
             echo '[ WARNING: Use Only ONE Of The Following Three Options, EITHER Ubuntu OR CentOS OR curl, But NOT More Than One! ]'
             C 'Please read the warning above.  Seriously.'
@@ -1662,7 +1714,7 @@ if [ $SECTION_CHOICE -le 21 ]; then
 
         elif [ $PERL_INSTALL_CHOICE == 'c' ] || [ $PERL_INSTALL_CHOICE == 'source' ]; then
 
-            echo '21c. [[[ LINUX, INSTALL SYSTEM-WIDE PERL FROM SOURCE & CPANM ]]]'
+            echo '31c. [[[ LINUX, INSTALL SYSTEM-WIDE PERL FROM SOURCE & CPANM ]]]'
             echo '[ WARNING: Choose ONLY ONE Of The Following Two Methods: Manual Build, Or Tokuhirom Perl-Build ]'
             C 'Please read the warning above.  Seriously.'
             # NEED ANSWER: does this actually work?
@@ -1681,7 +1733,7 @@ if [ $SECTION_CHOICE -le 21 ]; then
 
         elif [ $PERL_INSTALL_CHOICE == 'd' ] || [ $PERL_INSTALL_CHOICE == 'system' ]; then
 
-            echo '21d. [[[ LINUX, INSTALL SYSTEM-WIDE SYSTEM PERL & CPANM ]]]'
+            echo '31d. [[[ LINUX, INSTALL SYSTEM-WIDE SYSTEM PERL & CPANM ]]]'
             if [[ "$OS_CHOICE" == "ubuntu" ]]; then
                 VERIFY_UBUNTU
                 echo '[ Install Perl & CPANM ]'
@@ -1709,19 +1761,19 @@ if [ $SECTION_CHOICE -le 21 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-# SECTION 22 VARIABLES
+# SECTION 32 VARIABLES
 # overwrites previous settings, makes it easier to copy-and-paste from LAMP_installer.sh to rperl_installer.sh
 EDITOR='__EMPTY__'
 USERNAME='__EMPTY__'
 
-if [ $SECTION_CHOICE -le 22 ] && [ $DEVELOPER_CHOICE != 'yes' ]; then
-    echo  '22. [[[ LINUX, PACKAGE RPERL DEPENDENCIES ]]]'
+if [ $SECTION_CHOICE -le 32 ] && [ $DEVELOPER_CHOICE != 'yes' ]; then
+    echo  '32. [[[ LINUX, PACKAGE RPERL DEPENDENCIES ]]]'
     echo
     echo 'SKIPPING!  Developer Sections Disabled'
     echo
     CURRENT_SECTION_COMPLETE
-elif [ $SECTION_CHOICE -le 22 ]; then
-    echo  '22. [[[ LINUX, PACKAGE RPERL DEPENDENCIES ]]]'
+elif [ $SECTION_CHOICE -le 32 ]; then
+    echo  '32. [[[ LINUX, PACKAGE RPERL DEPENDENCIES ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
 
@@ -2107,7 +2159,7 @@ elif [ $SECTION_CHOICE -le 22 ]; then
             S make install
     #        S ln -sf /usr/lib/pkgconfig/libmongocxx.pc /usr/share/pkgconfig/libmongocxx.pc  # NOT NECESSARY IN UBUNTU???
     #        S ln -sf /usr/lib/pkgconfig/libbsoncxx.pc /usr/share/pkgconfig/libbsoncxx.pc    # NOT NECESSARY IN UBUNTU???
-            echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Before Running Optional Test Program, Please Install MongoDB Server Via LAMP Installer SECTION 60 [[[ UBUNTU LINUX, INSTALL MONGODB ]]] ]'
+            echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Before Running Optional Test Program, Please Install MongoDB Server Via LAMP Installer SECTION 70 [[[ UBUNTU LINUX, INSTALL MONGODB ]]] ]'
             echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Save Test Program ]'
             B printf "#include <iostream>\n#include <bsoncxx/builder/stream/document.hpp>\n#include <bsoncxx/json.hpp>\n#include <mongocxx/client.hpp>\n#include <mongocxx/instance.hpp>\nint main(int, char**) {\n    mongocxx::instance inst{};\n    mongocxx::client conn{mongocxx::uri{}};\n    bsoncxx::builder::stream::document document{};\n    auto collection = conn[\"testdb\"][\"testcollection\"];\n    document << \"hello\" << \"world\";\n    collection.insert_one(document.view());\n    auto cursor = collection.find({});\n    for (auto&& doc : cursor) {\n        std::cout << bsoncxx::to_json(doc) << std::endl;\n    }\n}" > ./mongocxx_test.cpp
             echo '[ UBUNTU MANUAL BUILD ONLY: Install RPerl Dependency MongoDB C++ Driver; Compile Test Program ]'
@@ -2248,8 +2300,8 @@ elif [ $SECTION_CHOICE -le 22 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 23 ]; then
-    echo '23. [[[ LINUX, INSTALL RPERL DEPENDENCIES ]]]'
+if [ $SECTION_CHOICE -le 33 ]; then
+    echo '33. [[[ LINUX, INSTALL RPERL DEPENDENCIES ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         echo '[ Overview Of RPerl Dependencies In This Section ]'
@@ -2410,66 +2462,66 @@ if [ $SECTION_CHOICE -le 23 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-# SECTION 24 VARIABLES
+# SECTION 34 VARIABLES
 #RPERL_INSTALL_CHOICE='__EMPTY__'  # this is now a global variable for command-line args, see top of file
 
-# SECTION 24b VARIABLES
+# SECTION 34b VARIABLES
 GITHUB_EMAIL='__EMPTY__'
 GITHUB_FIRST_NAME='__EMPTY__'
 GITHUB_LAST_NAME='__EMPTY__'
 RPERL_REPO_DIR='__EMPTY__'
 
-if [ $SECTION_CHOICE -le 24 ]; then
-    echo '24. [[[ PERL, INSTALL RPERL ]]]'
+if [ $SECTION_CHOICE -le 34 ]; then
+    echo '34. [[[ PERL, INSTALL RPERL ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         if [ $RPERL_INSTALL_CHOICE == '__EMPTY__' ]; then
             echo 'Please carefully read the following instructions, in order to choose an RPerl installation option...'
             echo
-            echo '24a. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA PACKAGES.RPERL.ORG ]]]'
+            echo '34a. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA PACKAGES.RPERL.ORG ]]]'
             echo '    [ You Should Use This Instead Of Stable Via CPAN Or Unstable Via GitHub In The Following Sub-Sections, Unless You Are An RPerl System Developer ]'
             echo '    [ This Option Will Install The Latest Stable Public Release Of RPerl, Pre-Built & Pre-Compiled ]'
             echo
             echo '__OR__ '
             echo
-            echo '24b. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPANM, SINGLE-USER ]]]'
-            echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 24a, Unless You Are An RPerl System Developer ]'
+            echo '34b. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPANM, SINGLE-USER ]]]'
+            echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 34a, Unless You Are An RPerl System Developer ]'
             echo '    [ This Option Will Install The Latest Stable Public Release Of RPerl, Built & Compiled On Your System, Using `cpanm` For Your Single User Only ]'
             echo
             echo '__OR__ '
             echo
-            echo '24c. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPANM, SYSTEM-WIDE ]]]'
-            echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 24a, Unless You Are An RPerl System Developer ]'
+            echo '34c. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPANM, SYSTEM-WIDE ]]]'
+            echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 34a, Unless You Are An RPerl System Developer ]'
             echo '    [ This Option Will Install The Latest Stable Public Release Of RPerl, Built & Compiled On Your System, Using `cpanm` For The Entire System ]'
             echo
             echo '__OR__ '
             echo
-            echo '24d. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPAN, SINGLE-USER ]]]'
-            echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 24a, Unless You Are An RPerl System Developer ]'
+            echo '34d. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPAN, SINGLE-USER ]]]'
+            echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 34a, Unless You Are An RPerl System Developer ]'
             echo '    [ This Option Will Install The Latest Stable Public Release Of RPerl, Built & Compiled On Your System, Using `cpan` For Your Single User Only ]'
             echo
             echo '__OR__ '
             echo
-            echo '24e. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPAN, SYSTEM-WIDE ]]]'
-            echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 24a, Unless You Are An RPerl System Developer ]'
+            echo '34e. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPAN, SYSTEM-WIDE ]]]'
+            echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 34a, Unless You Are An RPerl System Developer ]'
             echo '    [ This Option Will Install The Latest Stable Public Release Of RPerl, Built & Compiled On Your System, Using `cpan` For The Entire System ]'
             echo
             echo '__OR__ '
             echo
-            echo '24f. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB, SINGLE-USER, SECURE GIT ]]]'
-            echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 24a, Unless You Are An RPerl System Developer ]'
+            echo '34f. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB, SINGLE-USER, SECURE GIT ]]]'
+            echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 34a, Unless You Are An RPerl System Developer ]'
             echo '    [ This Option Will Install The Latest Unstable Development Release Of RPerl, Built & Compiled On Your System, Using Secure Github For Your Single User Only ]'
             echo
             echo '__OR__ '
             echo
-            echo '24g. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB, SINGLE-USER, PUBLIC GIT ]]]'
-            echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 24a, Unless You Are An RPerl System Developer ]'
+            echo '34g. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB, SINGLE-USER, PUBLIC GIT ]]]'
+            echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 34a, Unless You Are An RPerl System Developer ]'
             echo '    [ This Option Will Install The Latest Unstable Development Release Of RPerl, Built & Compiled On Your System, Using Public Github For Your Single User Only ]'
             echo
             echo '__OR__ '
             echo
-            echo '24h. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB, SINGLE-USER, PUBLIC ZIP ]]]'
-            echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 24a, Unless You Are An RPerl System Developer ]'
+            echo '34h. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB, SINGLE-USER, PUBLIC ZIP ]]]'
+            echo '    [ You SHOULD NOT Use This Instead Of Stable Via Packages In Section 34a, Unless You Are An RPerl System Developer ]'
             echo '    [ This Option Will Install The Latest Unstable Development Release Of RPerl, Built & Compiled On Your System, Using Public Github For Your Single User Only ]'
 
             C 'Please read the warnings above.  Seriously.'
@@ -2480,7 +2532,7 @@ if [ $SECTION_CHOICE -le 24 ]; then
         fi
 
         if [ $RPERL_INSTALL_CHOICE == 'a' ] || [ $RPERL_INSTALL_CHOICE == 'packages' ]; then
-            echo '24a. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA PACKAGES.RPERL.ORG ]]]'
+            echo '34a. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA PACKAGES.RPERL.ORG ]]]'
             echo
 
             if [[ "$OS_CHOICE" == "ubuntu" ]]; then
@@ -2506,7 +2558,7 @@ if [ $SECTION_CHOICE -le 24 ]; then
             fi
 
         elif [ $RPERL_INSTALL_CHOICE == 'b' ] || [ $RPERL_INSTALL_CHOICE == 'cpanm-single' ]; then
-            echo '24b. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPANM, SINGLE-USER ]]]'
+            echo '34b. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPANM, SINGLE-USER ]]]'
             echo '[ You Should Only Use This Option 24b If local::lib Or Perlbrew Is Installed For Your User ]'
             echo
 
@@ -2518,7 +2570,7 @@ if [ $SECTION_CHOICE -le 24 ]; then
             B cpanm -v --notest RPerl
 
         elif [ $RPERL_INSTALL_CHOICE == 'c' ] || [ $RPERL_INSTALL_CHOICE == 'cpanm-system' ]; then
-            echo '24c. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPANM, SYSTEM-WIDE ]]]'
+            echo '34c. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPANM, SYSTEM-WIDE ]]]'
             echo '[ You Should Only Use This Option 24c If local::lib Or Perlbrew Is NOT Installed For Your User ]'
             echo
 
@@ -2530,7 +2582,7 @@ if [ $SECTION_CHOICE -le 24 ]; then
             S cpanm -v --notest RPerl
 
         elif [ $RPERL_INSTALL_CHOICE == 'd' ] || [ $RPERL_INSTALL_CHOICE == 'cpan-single' ]; then
-            echo '24d. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPAN, SINGLE-USER ]]]'
+            echo '34d. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPAN, SINGLE-USER ]]]'
             echo '[ You Should Only Use This Option 24d If local::lib Or Perlbrew Is Installed For Your User, And You Do NOT Have CPANM Installed ]'
             echo
 
@@ -2542,7 +2594,7 @@ if [ $SECTION_CHOICE -le 24 ]; then
             B cpan -T RPerl
 
         elif [ $RPERL_INSTALL_CHOICE == 'e' ] || [ $RPERL_INSTALL_CHOICE == 'cpan-system' ]; then
-            echo '24e. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPAN, SYSTEM-WIDE ]]]'
+            echo '34e. [[[ PERL, INSTALL RPERL, LATEST STABLE VIA CPAN, SYSTEM-WIDE ]]]'
             echo '[ You Should Only Use This Option 24e If local::lib Or Perlbrew Is NOT Installed For Your User, And You Do NOT Have CPANM Installed ]'
             echo
 
@@ -2554,7 +2606,7 @@ if [ $SECTION_CHOICE -le 24 ]; then
             S cpan -T RPerl
 
         elif [ $RPERL_INSTALL_CHOICE == 'f' ] || [ $RPERL_INSTALL_CHOICE == 'github-secure-git' ]; then
-            echo '24f. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB, SINGLE-USER, SECURE GIT ]]]'
+            echo '34f. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB, SINGLE-USER, SECURE GIT ]]]'
             echo '[ If You Want To Upload Code To GitHub, Then You Must Use Secure Git Instead Of Public Git Or Public Zip ]'
             echo
 
@@ -2639,7 +2691,7 @@ if [ $SECTION_CHOICE -le 24 ]; then
             B git clone git@github.com:wbraswell/rperl.git $RPERL_REPO_DIR
 
         elif [ $RPERL_INSTALL_CHOICE == 'g' ] || [ $RPERL_INSTALL_CHOICE == 'github-public-git' ]; then
-            echo '24g. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB, SINGLE-USER, PUBLIC GIT ]]]'
+            echo '34g. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB, SINGLE-USER, PUBLIC GIT ]]]'
             echo '[ If You Want To Upload Code To GitHub, Then You Must Use Secure Git Instead Of Public Git Or Public Zip ]'
             echo
 
@@ -2650,7 +2702,7 @@ if [ $SECTION_CHOICE -le 24 ]; then
             B git clone https://github.com/wbraswell/rperl.git $RPERL_REPO_DIR
 
         elif [ $RPERL_INSTALL_CHOICE == 'h' ] || [ $RPERL_INSTALL_CHOICE == 'github-public-zip' ]; then
-            echo '24h. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB, SINGLE-USER, PUBLIC ZIP ]]]'
+            echo '34h. [[[ PERL, INSTALL RPERL, LATEST UNSTABLE VIA GITHUB, SINGLE-USER, PUBLIC ZIP ]]]'
             echo '[ If You Want To Upload Code To GitHub, Then You Must Use Secure Git Instead Of Public Git Or Public Zip ]'
             echo
 
@@ -2691,14 +2743,14 @@ if [ $SECTION_CHOICE -le 24 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-# SECTION 25 VARIABLES
+# SECTION 35 VARIABLES
 RPERL_VERBOSE='__EMPTY__'
 RPERL_DEBUG='__EMPTY__'
 RPERL_WARNINGS='__EMPTY__'
 RPERL_INSTALL_DIRECTORY='__EMPTY__'
 
-if [ $SECTION_CHOICE -le 25 ]; then
-    echo '25. [[[ RPERL, RUN COMPILER TESTS ]]]'
+if [ $SECTION_CHOICE -le 35 ]; then
+    echo '35. [[[ RPERL, RUN COMPILER TESTS ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $RPERL_VERBOSE 'RPERL_VERBOSE additional user output, 0 for off, 1 for on' '1'
@@ -2785,14 +2837,14 @@ if [ $SECTION_CHOICE -le 25 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-# SECTION 26 VARIABLES
+# SECTION 36 VARIABLES
 PHYSICSPERL_DOWNLOAD_DIRECTORY='__EMPTY__'
 #PHYSICSPERL_INSTALL_DIRECTORY='__EMPTY__'
 PHYSICSPERL_NBODY_STEPS='__EMPTY__'
 PHYSICSPERL_ENABLE_GRAPHICS='__EMPTY__'
 
-if [ $SECTION_CHOICE -le 26 ]; then
-    echo '26. [[[ RPERL, INSTALL RPERL APPS & RUN DEMOS ]]]'
+if [ $SECTION_CHOICE -le 36 ]; then
+    echo '36. [[[ RPERL, INSTALL RPERL APPS & RUN DEMOS ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $RPERL_VERBOSE 'RPERL_VERBOSE additional user output, 0 for off, 1 for on' '1'
@@ -2879,8 +2931,8 @@ if [ $SECTION_CHOICE -le 26 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 30 ]; then
-    echo '30. [[[ UBUNTU LINUX, INSTALL NFS & DBXFS ]]]'
+if [ $SECTION_CHOICE -le 40 ]; then
+    echo '40. [[[ UBUNTU LINUX, INSTALL NFS & DBXFS ]]]'
     echo
     VERIFY_UBUNTU
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
@@ -2951,8 +3003,8 @@ if [ $SECTION_CHOICE -le 30 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 31 ]; then
-    echo '31. [[[ UBUNTU LINUX, INSTALL APACHE & MOD_PERL ]]]'
+if [ $SECTION_CHOICE -le 41 ]; then
+    echo '41. [[[ UBUNTU LINUX, INSTALL APACHE & MOD_PERL ]]]'
     echo
     VERIFY_UBUNTU
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
@@ -3028,7 +3080,7 @@ if [ $SECTION_CHOICE -le 31 ]; then
             exit 1
         fi
 
-        echo '[ Check Certbot Installation; Certificate Configuration Occurs Per-Domain In Section 32 ]'
+        echo '[ Check Certbot Installation; Certificate Configuration Occurs Per-Domain In Section 42 ]'
         B certbot --version
 
     elif [ $MACHINE_CHOICE == '1' ] || [ $MACHINE_CHOICE == 'existing' ]; then
@@ -3037,14 +3089,14 @@ if [ $SECTION_CHOICE -le 31 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-# SECTION 32 VARIABLES
+# SECTION 42 VARIABLES
 ADMIN_EMAIL='__EMPTY__'
 CERTIFICATE_NAME='__EMPTY__'
 CERTIFICATE_DOMAIN_NAMES=''
 CERTBOT_DOMAIN_ARGUMENTS=''
 
-if [ $SECTION_CHOICE -le 32 ]; then
-    echo '32. [[[ APACHE, CONFIGURE DOMAIN(S) ]]]'
+if [ $SECTION_CHOICE -le 42 ]; then
+    echo '42. [[[ APACHE, CONFIGURE DOMAIN(S) ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $EDITOR 'preferred text editor' 'vi'
@@ -3156,8 +3208,8 @@ if [ $SECTION_CHOICE -le 32 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 33 ]; then
-    echo '33. [[[ UBUNTU LINUX, INSTALL MYSQL & PHPMYADMIN ]]]'
+if [ $SECTION_CHOICE -le 43 ]; then
+    echo '43. [[[ UBUNTU LINUX, INSTALL MYSQL & PHPMYADMIN ]]]'
     echo
     VERIFY_UBUNTU
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
@@ -3173,12 +3225,12 @@ if [ $SECTION_CHOICE -le 33 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-# SECTION 34 VARIABLES
+# SECTION 44 VARIABLES
 MCRYPT_INI='__EMPTY__'
 MCRYPT_SO='__EMPTY__'
 
-if [ $SECTION_CHOICE -le 34 ]; then
-    echo '34. [[[ APACHE & MYSQL, CONFIGURE PHPMYADMIN ]]]'
+if [ $SECTION_CHOICE -le 44 ]; then
+    echo '44. [[[ APACHE & MYSQL, CONFIGURE PHPMYADMIN ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $EDITOR 'preferred text editor' 'vi'
@@ -3270,8 +3322,8 @@ if [ $SECTION_CHOICE -le 34 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 35 ]; then
-    echo '35. [[[ UBUNTU LINUX, INSTALL WEBMIN ]]]'
+if [ $SECTION_CHOICE -le 45 ]; then
+    echo '45. [[[ UBUNTU LINUX, INSTALL WEBMIN ]]]'
     echo
     VERIFY_UBUNTU
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
@@ -3293,8 +3345,8 @@ if [ $SECTION_CHOICE -le 35 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 36 ]; then
-    echo '36. [[[ UBUNTU LINUX, INSTALL POSTFIX ]]]'
+if [ $SECTION_CHOICE -le 46 ]; then
+    echo '46. [[[ UBUNTU LINUX, INSTALL POSTFIX ]]]'
     echo
     VERIFY_UBUNTU
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
@@ -3349,11 +3401,11 @@ if [ $SECTION_CHOICE -le 36 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 37 ]; then
-    echo '37. [[[ PERL, INSTALL LATEST CATALYST ]]]'
+if [ $SECTION_CHOICE -le 47 ]; then
+    echo '47. [[[ PERL, INSTALL LATEST CATALYST ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
-        echo '[ WARNING: Do NOT Mix With Non-Latest Catalyst Via apt In Section 38! ]'
+        echo '[ WARNING: Do NOT Mix With Non-Latest Catalyst Via apt In Section 48! ]'
         C 'Please read the warning above.  Seriously.'
         echo '[ NOTE: Installing Latest Catalyst Via CPAN May Take Over An Hour To Complete ]'
         B cpanm -v --notest Task::Catalyst Catalyst::Devel
@@ -3363,12 +3415,12 @@ if [ $SECTION_CHOICE -le 37 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 38 ]; then
-    echo '38. [[[ UBUNTU LINUX, INSTALL NON-LATEST CATALYST ]]]'
+if [ $SECTION_CHOICE -le 48 ]; then
+    echo '48. [[[ UBUNTU LINUX, INSTALL NON-LATEST CATALYST ]]]'
     echo
     VERIFY_UBUNTU
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
-        echo '[ WARNING: Do NOT Mix With Latest Catalyst Via CPAN In Section 37! ]'
+        echo '[ WARNING: Do NOT Mix With Latest Catalyst Via CPAN In Section 47! ]'
         C 'Please read the warning above.  Seriously.'
         S apt-get install libmodule-install-perl libcatalyst-engine-apache-perl
         S service apache2 restart
@@ -3379,8 +3431,8 @@ if [ $SECTION_CHOICE -le 38 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 39 ]; then
-    echo '39. [[[ PERL, CHECK CATALYST VERSIONS ]]]'
+if [ $SECTION_CHOICE -le 49 ]; then
+    echo '49. [[[ PERL, CHECK CATALYST VERSIONS ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         B dpkg -p libcatalyst-perl
@@ -3408,11 +3460,11 @@ if [ $SECTION_CHOICE -le 39 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-# SECTION 40 VARIABLES
+# SECTION 50 VARIABLES
 MYSQL_ROOTPASS='__EMPTY__'
 
-if [ $SECTION_CHOICE -le 40 ]; then
-    echo '40. [[[ PERL, INSTALL RAPIDAPP ]]]'
+if [ $SECTION_CHOICE -le 50 ]; then
+    echo '50. [[[ PERL, INSTALL RAPIDAPP ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $USERNAME "new machine's username" `whoami`
@@ -3450,8 +3502,8 @@ if [ $SECTION_CHOICE -le 40 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 41 ]; then
-    echo '41. [[[ UBUNTU LINUX, INSTALL SHINYCMS DEPENDENCIES ]]]'
+if [ $SECTION_CHOICE -le 51 ]; then
+    echo '51. [[[ UBUNTU LINUX, INSTALL SHINYCMS DEPENDENCIES ]]]'
     echo
     VERIFY_UBUNTU
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
@@ -3459,7 +3511,7 @@ if [ $SECTION_CHOICE -le 41 ]; then
         EDITOR=$USER_INPUT
         D $UBUNTU_RELEASE_NAME 'Ubuntu release name (trusty, xenial, bionic, focal, etc.)' 'xenial'
         UBUNTU_RELEASE_NAME=$USER_INPUT
-        echo '[ WARNING: Prerequisite Dependencies Include Full LAMP Stack (Sections 0 - 11, 20, 21); mod_perl (Section 31) OR mod_fastcgi (This Section); Postfix (Section 36); And Expat, etc (This Section). ]'
+        echo '[ WARNING: Prerequisite Dependencies Include Full LAMP Stack (Sections 0 - 12, 30, 31); mod_perl (Section 41) OR mod_fastcgi (This Section); Postfix (Section 46); And Expat, etc (This Section). ]'
         C 'Please read the warning above.  Seriously.'
         echo '[ Install Expat, etc ]'
         S sudo apt-get install expat libexpat1-dev libxml2-dev zlib1g-dev
@@ -3481,8 +3533,8 @@ if [ $SECTION_CHOICE -le 41 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 42 ]; then
-    echo  '42. [[[ PERL SHINYCMS, INSTALL SHINYCMS DEPENDENCIES & SHINYCMS ]]]'
+if [ $SECTION_CHOICE -le 52 ]; then
+    echo  '52. [[[ PERL SHINYCMS, INSTALL SHINYCMS DEPENDENCIES & SHINYCMS ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $USERNAME "new machine's username" `whoami`
@@ -3509,7 +3561,7 @@ if [ $SECTION_CHOICE -le 42 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-# SECTION 43 VARIABLES
+# SECTION 53 VARIABLES
 DOMAIN_NAME_UNDERSCORES='__EMPTY__'
 DOMAIN_NAME_NO_USER='__EMPTY__'
 DOMAIN_NAME_YES_USER='__EMPTY__'
@@ -3521,8 +3573,8 @@ SITE_NAME_DEFAULT='__EMPTY__'
 ADMIN_FIRST_NAME='__EMPTY__'
 ADMIN_LAST_NAME='__EMPTY__'
 
-if [ $SECTION_CHOICE -le 43 ]; then
-    echo  '43. [[[ PERL SHINYCMS, CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES ]]]'
+if [ $SECTION_CHOICE -le 53 ]; then
+    echo  '53. [[[ PERL SHINYCMS, CREATE DATABASE & EDIT MYSHINYTEMPLATE FILES ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $USERNAME "new machine's username" `whoami`
@@ -3621,8 +3673,8 @@ if [ $SECTION_CHOICE -le 43 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 44 ]; then
-    echo  '44. [[[ PERL SHINYCMS, BUILD DEMO DATABASE & RUN TESTS ]]]'
+if [ $SECTION_CHOICE -le 54 ]; then
+    echo  '54. [[[ PERL SHINYCMS, BUILD DEMO DATABASE & RUN TESTS ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
@@ -3652,12 +3704,12 @@ if [ $SECTION_CHOICE -le 44 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-# SECTION 45 VARIABLES
+# SECTION 55 VARIABLES
 DOMAIN_NAME_UNDERSCORES_NO_USER='__EMPTY__'
 DOMAIN_NAME_UNDERSCORES_YES_USER='__EMPTY__'
 
-if [ $SECTION_CHOICE -le 45 ]; then
-    echo  '45. [[[ PERL SHINYCMS, BACKUP & RESTORE DATABASE ]]]'
+if [ $SECTION_CHOICE -le 55 ]; then
+    echo  '55. [[[ PERL SHINYCMS, BACKUP & RESTORE DATABASE ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
@@ -3705,12 +3757,12 @@ if [ $SECTION_CHOICE -le 45 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 46 ]; then
-    echo  '46. [[[ PERL SHINYCMS, CONFIGURE APACHE MOD_FASTCGI ]]]'
+if [ $SECTION_CHOICE -le 56 ]; then
+    echo  '56. [[[ PERL SHINYCMS, CONFIGURE APACHE MOD_FASTCGI ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
-        echo '[ You SHOULD Use This Section Instead Of Apache mod_perl In Section 47, Unless You Have No Choice ]'
-        echo '[ WARNING: Do NOT Mix With Apache mod_perl In Section 47! ]'
+        echo '[ You SHOULD Use This Section Instead Of Apache mod_perl In Section 57, Unless You Have No Choice ]'
+        echo '[ WARNING: Do NOT Mix With Apache mod_perl In Section 57! ]'
         C 'Please read the warning above.  Seriously.'
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
@@ -3776,7 +3828,7 @@ END_HEREDOC
         echo '[ 4 Options Include: Manual local::lib; Manual Perlbrew; Automatic Upstart; Automatic SysVinit ]'
         C 'Please read the warning above.  Seriously.'
         echo '[ Start FastCGI Service, Manual, local::lib ]'
-        echo "[ Run As Non-Root User $USERNAME By User $USERNAME, Must Have Created Symlinks In Section 43 (EDIT MYSHINYTEMPLATE FILES) ]"
+        echo "[ Run As Non-Root User $USERNAME By User $USERNAME, Must Have Created Symlinks In Section 53 (EDIT MYSHINYTEMPLATE FILES) ]"
         B ~/bin/fastcgi_start__$DOMAIN_NAME.sh
 
         # OR
@@ -3821,12 +3873,12 @@ END_HEREDOC
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 47 ]; then
-    echo  '47. [[[ PERL SHINYCMS, CONFIGURE APACHE MOD_PERL ]]]'
+if [ $SECTION_CHOICE -le 57 ]; then
+    echo  '57. [[[ PERL SHINYCMS, CONFIGURE APACHE MOD_PERL ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
-        echo '[ You Should NOT Use This Section Instead Of Apache mod_fastcgi In Section 46, Unless You Have No Choice ]'
-        echo '[ WARNING: Do NOT Mix With Apache mod_fastcgi In Section 46! ]'
+        echo '[ You Should NOT Use This Section Instead Of Apache mod_fastcgi In Section 56, Unless You Have No Choice ]'
+        echo '[ WARNING: Do NOT Mix With Apache mod_fastcgi In Section 56! ]'
         C 'Please read the warning above.  Seriously.'
         D $EDITOR 'preferred text editor' 'vi'
         EDITOR=$USER_INPUT
@@ -3888,8 +3940,8 @@ END_HEREDOC
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 48 ]; then
-    echo  '48. [[[ PERL SHINYCMS, CREATE APACHE DIRECTORIES & ENABLE STATIC PAGE ]]]'
+if [ $SECTION_CHOICE -le 58 ]; then
+    echo  '58. [[[ PERL SHINYCMS, CREATE APACHE DIRECTORIES & ENABLE STATIC PAGE ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
@@ -3904,8 +3956,8 @@ if [ $SECTION_CHOICE -le 48 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 49 ]; then
-    echo  '49. [[[ PERL SHINYCMS, CONFIGURE APACHE PERMISSIONS & ENABLE DYNAMIC PAGES ]]]'
+if [ $SECTION_CHOICE -le 59 ]; then
+    echo  '59. [[[ PERL SHINYCMS, CONFIGURE APACHE PERMISSIONS & ENABLE DYNAMIC PAGES ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $USERNAME "new machine's username" `whoami`
@@ -3941,8 +3993,8 @@ if [ $SECTION_CHOICE -le 49 ]; then
     CURRENT_SECTION_COMPLETE
 fi
 
-if [ $SECTION_CHOICE -le 50 ]; then
-    echo  '50. [[[ PERL SHINYCMS, CONFIGURE SHINY ]]]'
+if [ $SECTION_CHOICE -le 60 ]; then
+    echo  '60. [[[ PERL SHINYCMS, CONFIGURE SHINY ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $DOMAIN_NAME "new machine's fully-qualified domain name (ex: domain.com OR subdomain.domain.com)" `hostname`
@@ -3958,7 +4010,7 @@ if [ $SECTION_CHOICE -le 50 ]; then
         echo '[ Configure ShinyCMS Settings via ShinyCMS Web Interface ]'
         echo "http://$DOMAIN_NAME"
         echo 'Login To ShinyCMS Web Interface As New Admin User From Database Update In Previous Step'
-        echo 'Admin area -> Users -> List Users -> Change Passwords For All 3 Users (DOUBLE CHECK, SHOULD ALREADY BE DONE IN SECTION 37)'
+        echo 'Admin area -> Users -> List Users -> Change Passwords For All 3 Users (DOUBLE CHECK, SHOULD ALREADY BE DONE IN SECTION 47)'
         echo 'Admin area -> Users -> List Users -> Edit All 3 Users -> Update E-Mail, etc.'
         echo 'Admin area -> Pages -> List Form Handlers -> Edit Contact Form -> Update "E-mail To" Field'
         echo 'Admin area -> Pages -> List Pages -> Edit Home -> Add Image "/static/cms-uploads/images/homepage_added.png" Aligned Left & "Lorem Ipsum Dolor" Text'
@@ -3971,8 +4023,8 @@ if [ $SECTION_CHOICE -le 50 ]; then
 #    CURRENT_SECTION_COMPLETE  # final section!
 fi
 
-if [ $SECTION_CHOICE -le 60 ]; then
-    echo '60. [[[ LINUX, INSTALL MONGODB ]]]'
+if [ $SECTION_CHOICE -le 70 ]; then
+    echo '70. [[[ LINUX, INSTALL MONGODB ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
 
@@ -4133,11 +4185,11 @@ B wscat -b -r ws://localhost:3000
 
 
 
-# SECTION 70 VARIABLES
+# SECTION 80 VARIABLES
 LOCAL_HOSTNAME='__EMPTY__'
 
-if [ $SECTION_CHOICE -le 70 ]; then
-    echo  '70. [[[ PERL CLOUDFORFREE, INSTALL ]]]'
+if [ $SECTION_CHOICE -le 80 ]; then
+    echo  '80. [[[ PERL CLOUDFORFREE, INSTALL ]]]'
     echo
     if [ $MACHINE_CHOICE == '0' ] || [ $MACHINE_CHOICE == 'new' ]; then
         D $USERNAME "new machine's username" `whoami`
@@ -4146,7 +4198,7 @@ if [ $SECTION_CHOICE -le 70 ]; then
         P $LOCAL_HOSTNAME "Existing Machine's Local Hostname"
         LOCAL_HOSTNAME=$USER_INPUT
 
-echo '[ MUST COMPLETE SECTION 32 FOR cloudforfree.org DOMAIN BEFORE RUNNING THIS SECTION 70!!! ]'
+echo '[ MUST COMPLETE SECTION 42 FOR cloudforfree.org DOMAIN BEFORE RUNNING THIS SECTION 80!!! ]'
 
 # [[[ PERL CLOUDFORFREE, PREREQUISITES ]]]
 

@@ -1,5 +1,5 @@
-# Last Updated 20260224 2026.055
-# v0.100
+# Last Updated 20260724 2026.205
+# v0.110
 
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
@@ -33,7 +33,7 @@ fi
 export PATH=$HOME/script:$HOME/bin:$PATH:.:script:bin
 
 # enable lib & bin & script directories for git repositories
-for REPO_DIR in repos_gitlab/perl-types repos_github/lampuniversity.org repos_github/rperl
+for REPO_DIR in repos_gitlab/gitlab-template repos_gitlab/perl-types repos_github/lampuniversity.org repos_github/rperl
 do
     if [ -d $HOME/$REPO_DIR/lib ]; then 
         export PERL5LIB=$HOME/$REPO_DIR/lib:$PERL5LIB
@@ -41,6 +41,10 @@ do
 
     if [ -d $HOME/$REPO_DIR/bin ]; then 
         export PATH=$HOME/$REPO_DIR/bin:$PATH
+    fi
+
+    if [ -d $HOME/$REPO_DIR/bin/dev ]; then 
+        export PATH=$HOME/$REPO_DIR/bin/dev:$PATH
     fi
 
     if [ -d $HOME/$REPO_DIR/script ]; then 
