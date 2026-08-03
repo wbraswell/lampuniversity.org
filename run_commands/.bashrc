@@ -188,3 +188,5 @@ if [ -f /usr/bin/keychain ] && [ -f $HOME/.ssh/id_rsa ]; then
     source $HOME/.keychain/$HOSTNAME-sh
 fi
 
+
+. "$HOME/.local/bin/env"
