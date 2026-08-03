@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# v0.001
+# v0.002
 set -euo pipefail
 
-SCRIPT_VERSION="0.001"
+SCRIPT_VERSION="0.002"
 TRANSFER_DIRECTORY="${WHISPERX_TRANSFER_DIRECTORY:-/mnt/data}"
 DROPBOX_ROOT="${WHISPERX_DROPBOX_ROOT:-/home_wbraswell/school/utd/whisperx}"
 INPUT_NAME="${1:-2026-04-22_14-01-00.mp4}"
 SPEAKER_COUNT="${2:-3}"
 DROPBOX_HELPER="$TRANSFER_DIRECTORY/whisperx_dropbox_checkpoint_sync.pl"
-INSTALLER="$TRANSFER_DIRECTORY/install_whisperx_transfer_bundle_and_transcribe.sh"
+INSTALLER="$TRANSFER_DIRECTORY/whisperx_transfer_bundle_install_and_transcribe.sh"
 DROPBOX_CREDENTIALS_FILE="${WHISPERX_DROPBOX_CREDENTIALS_FILE:-}"
 TOKEN_CACHE_FILE="${WHISPERX_DROPBOX_TOKEN_CACHE_FILE:-$TRANSFER_DIRECTORY/.whisperx-dropbox-token-cache.json}"
 

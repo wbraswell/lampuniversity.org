@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# v0.003
+# v0.004
 set -euo pipefail
 
-SCRIPT_VERSION="0.003"
+SCRIPT_VERSION="0.004"
 BUILD_MODE="${1:-all}"
 BUILD_TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 RUNTIME_BUNDLE_NAME="whisperx_transfer_bundle_$BUILD_TIMESTAMP"

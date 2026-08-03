@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# v0.003
+# v0.004
 set -euo pipefail
 
-SCRIPT_VERSION="0.003"
+SCRIPT_VERSION="0.004"
 PARTS_DIRECTORY="${WHISPERX_TRANSFER_DIRECTORY:-/mnt/data}"
 INSTALL_ROOT="$PARTS_DIRECTORY/whisperx-full"
 EXTRACT_ROOT="$INSTALL_ROOT/extracted"

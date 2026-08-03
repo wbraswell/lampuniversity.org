@@ -1,6 +1,6 @@
 # WhisperX Sandbox Fail-Safe Workflow
 
-Document version: 0.001
+Document version: 0.002
 
 ## Purpose
 
@@ -11,9 +11,9 @@ This update keeps the large dependency/runtime bundle independent from the frequ
 Run the updated bundler in one of three modes:
 
 ```bash
-~/Downloads/build_whisperx_transfer_bundle.sh source
-~/Downloads/build_whisperx_transfer_bundle.sh dependencies
-~/Downloads/build_whisperx_transfer_bundle.sh all
+~/repos_github/lampuniversity.org/bin/whisperx_transfer_bundle_build.sh source
+~/repos_github/lampuniversity.org/bin/whisperx_transfer_bundle_build.sh dependencies
+~/repos_github/lampuniversity.org/bin/whisperx_transfer_bundle_build.sh all
 ```
 
 `source` creates only:
@@ -62,8 +62,8 @@ An unattended shell cannot invoke the ChatGPT Dropbox connector. The wrapper the
 Create a Dropbox app with access to the required folder and the file metadata/content read and write permissions. Then run:
 
 ```bash
-chmod a+x configure_whisperx_dropbox_credentials.pl
-./configure_whisperx_dropbox_credentials.pl \
+chmod a+x ~/repos_github/lampuniversity.org/bin/whisperx_dropbox_configure_credentials.pl
+~/repos_github/lampuniversity.org/bin/whisperx_dropbox_configure_credentials.pl \
     --output /private/path/whisperx_dropbox_credentials.conf
 ```
 
@@ -81,8 +81,8 @@ Never upload that credential file to Dropbox, Git, or ChatGPT.
 Place the dependency bundle files, latest source archive and checksum, control scripts, MP4, and private credential file in the sandbox. Then run:
 
 ```bash
-chmod a+x /mnt/data/install_whisperx_transfer_bundle_and_transcribe.sh
-/mnt/data/install_whisperx_transfer_bundle_and_transcribe.sh \
+chmod a+x /mnt/data/whisperx_transfer_bundle_install_and_transcribe.sh
+/mnt/data/whisperx_transfer_bundle_install_and_transcribe.sh \
     /mnt/data/2026-04-22_14-01-00.mp4 \
     3
 ```
@@ -101,7 +101,7 @@ The wrapper automatically:
 A deleted sandbox cannot execute its own recovery. Reintroduce only these bootstrap requirements:
 
 ```text
-restore_whisperx_sandbox_from_dropbox.sh
+whisperx_dropbox_restore_sandbox.sh
 whisperx_dropbox_checkpoint_sync.pl
 private Dropbox credentials file or equivalent environment variables
 ```
@@ -109,8 +109,8 @@ private Dropbox credentials file or equivalent environment variables
 Then run:
 
 ```bash
-chmod a+x /mnt/data/restore_whisperx_sandbox_from_dropbox.sh
-/mnt/data/restore_whisperx_sandbox_from_dropbox.sh \
+chmod a+x /mnt/data/whisperx_dropbox_restore_sandbox.sh
+/mnt/data/whisperx_dropbox_restore_sandbox.sh \
     2026-04-22_14-01-00.mp4 \
     3
 ```

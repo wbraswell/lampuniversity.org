@@ -13,7 +13,7 @@ use JSON::PP qw(decode_json encode_json);
 use MIME::Base64 qw(encode_base64);
 use POSIX qw(strftime);
 
-our $VERSION = '0.007';
+our $VERSION = '0.008';
 
 my $MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
 my $DEFAULT_DROPBOX_ROOT = '/home_wbraswell/school/utd/whisperx';
@@ -684,12 +684,13 @@ sub bootstrap_download {
     close $parts_handle or die "Unable to close $parts_manifest_local: $!\n";
 
     my @control_files = qw(
-        build_whisperx_transfer_bundle.sh
-        configure_whisperx_dropbox_credentials.pl
-        install_whisperx_transfer_bundle_and_transcribe.sh
-        restore_whisperx_sandbox_from_dropbox.sh
+        whisperx_transfer_bundle_build.sh
+        whisperx_dropbox_configure_credentials.pl
+        whisperx_transfer_bundle_install_and_transcribe.sh
+        whisperx_dropbox_restore_sandbox.sh
         whisperx_dropbox_checkpoint_sync.pl
         whisperx_dropbox_credentials.template.conf
+        whisperx_sandbox_fail_safe_readme.md
         whisperx_transcribe_accents.sh
         whisperx_correct_transcript.pl
         whisperx_corrections.template.json

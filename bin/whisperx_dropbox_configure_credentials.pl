@@ -10,7 +10,7 @@ use HTTP::Tiny;
 use JSON::PP qw(decode_json);
 use MIME::Base64 qw(encode_base64);
 
-our $VERSION = '0.001';
+our $VERSION = '0.002';
 
 my $output_path = q{};
 my $open_browser = 1;
