@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# v0.004
+# v0.008
 set -euo pipefail
 
-SCRIPT_VERSION="0.004"
+SCRIPT_VERSION="0.008"
 PARTS_DIRECTORY="${WHISPERX_TRANSFER_DIRECTORY:-/mnt/data}"
 INSTALL_ROOT="$PARTS_DIRECTORY/whisperx-full"
 EXTRACT_ROOT="$INSTALL_ROOT/extracted"
@@ -11,7 +11,7 @@ SOURCE_EXTRACT_ROOT="$INSTALL_ROOT/source-extracted"
 BIN_DIRECTORY="$INSTALL_ROOT/bin"
 INPUT_FILE="${1:-$PARTS_DIRECTORY/2026-04-22_14-01-00.mp4}"
 SPEAKER_COUNT="${2:-3}"
-DROPBOX_ROOT="${WHISPERX_DROPBOX_ROOT:-/home_wbraswell/school/utd/whisperx}"
+PREPARE_ONLY="${WHISPERX_PREPARE_ONLY:-0}"
 
 command -v awk
 command -v basename
@@ -56,14 +56,25 @@ SOURCE_MANIFEST="$PARTS_DIRECTORY/$(basename -- "$SOURCE_MANIFEST_NAME")"
 SOURCE_ARCHIVE="$PARTS_DIRECTORY/$(basename -- "$SOURCE_MANIFEST" .sha256)"
 
 WRAPPER_SOURCE="$PARTS_DIRECTORY/whisperx_transcribe_accents.sh"
-DROPBOX_HELPER_SOURCE="$PARTS_DIRECTORY/whisperx_dropbox_checkpoint_sync.pl"
+CONNECTOR_HOOK_SOURCE="$PARTS_DIRECTORY/whisperx_checkpoint_connector_pause.sh"
+CONNECTOR_RESTORE_SOURCE="$PARTS_DIRECTORY/whisperx_checkpoint_connector_restore.sh"
 
 test -f "$PARTS_MANIFEST"
 test -f "$ARCHIVE_MANIFEST"
 test -f "$SOURCE_MANIFEST"
 test -f "$SOURCE_ARCHIVE"
 test -f "$WRAPPER_SOURCE"
-test -f "$DROPBOX_HELPER_SOURCE"
+test -f "$CONNECTOR_HOOK_SOURCE"
+test -f "$CONNECTOR_RESTORE_SOURCE"
+bash "$CONNECTOR_HOOK_SOURCE" --preflight
+bash "$CONNECTOR_RESTORE_SOURCE" --preflight
+
+
+if [ ! -f "$INPUT_FILE" ]; then
+    echo "ERROR: Input recording is not staged locally: $INPUT_FILE" >&2
+    echo "The ChatGPT tool layer must stage the recording before running this installer." >&2
+    exit 1
+fi
 
 EXPECTED_SOURCE_SHA256="$(awk '{print $1; exit}' "$SOURCE_MANIFEST")"
 ACTUAL_SOURCE_SHA256="$(sha256sum "$SOURCE_ARCHIVE" | awk '{print $1}')"
@@ -145,19 +156,22 @@ test -f "$SOURCE_DIRECTORY/pyproject.toml"
 "$RUNTIME_DIRECTORY/bin/python" -c 'from importlib.metadata import version; print("whisperx", version("whisperx"))'
 
 cp "$WRAPPER_SOURCE" "$BIN_DIRECTORY/whisperx_transcribe_accents.sh"
-cp "$DROPBOX_HELPER_SOURCE" "$BIN_DIRECTORY/whisperx_dropbox_checkpoint_sync.pl"
+cp "$CONNECTOR_HOOK_SOURCE" "$BIN_DIRECTORY/whisperx_checkpoint_connector_pause.sh"
+cp "$CONNECTOR_RESTORE_SOURCE" "$BIN_DIRECTORY/whisperx_checkpoint_connector_restore.sh"
 chmod a+x "$BIN_DIRECTORY/whisperx_transcribe_accents.sh"
-chmod a+x "$BIN_DIRECTORY/whisperx_dropbox_checkpoint_sync.pl"
+chmod a+x "$BIN_DIRECTORY/whisperx_checkpoint_connector_pause.sh"
+chmod a+x "$BIN_DIRECTORY/whisperx_checkpoint_connector_restore.sh"
 
-if [ -f "$RUNTIME_BUNDLE_DIRECTORY/optional-tools/whisperx_correct_transcript.pl" ]; then
-    cp "$RUNTIME_BUNDLE_DIRECTORY/optional-tools/whisperx_correct_transcript.pl" \
-        "$BIN_DIRECTORY/whisperx_correct_transcript.pl"
-    chmod a+x "$BIN_DIRECTORY/whisperx_correct_transcript.pl"
+if [ -f "$RUNTIME_BUNDLE_DIRECTORY/optional-tools/whisperx_transcript_correct.pl" ]; then
+    cp "$RUNTIME_BUNDLE_DIRECTORY/optional-tools/whisperx_transcript_correct.pl" "$BIN_DIRECTORY/whisperx_transcript_correct.pl"
+    chmod a+x "$BIN_DIRECTORY/whisperx_transcript_correct.pl"
+elif [ -f "$RUNTIME_BUNDLE_DIRECTORY/optional-tools/whisperx_correct_transcript.pl" ]; then
+    cp "$RUNTIME_BUNDLE_DIRECTORY/optional-tools/whisperx_correct_transcript.pl" "$BIN_DIRECTORY/whisperx_transcript_correct.pl"
+    chmod a+x "$BIN_DIRECTORY/whisperx_transcript_correct.pl"
 fi
 
 if [ -f "$RUNTIME_BUNDLE_DIRECTORY/optional-tools/whisperx_corrections.template.json" ]; then
-    cp "$RUNTIME_BUNDLE_DIRECTORY/optional-tools/whisperx_corrections.template.json" \
-        "$BIN_DIRECTORY/whisperx_corrections.template.json"
+    cp "$RUNTIME_BUNDLE_DIRECTORY/optional-tools/whisperx_corrections.template.json" "$BIN_DIRECTORY/whisperx_corrections.template.json"
 fi
 
 cat > "$BIN_DIRECTORY/source_this_to_export_nonperl_paths.sh" <<ENVIRONMENT
@@ -185,35 +199,19 @@ export NLTK_DATA="$RUNTIME_BUNDLE_DIRECTORY/cache/nltk_data"
 export HF_HUB_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1
 export HF_TOKEN="${HF_TOKEN:-offline-cache-only}"
-export WHISPERX_DROPBOX_ROOT="$DROPBOX_ROOT"
 export WHISPERX_SOURCE_VERSION="$(basename -- "$SOURCE_ARCHIVE")"
-
-# Restore the recording from the configured Dropbox root when it is absent locally.
-if [ ! -f "$INPUT_FILE" ]; then
-    if [ -z "${WHISPERX_DROPBOX_CREDENTIALS_FILE:-}" ] &&
-       [ -z "${DROPBOX_ACCESS_TOKEN:-}" ] &&
-       { [ -z "${DROPBOX_APP_KEY:-}" ] || [ -z "${DROPBOX_APP_SECRET:-}" ] || [ -z "${DROPBOX_REFRESH_TOKEN:-}" ]; }; then
-        echo "ERROR: Input file is missing and Dropbox credentials are unavailable: $INPUT_FILE" >&2
-        exit 1
-    fi
-    DOWNLOAD_ARGUMENTS=(
-        download-file
-        --dropbox-path "$DROPBOX_ROOT/$(basename -- "$INPUT_FILE")"
-        --local-path "$INPUT_FILE"
-        --dropbox-root "$DROPBOX_ROOT"
-    )
-    if [ -n "${WHISPERX_DROPBOX_CREDENTIALS_FILE:-}" ]; then
-        DOWNLOAD_ARGUMENTS+=(--credentials-file "$WHISPERX_DROPBOX_CREDENTIALS_FILE")
-    fi
-    perl "$BIN_DIRECTORY/whisperx_dropbox_checkpoint_sync.pl" "${DOWNLOAD_ARGUMENTS[@]}"
-fi
 
 echo "WhisperX installer version: $SCRIPT_VERSION"
 echo "WhisperX dependency bundle: $RUNTIME_BUNDLE_NAME"
 echo "WhisperX source archive: $(basename -- "$SOURCE_ARCHIVE")"
+echo "WhisperX checkpoint transport: ChatGPT Dropbox connector handoff"
 
 whisperx --help
 
-"$BIN_DIRECTORY/whisperx_transcribe_accents.sh" \
-    "$INPUT_FILE" \
-    "$SPEAKER_COUNT"
+if [ "$PREPARE_ONLY" = "1" ]; then
+    WHISPERX_PREPARE_ONLY=1 "$BIN_DIRECTORY/whisperx_transcribe_accents.sh" "$INPUT_FILE" "$SPEAKER_COUNT"
+    echo "WhisperX installer status: preparation-only validation completed; transcription was not started."
+    exit 0
+fi
+
+"$BIN_DIRECTORY/whisperx_transcribe_accents.sh" "$INPUT_FILE" "$SPEAKER_COUNT"
