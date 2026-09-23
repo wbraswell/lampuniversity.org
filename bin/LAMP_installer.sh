@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # LAMP Installer Script
-VERSION='0.538_000'
+VERSION='0.539_000'
 
 
 # START HERE: sync w/ rperl_installer.sh
@@ -788,10 +788,10 @@ if [ $SECTION_CHOICE -le 8 ]; then
         B mv master.zip lampuniversity.org-master.zip
         B unzip lampuniversity.org-master.zip
         B mkdir ~/bin
-        B cp lampuniversity.org-master/bin/* ~/bin
-        echo '[ Install Vim RC Config File ]'
-        B cp lampuniversity.org-master/run_commands/.vimrc ~/
-        B rm -Rf lampuniversity.org*
+        B mv lampuniversity.org-master lampuniversity.org
+        echo '[ Install RC Config Files ]'
+        B ln -S lampuniversity.org-master/run_commands/.?* ~/
+        B source ~/.bashrc
         B hash -r
         C 'Please Log Out And Log Back In, Which Should Reset The $PATH Environmental Variable To Include The Newly-Created ~/bin Directory, Then Come Back To This Point.'
         echo '[ Test LAMP University Tools, Top Memory Script ]'
