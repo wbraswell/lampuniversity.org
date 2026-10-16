@@ -1,5 +1,5 @@
-# Last Updated 20260724 2026.205
-# v0.110
+# Last Updated 20261015 2026.288
+# v0.112
 
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
@@ -33,7 +33,7 @@ fi
 export PATH=$HOME/script:$HOME/bin:$PATH:.:script:bin
 
 # enable lib & bin & script directories for git repositories
-for REPO_DIR in repos_gitlab/gitlab-template repos_gitlab/perl-types repos_github/lampuniversity.org repos_github/rperl
+for REPO_DIR in repos_gitlab/gitlab-template repos_gitlab/perl-types repos_gitlab/perl-types-lite repos_github/lampuniversity.org repos_github/rperl
 do
     if [ -d $HOME/$REPO_DIR/lib ]; then 
         export PERL5LIB=$HOME/$REPO_DIR/lib:$PERL5LIB
@@ -188,5 +188,9 @@ if [ -f /usr/bin/keychain ] && [ -f $HOME/.ssh/id_rsa ]; then
     source $HOME/.keychain/$HOSTNAME-sh
 fi
 
-
-. "$HOME/.local/bin/env"
+# load evironment configuration file if present;
+# used by WhisperX, as well as projects written in other non-Perl languages;
+# not to be confused with /usr/bin/env
+if [ -f "$HOME/.local/bin/env" ]; then
+    . "$HOME/.local/bin/env"
+fi
