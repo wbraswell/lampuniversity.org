@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 # Copyright © 2025, 2026, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # create tarball from directory containing git repository
-VERSION='0.006'
+VERSION='0.007'
 
 # check if an argument was provided;
 # the "$#" variable holds the number of command-line arguments
@@ -44,7 +44,7 @@ done
 # check if the sanitized argument is a valid directory;
 # the "-d" flag tests if a path exists and is a directory
 if [ ! -d "$DIRNAME" ]; then
-    echo "Error: '$1' is not a valid directory in the current working directory." >&2
+    echo "Error: '$DIRNAME' is not a valid directory in the current working directory." >&2
     exit 1
 fi
 ORIGINAL_DIR="$PWD"
