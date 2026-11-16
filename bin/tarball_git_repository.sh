@@ -1,30 +1,43 @@
 #!/usr/bin/bash
 # Copyright © 2025, 2026, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # create tarball from directory containing git repository
-VERSION='0.004'
+VERSION='0.005'
 
 # check if an argument was provided;
 # the "$#" variable holds the number of command-line arguments
 if [ "$#" -eq 0 ]; then
     echo "Error: No argument was provided." >&2
-    echo "Usage: $0 [--full-git] <directory_name> [--full-git] [tar arguments ...]" >&2
+    echo "Usage: $0 <directory_name> [--full-git] [--output-dir=DIR] [tar arguments ...]" >&2
     exit 1
 fi
 
 # store the sanitized argument in a new variable, removing any trailing slash
-FULL_GIT=false
-if [ "$1" = "--full-git" ]; then
-    FULL_GIT=true
-    shift
+if [ "$1" = "--full-git" ] || [ "$1" = "--output-dir" ] || [[ "$1" == --output-dir=* ]]; then
+    echo "Error: The directory name must be the first argument." >&2
+    exit 1
 fi
 DIRNAME="${1%/}"
 shift
-EXTRA_TAR_ARGS=()
-for ARG in "$@"; do
-    if [ "$ARG" = "--full-git" ]; then
-        FULL_GIT=true
-    else
-        EXTRA_TAR_ARGS+=("$ARG")
+FULL_GIT=false
+if [ "${1:-}" = "--full-git" ]; then
+    FULL_GIT=true
+    shift
+fi
+OUTPUT_DIR=""
+if [[ "${1:-}" == --output-dir=* ]]; then
+    OUTPUT_DIR="${1#--output-dir=}"
+    shift
+    if [ -z "$OUTPUT_DIR" ] || [ ! -d "$OUTPUT_DIR" ]; then
+        echo "Error: The --output-dir path must name an existing directory." >&2
+        exit 1
+    fi
+    OUTPUT_DIR="$(cd -- "$OUTPUT_DIR" && pwd)" || exit 1
+fi
+EXTRA_TAR_ARGS=("$@")
+for ARG in "${EXTRA_TAR_ARGS[@]}"; do
+    if [ "$ARG" = "--full-git" ] || [ "$ARG" = "--output-dir" ] || [[ "$ARG" == --output-dir=* ]]; then
+        echo "Error: --full-git and --output-dir=DIR must precede any tar arguments, in that order." >&2
+        exit 1
     fi
 done
 
@@ -44,6 +57,9 @@ fi
 # create a unique archive name using a long date/time serialization string
 STAMP="$(date +%Y%m%d_%H%M%S)"
 ARCHIVE="${DIRNAME}__${STAMP}.tar.gz"
+if [ -n "$OUTPUT_DIR" ]; then
+    ARCHIVE="${OUTPUT_DIR}/$(basename "$DIRNAME")__${STAMP}.tar.gz"
+fi
 
 echo "Removing existing archive (if any): $ARCHIVE"
 rm -f "$ARCHIVE"
