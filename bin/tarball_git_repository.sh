@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 # Copyright © 2025, 2026, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # create tarball from directory containing git repository
-VERSION='0.008'
+VERSION='0.009'
 
 # check if an argument was provided;
 # the "$#" variable holds the number of command-line arguments
@@ -91,9 +91,13 @@ fi
 
 # create a unique archive name using a long date/time serialization string
 STAMP="$(date +%Y%m%d_%H%M%S)"
-ARCHIVE="${REPO_PARENT}/${REPO_NAME}__${STAMP}.tar.gz"
+ARCHIVE_NAME_SUFFIX=""
+if [ "$FULL_GIT" = true ]; then
+    ARCHIVE_NAME_SUFFIX="_FULL_GIT"
+fi
+ARCHIVE="${REPO_PARENT}/${REPO_NAME}${ARCHIVE_NAME_SUFFIX}__${STAMP}.tar.gz"
 if [ -n "$OUTPUT_DIR" ]; then
-    ARCHIVE="${OUTPUT_DIR}/${REPO_NAME}__${STAMP}.tar.gz"
+    ARCHIVE="${OUTPUT_DIR}/${REPO_NAME}${ARCHIVE_NAME_SUFFIX}__${STAMP}.tar.gz"
 fi
 
 echo "Removing existing archive (if any): $ARCHIVE"
@@ -128,7 +132,7 @@ if [ "$QUIET" = true ]; then
         echo "Error: could not count archived files: $ARCHIVE" >&2
         exit "$COUNT_STATUS"
     fi
-    printf 'Files added to archive: %s\n' "$FILE_COUNT" >&3
+    printf '%s files added to tarball %s\n' "$FILE_COUNT" "$ARCHIVE" >&3
 else
     echo
     echo "Done creating new archive: $ARCHIVE"
