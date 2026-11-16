@@ -1,45 +1,76 @@
 #!/usr/bin/bash
 # Copyright © 2025, 2026, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # create tarball from directory containing git repository
-VERSION='0.007'
+VERSION='0.008'
 
 # check if an argument was provided;
 # the "$#" variable holds the number of command-line arguments
 if [ "$#" -eq 0 ]; then
     echo "Error: No argument was provided." >&2
-    echo "Usage: $0 <directory_name> [--full-git] [--output-dir=DIR] [tar arguments ...]" >&2
+    echo "Usage: $0 <directory_name> [--full-git] [--output-dir=DIR] [--quiet] [tar arguments ...]" >&2
     exit 1
 fi
 
 # store the sanitized argument in a new variable, removing any trailing slash
-if [ "$1" = "--full-git" ] || [ "$1" = "--output-dir" ] || [[ "$1" == --output-dir=* ]]; then
+if [ "$1" = "--full-git" ] || [ "$1" = "--quiet" ] || [ "$1" = "--output-dir" ] || [[ "$1" == --output-dir=* ]]; then
     echo "Error: The directory name must be the first argument." >&2
     exit 1
 fi
 DIRNAME="${1%/}"
 shift
 FULL_GIT=false
-if [ "${1:-}" = "--full-git" ]; then
-    FULL_GIT=true
-    shift
-fi
 OUTPUT_DIR=""
-if [[ "${1:-}" == --output-dir=* ]]; then
-    OUTPUT_DIR="${1#--output-dir=}"
-    shift
-    if [ -z "$OUTPUT_DIR" ] || [ ! -d "$OUTPUT_DIR" ]; then
-        echo "Error: The --output-dir path must name an existing directory." >&2
-        exit 1
-    fi
-    OUTPUT_DIR="$(cd -- "$OUTPUT_DIR" && pwd)" || exit 1
-fi
+QUIET=false
+OUTPUT_DIR_SEEN=false
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --full-git)
+            if [ "$FULL_GIT" = true ] || [ "$OUTPUT_DIR_SEEN" = true ]; then
+                echo "Error: --full-git must precede --output-dir=DIR and must not be repeated." >&2
+                exit 1
+            fi
+            FULL_GIT=true
+            shift
+            ;;
+        --output-dir=*)
+            if [ "$OUTPUT_DIR_SEEN" = true ]; then
+                echo "Error: --output-dir=DIR must not be repeated." >&2
+                exit 1
+            fi
+            OUTPUT_DIR_SEEN=true
+            OUTPUT_DIR="${1#--output-dir=}"
+            shift
+            if [ -z "$OUTPUT_DIR" ] || [ ! -d "$OUTPUT_DIR" ]; then
+                echo "Error: The --output-dir path must name an existing directory." >&2
+                exit 1
+            fi
+            OUTPUT_DIR="$(cd -- "$OUTPUT_DIR" && pwd)" || exit 1
+            ;;
+        --quiet)
+            if [ "$QUIET" = true ]; then
+                echo "Error: --quiet must not be repeated." >&2
+                exit 1
+            fi
+            QUIET=true
+            shift
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
 EXTRA_TAR_ARGS=("$@")
 for ARG in "${EXTRA_TAR_ARGS[@]}"; do
-    if [ "$ARG" = "--full-git" ] || [ "$ARG" = "--output-dir" ] || [[ "$ARG" == --output-dir=* ]]; then
-        echo "Error: --full-git and --output-dir=DIR must precede any tar arguments, in that order." >&2
+    if [ "$ARG" = "--full-git" ] || [ "$ARG" = "--quiet" ] || [ "$ARG" = "--output-dir" ] || [[ "$ARG" == --output-dir=* ]]; then
+        echo "Error: --full-git, --output-dir=DIR, and --quiet must precede any tar arguments." >&2
         exit 1
     fi
 done
+
+# preserve standard output for the single quiet-mode summary
+if [ "$QUIET" = true ]; then
+    exec 3>&1 1>/dev/null
+fi
 
 # check if the sanitized argument is a valid directory;
 # the "-d" flag tests if a path exists and is a directory
@@ -90,5 +121,15 @@ if [ "$TAR_STATUS" -ne 0 ]; then
     exit "$TAR_STATUS"
 fi
 
-echo
-echo "Done creating new archive: $ARCHIVE"
+if [ "$QUIET" = true ]; then
+    FILE_COUNT="$(set -o pipefail; tar -tzf "$ARCHIVE" | awk '!/\/$/ { count++ } END { print count + 0 }')"
+    COUNT_STATUS=$?
+    if [ "$COUNT_STATUS" -ne 0 ]; then
+        echo "Error: could not count archived files: $ARCHIVE" >&2
+        exit "$COUNT_STATUS"
+    fi
+    printf 'Files added to archive: %s\n' "$FILE_COUNT" >&3
+else
+    echo
+    echo "Done creating new archive: $ARCHIVE"
+fi
