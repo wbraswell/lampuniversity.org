@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 # Copyright © 2025, 2026, William N. Braswell, Jr.. All Rights Reserved. This work is Free & Open Source; you can redistribute it and/or modify it under the same terms as Perl 5.
 # create tarball from directory containing git repository
-VERSION='0.005'
+VERSION='0.006'
 
 # check if an argument was provided;
 # the "$#" variable holds the number of command-line arguments
@@ -47,6 +47,10 @@ if [ ! -d "$DIRNAME" ]; then
     echo "Error: '$1' is not a valid directory in the current working directory." >&2
     exit 1
 fi
+ORIGINAL_DIR="$PWD"
+REPO_PATH="$(cd -- "$DIRNAME" && pwd -P)" || exit 1
+REPO_PARENT="$(dirname -- "$REPO_PATH")"
+REPO_NAME="$(basename -- "$REPO_PATH")"
 
 echo "Received input argument: $DIRNAME"
 echo "Processed directory name: $DIRNAME"
@@ -56,28 +60,34 @@ fi
 
 # create a unique archive name using a long date/time serialization string
 STAMP="$(date +%Y%m%d_%H%M%S)"
-ARCHIVE="${DIRNAME}__${STAMP}.tar.gz"
+ARCHIVE="${REPO_PARENT}/${REPO_NAME}__${STAMP}.tar.gz"
 if [ -n "$OUTPUT_DIR" ]; then
-    ARCHIVE="${OUTPUT_DIR}/$(basename "$DIRNAME")__${STAMP}.tar.gz"
+    ARCHIVE="${OUTPUT_DIR}/${REPO_NAME}__${STAMP}.tar.gz"
 fi
 
 echo "Removing existing archive (if any): $ARCHIVE"
-rm -f "$ARCHIVE"
+rm -f "$ARCHIVE" || exit 1
 
 echo "Changing into directory: $DIRNAME"
 cd "$DIRNAME" || exit 1
 
 echo "Running inline_clean.sh"
-inline_clean.sh
+inline_clean.sh || exit 1
 
 echo "Returning to previous directory"
-cd .. || exit 1
+cd -- "$ORIGINAL_DIR" || exit 1
 
 echo "Creating new archive: $ARCHIVE"
 if [ "$FULL_GIT" = true ]; then
-    tar -czvf "$ARCHIVE" "${EXTRA_TAR_ARGS[@]}" "$DIRNAME"
+    tar -czvf "$ARCHIVE" "${EXTRA_TAR_ARGS[@]}" -C "$REPO_PARENT" "$REPO_NAME"
 else
-    tar -czvf "$ARCHIVE" --exclude=.git "${EXTRA_TAR_ARGS[@]}" "$DIRNAME"
+    tar -czvf "$ARCHIVE" --exclude=.git "${EXTRA_TAR_ARGS[@]}" -C "$REPO_PARENT" "$REPO_NAME"
+fi
+TAR_STATUS=$?
+if [ "$TAR_STATUS" -ne 0 ]; then
+    echo "Error: tar failed with exit status $TAR_STATUS; archive was not created successfully: $ARCHIVE" >&2
+    rm -f "$ARCHIVE"
+    exit "$TAR_STATUS"
 fi
 
 echo
